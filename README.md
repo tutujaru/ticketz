@@ -53,91 +53,119 @@ Depois disso, acesse seu servidor e execute o comando abaixo, substituindo com s
 
 ```bash
 curl -sSL get.ticke.tz | sudo bash -s app.seudominio.com.br seu@email.com
+```
 
 Após alguns minutos, o sistema estará rodando no domínio informado.
 
-🔐 Login padrão:
+> 🔐 Login padrão:
+> - **Usuário:** o e-mail informado na instalação
+> - **Senha:** `123456` (altere imediatamente)
 
-Usuário: o e-mail informado na instalação
-
-Senha: 123456 (altere imediatamente)
-
-Atualização
+### Atualização
 
 Para atualizar para a versão mais recente:
 
+```bash
 curl -sSL update.ticke.tz | sudo bash
+```
 
 O sistema será reiniciado e atualizado automaticamente.
 
-Ver logs
+### Ver logs
 
 Acesse a pasta de instalação:
 
+```bash
 cd ~/ticketz-docker-acme
+```
 
 Visualize os logs completos:
 
+```bash
 docker compose logs -t
+```
 
 Ou com acompanhamento em tempo real:
 
+```bash
 docker compose logs -t -f
-
-Executando a partir do Código-Fonte (com Docker)
-Você precisa ter o Docker e o Git instalados. A forma de instalação depende do seu sistema operacional. Guia oficial do Docker aqui.
-
-Clone o repositório oficial mantido por mim:
-
-git clone https://github.com/tutujaru/ticketz.git
-cd ticketz
-
-
-Executando Localmente
-Por padrão, o sistema roda apenas no computador local. Para acesso pela rede local, edite os arquivos .env-backend-local e .env-frontend-local, trocando localhost pelo IP da máquina (ex: 192.168.0.10).
-
-Para iniciar:
-docker compose -f docker-compose-local.yaml up -d
-
-A aplicação ficará acessível na porta 3000
-Login padrão: admin@ticketz.host / 123456
-
-Para parar:
-
-docker compose -f docker-compose-local.yaml down
-
-Executando na Internet (com seu domínio)
-Com uma VPS configurada e acessível pela internet, edite os arquivos .env-backend-acme e .env-frontend-acme, configurando:
-
-backend: api.seudominio.com.br
-
-frontend: seudominio.com.br
-
-email: contato@seudominio.com.br
-
-Caso utilize reCAPTCHA no cadastro, adicione as chaves nos arquivos .env.
-
-Execute:
-sudo docker compose -f docker-compose-acme.yaml up -d
-
-Após algum tempo, o Ticketz estará disponível no domínio configurado.
-
-Para parar:
-sudo docker compose -f docker-compose-acme.yaml down
-
-Aviso Importante
-Este projeto não possui qualquer vínculo com a Meta, WhatsApp ou empresas similares. O uso do código é de responsabilidade do usuário e não implica responsabilidade do autor ou colaboradores do projeto.
-
-Esse Projeto te Ajudou?
-Se esse projeto facilitou sua vida ou economizou tempo, considere apoiar com uma doação via PIX ou PayPal:
-
-
-
-Chave PIX:
-0699c69d-0951-4686-a5b7-c6cd21aa7e15
-
-Repositório oficial: https://github.com/tutujaru/ticketz
+```
 
 ---
 
+## Executando a partir do Código-Fonte (com Docker)
 
+Você precisa ter o **Docker** e o **Git** instalados. A forma de instalação depende do seu sistema operacional. [Guia oficial do Docker aqui](https://docs.docker.com/engine/install/).
+
+Clone o repositório oficial mantido por mim:
+
+```bash
+git clone https://github.com/tutujaru/ticketz.git
+cd ticketz
+```
+
+### Executando Localmente
+
+Por padrão, o sistema roda apenas no computador local. Para acesso pela rede local, edite os arquivos `.env-backend-local` e `.env-frontend-local`, trocando `localhost` pelo IP da máquina (ex: `192.168.0.10`).
+
+Para iniciar:
+
+```bash
+docker compose -f docker-compose-local.yaml up -d
+```
+
+> A aplicação ficará acessível na porta **3000**  
+> Login padrão: `admin@ticketz.host` / `123456`
+
+Para parar:
+
+```bash
+docker compose -f docker-compose-local.yaml down
+```
+
+---
+
+## Executando na Internet (com seu domínio)
+
+Com uma VPS configurada e acessível pela internet, edite os arquivos `.env-backend-acme` e `.env-frontend-acme`, configurando:
+
+- **backend:** api.seudominio.com.br
+- **frontend:** seudominio.com.br
+- **email:** contato@seudominio.com.br
+
+Caso utilize reCAPTCHA no cadastro, adicione as chaves nos arquivos `.env`.
+
+Execute:
+
+```bash
+sudo docker compose -f docker-compose-acme.yaml up -d
+```
+
+> Após algum tempo, o Ticketz estará disponível no domínio configurado.
+
+Para parar:
+
+```bash
+sudo docker compose -f docker-compose-acme.yaml down
+```
+
+---
+
+## Aviso Importante
+
+Este projeto **não possui qualquer vínculo com a Meta, WhatsApp ou empresas similares**. O uso do código é de responsabilidade do usuário e não implica responsabilidade do autor ou colaboradores do projeto.
+
+---
+
+## Esse Projeto te Ajudou?
+
+Se esse projeto facilitou sua vida ou economizou tempo, considere apoiar com uma doação via **PIX** ou **PayPal**:
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=X6XHVCPMRQEL4)
+
+**Chave PIX:**  
+`0699c69d-0951-4686-a5b7-c6cd21aa7e15`
+
+---
+
+> Repositório oficial: [https://github.com/tutujaru/ticketz](https://github.com/tutujaru/ticketz)
