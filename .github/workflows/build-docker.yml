@@ -3,12 +3,12 @@ name: Create and publish multi-arch Docker images
 on:
   push:
     branches:
-      - 'CRM - CNRO'
-      - 'fix/CRM - CNRO'
+      - 'main'
+      - 'fix/**'
       - 'dev'
       - 'test-**'
     tags:
-      - 'v2.0.0'
+      - 'v*.*.*'
 env:
   REGISTRY: ghcr.io
   IMAGE_BACKEND: tutujaru/ticketz-backend
