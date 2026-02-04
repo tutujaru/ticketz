@@ -162,13 +162,3 @@ Important Notice
 
 This project is not affiliated with Meta, WhatsApp, or any other company. The use of the provided code is the sole responsibility of the users and does not imply any liability for the author or project collaborators.
 
-Made Your Life Easier?
-----------------------
-
-If this project has helped you with a complex task, consider making a donation to the author via PayPal or Brazilian PIX below.
-
-[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=X6XHVCPMRQEL4)
-
-![image](https://github.com/ticketz-oss/ticketz/assets/6070736/8e85b263-73ca-4fb4-9bdc-03fff356b6ff)
-
-PIX Key: 0699c69d-0951-4686-a5b7-c6cd21aa7e15
