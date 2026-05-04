@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useReducer, useRef, useContext, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useReducer,
+  useRef,
+  useContext,
+  useMemo
+} from "react";
 
 import { isSameDay, parseISO, format } from "date-fns";
 import clsx from "clsx";
@@ -12,7 +19,7 @@ import {
   IconButton,
   makeStyles,
   Tooltip,
-  Typography,
+  Typography
 } from "@material-ui/core";
 
 import {
@@ -32,7 +39,7 @@ import {
   LocationOn,
   PlayArrow,
   Pause,
-  CropFree,
+  CropFree
 } from "@material-ui/icons";
 
 import WhatsMarked from "react-whatsmarked";
@@ -40,7 +47,9 @@ import PdfPreview from "../PdfPreview";
 import MessageOptionsMenu from "../MessageOptionsMenu";
 import whatsBackground from "../../assets/wa-background.png";
 import whatsBackgroundDark from "../../assets/wa-background-dark.png";
-import MediaGalleryLightbox, { buildMediaGalleryData } from "../MediaGalleryLightbox";
+import MediaGalleryLightbox, {
+  buildMediaGalleryData
+} from "../MediaGalleryLightbox";
 
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
@@ -54,23 +63,26 @@ import { Mutex } from "async-mutex";
 
 const loadPageMutex = new Mutex();
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   messageContainer: {
     "& a": {
       color: theme.palette.primary.main,
       fontWeight: "bold",
-      textDecoration: "none",
+      textDecoration: "none"
     },
     "& span.ticketzMention": {
       color: theme.palette.primary.main,
       fontWeight: "bold",
-      cursor: "pointer",
+      cursor: "pointer"
     },
-    marginBottom: 5,
+    marginBottom: 5
   },
-  
+
   stickedMessages: {
-    backgroundImage: theme.mode === 'light' ? `url(${whatsBackground})` : `url(${whatsBackgroundDark})`,
+    backgroundImage:
+      theme.mode === "light"
+        ? `url(${whatsBackground})`
+        : `url(${whatsBackgroundDark})`,
     flexDirection: "column",
     flexGrow: 1,
     padding: "5px 20px 20px 20px",
@@ -82,7 +94,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     maxHeight: "250px",
     zIndex: 10,
-    borderTop: `1px solid ${theme.palette.divider}`,
+    borderTop: `1px solid ${theme.palette.divider}`
   },
 
   messagesListWrapper: {
@@ -93,17 +105,20 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     width: "100%",
     minWidth: 300,
-    minHeight: 150,
+    minHeight: 150
   },
 
   messagesList: {
-    backgroundImage: theme.mode === 'light' ? `url(${whatsBackground})` : `url(${whatsBackgroundDark})`,
+    backgroundImage:
+      theme.mode === "light"
+        ? `url(${whatsBackground})`
+        : `url(${whatsBackgroundDark})`,
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
     padding: "20px 20px 20px 20px",
     overflowY: "scroll",
-    ...theme.scrollbarStyles,
+    ...theme.scrollbarStyles
   },
 
   circleLoading: {
@@ -112,7 +127,7 @@ const useStyles = makeStyles((theme) => ({
     opacity: "70%",
     top: 0,
     left: "50%",
-    marginTop: 12,
+    marginTop: 12
   },
 
   messageLeft: {
@@ -127,12 +142,12 @@ const useStyles = makeStyles((theme) => ({
       display: "flex",
       position: "absolute",
       top: 0,
-      right: 0,
+      right: 0
     },
 
     whiteSpace: "pre-wrap",
-    backgroundColor: theme.mode === 'light' ? "#ffffff" : "#024481",
-    color: theme.mode === 'light' ? "#303030" : "#ffffff",
+    backgroundColor: theme.mode === "light" ? "#ffffff" : "#024481",
+    color: theme.mode === "light" ? "#303030" : "#ffffff",
     alignSelf: "flex-start",
     borderTopLeftRadius: 0,
     borderTopRightRadius: 8,
@@ -142,18 +157,19 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 5,
     paddingTop: 5,
     paddingBottom: 0,
-    boxShadow: theme.mode === 'light' ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000",
-    transition: 'background-color 0.5s ease-in-out',
+    boxShadow:
+      theme.mode === "light" ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000",
+    transition: "background-color 0.5s ease-in-out"
   },
 
   quotedContainerLeft: {
     margin: "-3px -80px 6px -6px",
     overflow: "hidden",
-    backgroundColor: theme.mode === 'light' ? "#f0f0f0" : "#1c2134",
+    backgroundColor: theme.mode === "light" ? "#f0f0f0" : "#1c2134",
     borderRadius: "7.5px",
     display: "flex",
     position: "relative",
-    cursor: "pointer",
+    cursor: "pointer"
   },
 
   quotedMsg: {
@@ -163,18 +179,18 @@ const useStyles = makeStyles((theme) => ({
     height: "auto",
     display: "block",
     whiteSpace: "pre-wrap",
-    overflow: "hidden",
+    overflow: "hidden"
   },
 
   quotedSideColorLeft: {
     flex: "none",
     width: "4px",
-    backgroundColor: "#6bcbef",
+    backgroundColor: "#6bcbef"
   },
 
   quotedThumbnail: {
     maxWidth: "180px",
-    height: "90px",
+    height: "90px"
   },
 
   messageRight: {
@@ -189,11 +205,11 @@ const useStyles = makeStyles((theme) => ({
       display: "flex",
       position: "absolute",
       top: 0,
-      right: 0,
+      right: 0
     },
     whiteSpace: "pre-wrap",
-    backgroundColor: theme.mode === 'light' ? "#dcf8c6" : "#005c4b",
-    color: theme.mode === 'light' ? "#303030" : "#ffffff",
+    backgroundColor: theme.mode === "light" ? "#dcf8c6" : "#005c4b",
+    color: theme.mode === "light" ? "#303030" : "#ffffff",
     alignSelf: "flex-end",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
@@ -203,30 +219,31 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 5,
     paddingTop: 5,
     paddingBottom: 0,
-    boxShadow: theme.mode === 'light' ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000",
-    transition: 'background-color 0.5s ease-in-out',
+    boxShadow:
+      theme.mode === "light" ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000",
+    transition: "background-color 0.5s ease-in-out"
   },
 
   quotedContainerRight: {
     margin: "-3px -80px 6px -6px",
     overflowY: "hidden",
-    backgroundColor: theme.mode === 'light' ? "#cfe9ba" : "#075e54",
+    backgroundColor: theme.mode === "light" ? "#cfe9ba" : "#075e54",
     borderRadius: "7.5px",
     display: "flex",
-    position: "relative",
+    position: "relative"
   },
 
   quotedMsgRight: {
     padding: 10,
     // maxWidth: 300,
     height: "auto",
-    whiteSpace: "pre-wrap",
+    whiteSpace: "pre-wrap"
   },
 
   quotedSideColorRight: {
     flex: "none",
     width: "4px",
-    backgroundColor: "#35cd96",
+    backgroundColor: "#35cd96"
   },
 
   messageActionsButton: {
@@ -236,39 +253,39 @@ const useStyles = makeStyles((theme) => ({
     zIndex: 1,
     backgroundColor: "inherit",
     opacity: "90%",
-    "&:hover, &.Mui-focusVisible": { backgroundColor: "inherit" },
+    "&:hover, &.Mui-focusVisible": { backgroundColor: "inherit" }
   },
 
   messageContactName: {
     display: "flex",
     color: "#6bcbef",
     fontWeight: 500,
-    cursor: "pointer",
+    cursor: "pointer"
   },
-  
+
   forwardedMessage: {
     display: "flex",
-    color: theme.mode === 'light' ? "#999" : "#d0d0d0",
+    color: theme.mode === "light" ? "#999" : "#d0d0d0",
     fontSize: 11,
-    fontWeight: 'bold'
+    fontWeight: "bold"
   },
 
   forwardedIcon: {
-    color: theme.mode === 'light' ? "#999" : "#d0d0d0",
+    color: theme.mode === "light" ? "#999" : "#d0d0d0",
     fontSize: 15,
     verticalAlign: "middle",
-    marginLeft: 4,
+    marginLeft: 4
   },
 
   textContentItem: {
     overflowWrap: "break-word",
-    padding: "3px 80px 6px 6px",
+    padding: "3px 80px 6px 6px"
   },
-  
+
   messageLocation: {
-    display: 'flex',
+    display: "flex",
     padding: 5,
-    cursor: 'pointer',
+    cursor: "pointer"
   },
 
   messageLocationText: {
@@ -276,24 +293,24 @@ const useStyles = makeStyles((theme) => ({
     paddingLeft: 5,
     minWidth: 200,
     marginTop: "auto",
-    marginBottom: "auto",
+    marginBottom: "auto"
   },
-  
+
   textContentItemDeleted: {
     fontStyle: "italic",
     color: "rgba(0, 0, 0, 0.36)",
     overflowWrap: "break-word",
-    padding: "3px 80px 6px 6px",
+    padding: "3px 80px 6px 6px"
   },
 
   textContentItemEdited: {
     overflowWrap: "break-word",
-    padding: "3px 120px 6px 6px",
+    padding: "3px 120px 6px 6px"
   },
   messageMediaDeleted: {
     filter: "grayscale(1)",
     opacity: 0.4
-  },  
+  },
 
   messageVideo: {
     width: 250,
@@ -301,7 +318,7 @@ const useStyles = makeStyles((theme) => ({
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderBottomRightRadius: 8
   },
   videoPreviewWrapper: {
     width: 250,
@@ -312,12 +329,12 @@ const useStyles = makeStyles((theme) => ({
     borderBottomRightRadius: 8,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: "#000",
+    backgroundColor: "#000"
   },
   videoPreviewMedia: {
     width: "100%",
     maxHeight: 445,
-    display: "block",
+    display: "block"
   },
   videoPreviewActions: {
     position: "absolute",
@@ -325,14 +342,14 @@ const useStyles = makeStyles((theme) => ({
     bottom: 8,
     display: "flex",
     gap: 8,
-    zIndex: 1,
+    zIndex: 1
   },
   videoPreviewActionButton: {
     backgroundColor: "rgba(15, 23, 42, 0.65)",
     color: "#fff",
     "&:hover": {
-      backgroundColor: "rgba(15, 23, 42, 0.82)",
-    },
+      backgroundColor: "rgba(15, 23, 42, 0.82)"
+    }
   },
 
   messageMedia: {
@@ -342,16 +359,16 @@ const useStyles = makeStyles((theme) => ({
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderBottomRightRadius: 8
   },
 
   messageMediaClickable: {
-    cursor: "pointer",
+    cursor: "pointer"
   },
 
   messageMediaSticker: {
     backgroundColor: "unset",
-    boxShadow: "unset",
+    boxShadow: "unset"
   },
 
   timestamp: {
@@ -359,18 +376,19 @@ const useStyles = makeStyles((theme) => ({
     position: "absolute",
     bottom: 0,
     right: 5,
-    color: theme.mode === 'light' ? "#999" : "#d0d0d0"
+    color: theme.mode === "light" ? "#999" : "#d0d0d0"
   },
 
   timestampStickerLeft: {
-    backgroundColor: theme.mode === 'light' ? "#ffffff" : "#024481",
+    backgroundColor: theme.mode === "light" ? "#ffffff" : "#024481",
     borderRadius: 8,
     padding: 5,
-    boxShadow: theme.mode === 'light' ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000"
+    boxShadow:
+      theme.mode === "light" ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000"
   },
 
   timestampStickerRight: {
-    backgroundColor: theme.mode === 'light' ? "#dcf8c6" : "#128c7e",
+    backgroundColor: theme.mode === "light" ? "#dcf8c6" : "#128c7e",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomLeftRadius: 8,
@@ -379,7 +397,8 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 5,
     paddingTop: 5,
     paddingBottom: 0,
-    boxShadow: theme.mode === 'light' ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000"
+    boxShadow:
+      theme.mode === "light" ? "0 1px 1px #b3b3b3" : "0 1px 1px #000000"
   },
 
   dailyTimestamp: {
@@ -390,33 +409,33 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.backgroundContrast.paper,
     margin: "10px",
     borderRadius: "10px",
-    boxShadow: `0 1px 1px ${theme.palette.backgroundContrast.border}`,
+    boxShadow: `0 1px 1px ${theme.palette.backgroundContrast.border}`
   },
 
   dailyTimestampText: {
     color: theme.palette.textCommon.main,
     padding: 8,
     alignSelf: "center",
-    marginLeft: "0px",
+    marginLeft: "0px"
   },
 
   ackIcons: {
     fontSize: 18,
     verticalAlign: "middle",
-    marginLeft: 4,
+    marginLeft: 4
   },
 
   deletedIcon: {
     fontSize: 18,
     verticalAlign: "middle",
-    marginRight: 4,
+    marginRight: 4
   },
 
   ackDoneReadIcon: {
     color: blue[500],
     fontSize: 18,
     verticalAlign: "middle",
-    marginLeft: 4,
+    marginLeft: 4
   },
 
   downloadMedia: {
@@ -424,66 +443,66 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "inherit",
-    padding: 10,
+    padding: 10
   },
   imageLocation: {
-    position: 'relative',
-    color: 'red',
+    position: "relative",
+    color: "red",
     width: 100,
     height: 100,
     borderRadius: 5
   },
 
-  '@global': {
-    '@keyframes wave': {
-      '0%, 60%, 100%': {
-        transform: 'initial',
+  "@global": {
+    "@keyframes wave": {
+      "0%, 60%, 100%": {
+        transform: "initial"
       },
-      '30%': {
-        transform: 'translateY(-15px)',
-      },
-    },
-    '@keyframes quiet': {
-      '25%': {
-        transform: 'scaleY(.6)'
-      },
-      '50%': {
-        transform: 'scaleY(.4)',
-      },
-      '75%': {
-        transform: 'scaleY(.8)',
+      "30%": {
+        transform: "translateY(-15px)"
       }
     },
-    '@keyframes normal': {
-      '25%': {
-        transform: 'scaleY(.1)'
+    "@keyframes quiet": {
+      "25%": {
+        transform: "scaleY(.6)"
       },
-      '50%': {
-        transform: 'scaleY(.4)',
+      "50%": {
+        transform: "scaleY(.4)"
       },
-      '75%': {
-        transform: 'scaleY(.6)',
+      "75%": {
+        transform: "scaleY(.8)"
       }
     },
-    '@keyframes loud': {
-      '25%': {
-        transform: 'scaleY(1)'
+    "@keyframes normal": {
+      "25%": {
+        transform: "scaleY(.1)"
       },
-      '50%': {
-        transform: 'scaleY(.4)',
+      "50%": {
+        transform: "scaleY(.4)"
       },
-      '75%': {
-        transform: 'scaleY(1.2)',
+      "75%": {
+        transform: "scaleY(.6)"
       }
     },
+    "@keyframes loud": {
+      "25%": {
+        transform: "scaleY(1)"
+      },
+      "50%": {
+        transform: "scaleY(.4)"
+      },
+      "75%": {
+        transform: "scaleY(1.2)"
+      }
+    }
   },
   wave: {
-    position: 'relative',
-    textAlign: 'center',
+    position: "relative",
+    textAlign: "center",
     height: "30px",
     marginTop: "10px",
-    marginLeft: 'auto',
-    marginRight: 'auto',
+    marginLeft: "auto",
+    marginRight: "auto"
   },
   dot: {
     display: "inline-block",
@@ -491,19 +510,19 @@ const useStyles = makeStyles((theme) => ({
     height: "7px",
     borderRadius: "50%",
     marginRight: "3px",
-    background: theme.mode === 'light' ? "#303030" : "#ffffff",
+    background: theme.mode === "light" ? "#303030" : "#ffffff",
     animation: "wave 1.3s linear infinite",
     "&:nth-child(2)": {
-      animationDelay: "-1.1s",
+      animationDelay: "-1.1s"
     },
     "&:nth-child(3)": {
-      animationDelay: "-0.9s",
+      animationDelay: "-0.9s"
     }
   },
 
   wavebarsContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
+    display: "flex",
+    justifyContent: "space-between",
     height: "30px",
     marginTop: "5px",
     marginBottom: "5px",
@@ -511,7 +530,7 @@ const useStyles = makeStyles((theme) => ({
     marginRight: "auto",
     "--boxSize": "5px",
     "--gutter": "4px",
-    width: "calc((var(--boxSize) + var(--gutter)) * 5)",
+    width: "calc((var(--boxSize) + var(--gutter)) * 5)"
   },
 
   wavebars: {
@@ -519,30 +538,30 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
     width: "var(--boxSize)",
     animationDuration: "1.2s",
-    backgroundColor: theme.mode === 'light' ? "#303030" : "#ffffff",
-    animationTimingFunction: 'ease-in-out',
-    animationIterationCount: 'infinite',
-    borderRadius: '8px',
+    backgroundColor: theme.mode === "light" ? "#303030" : "#ffffff",
+    animationTimingFunction: "ease-in-out",
+    animationIterationCount: "infinite",
+    borderRadius: "8px"
   },
 
   wavebar1: {
-    animationName: 'quiet'
+    animationName: "quiet"
   },
   wavebar2: {
-    animationName: 'normal'
+    animationName: "normal"
   },
   wavebar3: {
-    animationName: 'quiet'
+    animationName: "quiet"
   },
   wavebar4: {
-    animationName: 'loud'
+    animationName: "loud"
   },
   wavebar5: {
-    animationName: 'quiet'
+    animationName: "quiet"
   },
   linkPreviewThumbnail: {
     width: "328px",
-    height: "172px",
+    height: "172px"
   },
   linkPreviewTitle: {
     fontWeight: "bold",
@@ -556,23 +575,23 @@ const useStyles = makeStyles((theme) => ({
   },
   linkPreviewAnchor: {
     textDecoration: "none",
-    color: theme.mode === 'light' ? "#303030" : "#ffffff",
+    color: theme.mode === "light" ? "#303030" : "#ffffff"
   },
   messageHighlighted: {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.palette.primary.main
   },
   previewThumbnail: {
     width: "383px",
-    maxWidth: "100%",
+    maxWidth: "100%"
   },
   audioBottom: {
-    marginBottom: "12px",
+    marginBottom: "12px"
   },
   reactionsContainer: {
     width: "fit-content",
     height: 1,
     marginLeft: "auto",
-    marginRight: "auto",
+    marginRight: "auto"
   },
   reactions: {
     top: -8,
@@ -592,13 +611,13 @@ const useStyles = makeStyles((theme) => ({
     padding: 5,
     marginBottom: 5,
     borderLeft: "5px solid",
-    borderColor: theme.mode === 'light' ? "#000" : "#fff",
+    borderColor: theme.mode === "light" ? "#000" : "#fff"
   },
   messageButton: {
     display: "flex",
     width: "100%",
     textTransform: "none",
-    margin: "auto",
+    margin: "auto"
   }
 }));
 
@@ -607,9 +626,8 @@ const reducer = (state, action) => {
     const messages = action.payload;
     const newMessages = [];
 
-    messages.forEach((message) => {
-
-      const messageIndex = state.findIndex((m) => m.id === message.id);
+    messages.forEach(message => {
+      const messageIndex = state.findIndex(m => m.id === message.id);
       if (messageIndex !== -1) {
         state[messageIndex] = message;
       } else {
@@ -622,7 +640,7 @@ const reducer = (state, action) => {
 
   if (action.type === "ADD_MESSAGE") {
     const newMessage = action.payload;
-    const messageIndex = state.findIndex((m) => m.id === newMessage.id);
+    const messageIndex = state.findIndex(m => m.id === newMessage.id);
 
     if (messageIndex !== -1) {
       state[messageIndex] = newMessage;
@@ -631,18 +649,20 @@ const reducer = (state, action) => {
     }
 
     if (newMessage.mediaType === "reactionMessage") {
-      const reactionIndex = state.findIndex((m) => m.id === newMessage.quotedMsgId);
+      const reactionIndex = state.findIndex(
+        m => m.id === newMessage.quotedMsgId
+      );
       if (reactionIndex !== -1) {
         state[reactionIndex].replies = state[reactionIndex].replies || [];
         state[reactionIndex].replies.push(newMessage);
       }
     }
-    
+
     return [...state];
   }
-  
+
   if (action.type === "RESET_STICKY") {
-    state.forEach((message) => {
+    state.forEach(message => {
       delete message.bottomStick;
     });
     return [...state];
@@ -650,7 +670,7 @@ const reducer = (state, action) => {
 
   if (action.type === "UPDATE_MESSAGE") {
     const messageToUpdate = action.payload;
-    const messageIndex = state.findIndex((m) => m.id === messageToUpdate.id);
+    const messageIndex = state.findIndex(m => m.id === messageToUpdate.id);
 
     if (messageIndex !== -1) {
       state[messageIndex] = messageToUpdate;
@@ -695,7 +715,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
         if (ticketId === undefined) return;
         try {
           const { data } = await api.get("/messages/" + ticketId, {
-            params: { pageNumber: thisPageNumber, markAsRead },
+            params: { pageNumber: thisPageNumber, markAsRead }
           });
 
           if (currentTicketId.current === ticketId) {
@@ -725,7 +745,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     setContactPresence("available");
 
     currentTicketId.current = ticketId;
-    
+
     await loadPageMutex.runExclusive(async () => {
       loadData();
     });
@@ -742,20 +762,24 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
 
     const onConnect = () => {
       socket.emit("joinChatBox", `${ticket.id}`);
-    }
+    };
 
     socketManager.onConnect(onConnect);
 
-    const onAppMessage = (data) => {
+    const onAppMessage = data => {
       if (data.message.ticketId === currentTicketId.current) {
         setContactPresence("available");
         if (data.action === "create") {
           const message = data.message;
           const { scrollTop, clientHeight, scrollHeight } = scrollRef.current;
-          const isAtBottom = scrollTop + clientHeight >= (scrollHeight - clientHeight / 4);
-          message.bottomStick = !isAtBottom && !message.fromMe || undefined;
+          const isAtBottom =
+            scrollTop + clientHeight >= scrollHeight - clientHeight / 4;
+          message.bottomStick = (!isAtBottom && !message.fromMe) || undefined;
           dispatch({ type: "ADD_MESSAGE", payload: message });
-          if ((isAtBottom || data.message.fromMe) && data.message.mediaType !== "reactionMessage") {
+          if (
+            (isAtBottom || data.message.fromMe) &&
+            data.message.mediaType !== "reactionMessage"
+          ) {
             scrollToBottom();
           }
           if (message.bottomStick) {
@@ -767,14 +791,20 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
         }
       }
-    }
+    };
 
     socket.on(`company-${companyId}-appMessage`, onAppMessage);
 
-    socket.on(`company-${companyId}-presence`, (data) => {
+    socket.on(`company-${companyId}-presence`, data => {
       const { scrollTop, clientHeight, scrollHeight } = scrollRef.current;
-      console.log({ presence: data.presence, scrollTop, clientHeight, scrollHeight });
-      const isAtBottom = scrollTop + clientHeight >= (scrollHeight - clientHeight / 4);
+      console.log({
+        presence: data.presence,
+        scrollTop,
+        clientHeight,
+        scrollHeight
+      });
+      const isAtBottom =
+        scrollTop + clientHeight >= scrollHeight - clientHeight / 4;
       if (data?.ticketId === ticket.id) {
         setContactPresence(data.presence);
         if (["composing", "recording"].includes(data.presence)) {
@@ -802,14 +832,14 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   };
-  
+
   const scrollStickedToBottom = () => {
     if (stickedRef.current) {
       stickedRef.current.scrollTop = stickedRef.current.scrollHeight;
     }
   };
 
-  const handleScroll = (e) => {
+  const handleScroll = e => {
     const messagesList = e.currentTarget;
     const sticky = document.querySelector(`.${classes.stickedMessages}`);
     if (sticky && sticky.style.display !== "none") {
@@ -843,7 +873,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     setSelectedMessageData(data);
   };
 
-  const handleCloseMessageOptionsMenu = (e) => {
+  const handleCloseMessageOptionsMenu = e => {
     setAnchorEl(null);
   };
 
@@ -851,7 +881,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     return buildMediaGalleryData(messagesList);
   }, [messagesList]);
 
-  const openLightboxForMessage = (messageId) => {
+  const openLightboxForMessage = messageId => {
     const index = lightboxMedia.byMessageId[messageId];
     if (index === undefined) {
       return;
@@ -874,14 +904,14 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     }
 
     if (previewVideo.paused) {
-      previewVideo.play().catch(() => { });
+      previewVideo.play().catch(() => {});
       return;
     }
 
     previewVideo.pause();
   };
 
-  const pausePreviewVideo = (messageId) => {
+  const pausePreviewVideo = messageId => {
     const previewVideo = previewVideoRefs.current[messageId];
     if (!previewVideo) {
       return;
@@ -892,13 +922,13 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
 
   const checkMessageMedia = (message, data, isSticker = false) => {
     const document =
-      data?.message?.documentMessage
-      || data?.message?.documentWithCaptionMessage?.message?.documentMessage;
+      data?.message?.documentMessage ||
+      data?.message?.documentWithCaptionMessage?.message?.documentMessage;
     if (isSticker) {
       return (
         <img
           className={clsx(classes.messageMedia, {
-            [classes.messageMediaDeleted]: message.isDeleted,
+            [classes.messageMediaDeleted]: message.isDeleted
           })}
           src={message.mediaUrl}
           alt="sticker"
@@ -910,44 +940,45 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       return (
         <>
           <img
-            className={clsx(classes.messageMedia, classes.messageMediaClickable, {
-              [classes.messageMediaDeleted]: message.isDeleted,
-            })}
+            className={clsx(
+              classes.messageMedia,
+              classes.messageMediaClickable,
+              {
+                [classes.messageMediaDeleted]: message.isDeleted
+              }
+            )}
             src={message.mediaUrl}
             alt="midia da mensagem"
             onClick={() => openLightboxForMessage(message.id)}
           />
           <>
-            <div className={[clsx({
-              [classes.textContentItemDeleted]: message.isDeleted,
-              [classes.textContentItem]: !message.isDeleted,
-            }),]}>
-              {message.body &&
+            <div
+              className={[
+                clsx({
+                  [classes.textContentItemDeleted]: message.isDeleted,
+                  [classes.textContentItem]: !message.isDeleted
+                })
+              ]}
+            >
+              {message.body && (
                 <>
-                  <WhatsMarked>
-                    {message.body}
-                  </WhatsMarked>
+                  <WhatsMarked>{message.body}</WhatsMarked>
                 </>
-              }
+              )}
             </div>
           </>
         </>
-      )
+      );
     }
     if (!document && message.mediaType === "audio") {
-
       return (
         <>
           <audio className={classes.audioBottom} controls>
             <source src={message.mediaUrl} type="audio/ogg"></source>
           </audio>
-          {
-            message.body &&
-            !["🔊","Áudio"].includes(message.body) &&
-            <div className={classes.mediaDescription}>
-              {message.body}
-            </div>
-          }
+          {message.body && !["🔊", "Áudio"].includes(message.body) && (
+            <div className={classes.mediaDescription}>{message.body}</div>
+          )}
         </>
       );
     }
@@ -957,11 +988,11 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
         <>
           <div
             className={clsx(classes.videoPreviewWrapper, {
-              [classes.messageMediaDeleted]: message.isDeleted,
+              [classes.messageMediaDeleted]: message.isDeleted
             })}
           >
             <video
-              ref={(element) => {
+              ref={element => {
                 if (element) {
                   previewVideoRefs.current[message.id] = element;
                 } else {
@@ -973,21 +1004,21 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               preload="metadata"
               playsInline
               onPlay={() => {
-                setPreviewVideoPlayingById((previous) => ({
+                setPreviewVideoPlayingById(previous => ({
                   ...previous,
-                  [message.id]: true,
+                  [message.id]: true
                 }));
               }}
               onPause={() => {
-                setPreviewVideoPlayingById((previous) => ({
+                setPreviewVideoPlayingById(previous => ({
                   ...previous,
-                  [message.id]: false,
+                  [message.id]: false
                 }));
               }}
               onEnded={() => {
-                setPreviewVideoPlayingById((previous) => ({
+                setPreviewVideoPlayingById(previous => ({
                   ...previous,
-                  [message.id]: false,
+                  [message.id]: false
                 }));
               }}
             />
@@ -995,14 +1026,20 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               <IconButton
                 className={classes.videoPreviewActionButton}
                 aria-label="play preview"
-                onClick={(event) => handleVideoPreviewPlayClick(event, message.id)}
+                onClick={event =>
+                  handleVideoPreviewPlayClick(event, message.id)
+                }
               >
-                {previewVideoPlayingById[message.id] ? <Pause /> : <PlayArrow />}
+                {previewVideoPlayingById[message.id] ? (
+                  <Pause />
+                ) : (
+                  <PlayArrow />
+                )}
               </IconButton>
               <IconButton
                 className={classes.videoPreviewActionButton}
                 aria-label="open video lightbox"
-                onClick={(event) => {
+                onClick={event => {
                   event.stopPropagation();
                   pausePreviewVideo(message.id);
                   openLightboxForMessage(message.id);
@@ -1012,17 +1049,19 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               </IconButton>
             </div>
           </div>
-          <div className={[clsx({
-            [classes.textContentItemDeleted]: message.isDeleted,
-            [classes.textContentItem]: !message.isDeleted,
-          }),]}>
-            {message.body &&
+          <div
+            className={[
+              clsx({
+                [classes.textContentItemDeleted]: message.isDeleted,
+                [classes.textContentItem]: !message.isDeleted
+              })
+            ]}
+          >
+            {message.body && (
               <>
-                <WhatsMarked>
-                  {message.body}
-                </WhatsMarked>
+                <WhatsMarked>{message.body}</WhatsMarked>
               </>
-            }
+            )}
           </div>
         </>
       );
@@ -1035,10 +1074,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       return (
         <>
           {isPdf && message.mediaUrl && (
-            <PdfPreview
-              url={message.mediaUrl}
-              fileName={fileName}
-            />
+            <PdfPreview url={message.mediaUrl} fileName={fileName} />
           )}
           <div className={classes.downloadMedia}>
             <Button
@@ -1048,26 +1084,28 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               variant="outlined"
               onClick={() => downloadFile(message.mediaUrl)}
             >
-             { document?.fileName || message.body}
+              {document?.fileName || message.body}
             </Button>
           </div>
-          {message.body !== document?.fileName &&
+          {message.body !== document?.fileName && (
             <>
-              <div className={[clsx({
-                [classes.textContentItemDeleted]: message.isDeleted,
-              }),]}>
-                <WhatsMarked>
-                  { message.body }
-                </WhatsMarked>
+              <div
+                className={[
+                  clsx({
+                    [classes.textContentItemDeleted]: message.isDeleted
+                  })
+                ]}
+              >
+                <WhatsMarked>{message.body}</WhatsMarked>
               </div>
             </>
-          }
+          )}
         </>
       );
     }
   };
 
-  const renderMessageAck = (message) => {
+  const renderMessageAck = message => {
     if (message.ack === 0) {
       return <Warning fontSize="small" className={classes.ackIcons} />;
     }
@@ -1130,10 +1168,10 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     }
   };
 
-  const scrollToMessage = (id) => {
+  const scrollToMessage = id => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
 
       // Add the highlight class
       element.classList.add(classes.messageHighlighted);
@@ -1145,7 +1183,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     }
   };
 
-  const getQuotedMessageText = (quotedMsg) => {
+  const getQuotedMessageText = quotedMsg => {
     if (!quotedMsg?.body && quotedMsg?.mediaUrl) {
       return "📎 " + quotedMsg.mediaUrl.split("/").pop();
     }
@@ -1153,27 +1191,31 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     if (isVCard(quotedMsg?.body)) {
       return "🪪";
     }
-    
-    return quotedMsg?.body;
-  }
-    
 
-  const renderQuotedMessage = (message) => {
+    return quotedMsg?.body;
+  };
+
+  const renderQuotedMessage = message => {
     const data = JSON.parse(message.quotedMsg.dataJson);
-    
+
     const thumbnail = data?.message?.imageMessage?.jpegThumbnail;
-    const mediaUrl = message.quotedMsg?.mediaType === "image" ? message.quotedMsg.mediaUrl : null;
-    const imageUrl = thumbnail ? "data:image/png;base64, " + thumbnail : mediaUrl;
+    const mediaUrl =
+      message.quotedMsg?.mediaType === "image"
+        ? message.quotedMsg.mediaUrl
+        : null;
+    const imageUrl = thumbnail
+      ? "data:image/png;base64, " + thumbnail
+      : mediaUrl;
     return (
       <div
         className={clsx(classes.quotedContainerLeft, {
-          [classes.quotedContainerRight]: message.fromMe,
+          [classes.quotedContainerRight]: message.fromMe
         })}
         onClick={() => scrollToMessage(message.quotedMsg.id)}
       >
         <span
           className={clsx(classes.quotedSideColorLeft, {
-            [classes.quotedSideColorRight]: message.quotedMsg?.fromMe,
+            [classes.quotedSideColorRight]: message.quotedMsg?.fromMe
           })}
         ></span>
         <div className={classes.quotedMsg}>
@@ -1184,84 +1226,70 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           )}
           <WhatsMarked>{getQuotedMessageText(message.quotedMsg)}</WhatsMarked>
         </div>
-        {imageUrl && (
-          <img className={classes.quotedThumbnail} src={imageUrl} />
-        )}
+        {imageUrl && <img className={classes.quotedThumbnail} src={imageUrl} />}
       </div>
     );
   };
 
-  const renderReplies = (replies) => {
-    const reactions = replies &&
-      replies.filter(
-        (reply) => reply?.mediaType === "reactionMessage"
-      ).map((reply) => {
-        return (
-          reply.contact?.name ?
-            <Tooltip title={reply.contact?.name} placement="top" arrow >
-              <div
-                key={reply.id}
-              >
-                {reply.body}
-              </div>
+  const renderReplies = replies => {
+    const reactions =
+      replies &&
+      replies
+        .filter(reply => reply?.mediaType === "reactionMessage")
+        .map(reply => {
+          return reply.contact?.name ? (
+            <Tooltip title={reply.contact?.name} placement="top" arrow>
+              <div key={reply.id}>{reply.body}</div>
             </Tooltip>
-            :
-            <div
-              key={reply.id}
-            >
-              {reply.body}
-            </div>
-        )
-      });
+          ) : (
+            <div key={reply.id}>{reply.body}</div>
+          );
+        });
 
     return (
-      reactions?.length > 0 && <div className={classes.reactionsContainer}>
-        <div className={classes.reactions}>
-          {reactions}
+      reactions?.length > 0 && (
+        <div className={classes.reactionsContainer}>
+          <div className={classes.reactions}>{reactions}</div>
         </div>
-      </div>
+      )
     );
-  }
-  
-  const renderLinkPreview = (message) => {
+  };
+
+  const renderLinkPreview = message => {
     const data = JSON.parse(message.dataJson);
-    
+
     const title = data?.message?.extendedTextMessage?.title;
     const description = data?.message?.extendedTextMessage?.description;
     const canonicalUrl = data?.message?.extendedTextMessage?.canonicalUrl;
-    const url = canonicalUrl && new URL(
-      canonicalUrl,
-    );
-    
+    const url = canonicalUrl && new URL(canonicalUrl);
+
     if (!title && !description && !url) {
-      return (<></>);
+      return <></>;
     }
-    
+
     const thumbnail = data?.message?.extendedTextMessage?.jpegThumbnail;
     const imageUrl = thumbnail ? "data:image/png;base64, " + thumbnail : "";
     return (
-      <a href={canonicalUrl} className={classes.linkPreviewAnchor} target="_blank">
+      <a
+        href={canonicalUrl}
+        className={classes.linkPreviewAnchor}
+        target="_blank"
+      >
         <div
           className={clsx(classes.quotedContainerLeft, {
-            [classes.quotedContainerRight]: message.fromMe,
+            [classes.quotedContainerRight]: message.fromMe
           })}
         >
           <div className={classes.quotedMsg}>
-            {title &&
-              <div className={classes.linkPreviewTitle}>
-                {title}
-              </div>
-            }
-            {description &&
+            {title && <div className={classes.linkPreviewTitle}>{title}</div>}
+            {description && (
               <div className={classes.linkPreviewDescription}>
                 {description}
               </div>
-            }
-            {url?.hostname &&
-              <div className={classes.linkPreviewUrl}>
-                {url.hostname}
-              </div>
-            }
+            )}
+            {url?.hostname && (
+              <div className={classes.linkPreviewUrl}>{url.hostname}</div>
+            )}
           </div>
           {!message.thumbnailUrl && imageUrl && (
             <img className={classes.quotedThumbnail} src={imageUrl} />
@@ -1271,7 +1299,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     );
   };
 
-  const sendReply = async (body) => {
+  const sendReply = async body => {
     const message = {
       read: 1,
       fromMe: true,
@@ -1279,12 +1307,12 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       body
     };
 
-    api.post(`/messages/${ticketId}`, message).catch((err) => {
+    api.post(`/messages/${ticketId}`, message).catch(err => {
       toastError(err);
     });
   };
 
-  const renderReplyButton = (text) => {
+  const renderReplyButton = text => {
     return (
       <Button
         className={classes.messageButton}
@@ -1294,36 +1322,49 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
         onClick={() => {
           if (!readOnly) {
             sendReply(text);
-          };
-        }
-        }
+          }
+        }}
       >
         {text}
       </Button>
     );
-  }
-  
-  const renderUrlButton = ({ displayText, url }) =>
+  };
+
+  const renderUrlButton = ({ displayText, url }) => (
     <Button
       className={classes.messageButton}
       color="primary"
-      startIcon={displayText === 'Facebook' ? <Facebook /> : displayText === 'Instagram' ? <Instagram /> : <Launch />}
+      startIcon={
+        displayText === "Facebook" ? (
+          <Facebook />
+        ) : displayText === "Instagram" ? (
+          <Instagram />
+        ) : (
+          <Launch />
+        )
+      }
     >
-      <a href={url} target="_blank" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <a
+        href={url}
+        target="_blank"
+        style={{ textDecoration: "none", color: "inherit" }}
+      >
         {displayText}
       </a>
     </Button>
-  
-  const renderButtons = (message) => {
-    const objects = 
+  );
+
+  const renderButtons = message => {
+    const objects =
       message?.buttonsMessage?.buttons ||
       message?.listMessage?.sections ||
       message?.templateMessage?.hydratedTemplate?.hydratedButtons ||
-      message?.templateMessage?.interactiveMessageTemplate?.nativeFlowMessage?.buttons
+      message?.templateMessage?.interactiveMessageTemplate?.nativeFlowMessage
+        ?.buttons;
 
-    if (!objects) return (<></>);
+    if (!objects) return <></>;
 
-    return objects.map((item) => {
+    return objects.map(item => {
       if (item.urlButton) {
         return renderUrlButton({
           displayText: item.urlButton.displayText,
@@ -1345,31 +1386,30 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           return renderReplyButton(params.display_text);
         }
       } else if (item.rows) {
-        return item.rows.map((row) => {
+        return item.rows.map(row => {
           return renderReplyButton(row.title);
         });
       }
-         
-      return (<></>);
-    }
-    );
+
+      return <></>;
+    });
   };
-  
-  const formatVCardN = (n) => {
-    return(
+
+  const formatVCardN = n => {
+    return (
       (n[3] ? n[3] + " " : "") +
       (n[1] ? n[1] + " " : "") +
       (n[2] ? n[2] + " " : "") +
       (n[0] ? n[0] + " " : "") +
       (n[4] ? n[4] + " " : "")
     );
-  }
+  };
 
-  const isVCard = (message) => {
+  const isVCard = message => {
     return message.startsWith('{"ticketzvCard":');
   };
-  
-  const stringOrFirstElement = (data) => {
+
+  const stringOrFirstElement = data => {
     if (!data) {
       return "";
     }
@@ -1380,46 +1420,72 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
   };
 
   const handleContactClick = (name, number) => {
-    api.post(`/contacts/findOrInsert`, {
-      name,
-      number
-    }).then((response) => {
-      if (response?.data?.id) {
-        window.mentionClick(response.data);
-      }
-    }).catch((err) => {
-      toastError(err);
-    });
+    api
+      .post(`/contacts/findOrInsert`, {
+        name,
+        number
+      })
+      .then(response => {
+        if (response?.data?.id) {
+          window.mentionClick(response.data);
+        }
+      })
+      .catch(err => {
+        toastError(err);
+      });
   };
-  
-  const renderVCard = (vcardJson) => {
+
+  const renderVCard = vcardJson => {
     const cardArray = JSON.parse(vcardJson)?.ticketzvCard;
-    
+
     if (!cardArray || !Array.isArray(cardArray)) {
       return <div>Invalid VCARD data</div>;
     }
 
-    return cardArray.map((item) => {
+    return cardArray.map(item => {
       const message = item?.vcard;
       if (!message) {
         return <></>;
       }
       const parsedVCard = vCard.parse(message);
-      console.debug("vCard data:", { message , parsedVCard });
-      
+      console.debug("vCard data:", { message, parsedVCard });
+
       const name = stringOrFirstElement(
-        parsedVCard['X-WA-BIZ-NAME']?.[0]?.value ||
-        parsedVCard.fn?.[0]?.value ||
-        formatVCardN(parsedVCard.n?.[0]?.value));
+        parsedVCard["X-WA-BIZ-NAME"]?.[0]?.value ||
+          parsedVCard.fn?.[0]?.value ||
+          formatVCardN(parsedVCard.n?.[0]?.value)
+      );
       const description = stringOrFirstElement(
-        parsedVCard['X-WA-BIZ-DESCRIPTION']?.[0]?.value || "");
+        parsedVCard["X-WA-BIZ-DESCRIPTION"]?.[0]?.value || ""
+      );
       const number = stringOrFirstElement(parsedVCard?.tel?.[0]?.value);
-      const metaNumber = parsedVCard?.tel?.[0]?.meta?.waid?.[0] || number || "unknown";
-      
+      const metaNumber =
+        parsedVCard?.tel?.[0]?.meta?.waid?.[0] || number || "unknown";
+
       return (
         <div>
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 20 }}>
-            <Avatar style={{ backgroundColor: generateColor(metaNumber), marginRight: 10, marginLeft: 20, width: 60, height: 60, color: "white", fontWeight: "bold" }}>{ getInitials(name)}</Avatar>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 20,
+              marginBottom: 20
+            }}
+          >
+            <Avatar
+              style={{
+                backgroundColor: generateColor(metaNumber),
+                marginRight: 10,
+                marginLeft: 20,
+                width: 60,
+                height: 60,
+                color: "white",
+                fontWeight: "bold"
+              }}
+            >
+              {getInitials(name)}
+            </Avatar>
             <div style={{ width: 350 }}>
               <div>
                 <Typography
@@ -1427,7 +1493,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                   component="h4"
                   variant="body2"
                   color="textPrimary"
-                  style={{ fontWeight: '700' }}
+                  style={{ fontWeight: "700" }}
                 >
                   {name}
                 </Typography>
@@ -1438,7 +1504,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                   component="span"
                   variant="body2"
                   color="textPrimary"
-                  style={{ display: 'flex' }}
+                  style={{ display: "flex" }}
                 >
                   {description}
                 </Typography>
@@ -1449,76 +1515,113 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                   component="span"
                   variant="body2"
                   color="textPrimary"
-                  style={{ display: 'flex' }}
+                  style={{ display: "flex" }}
                 >
-                  <span class="ticketzMention" onClick={() => handleContactClick(name, metaNumber)}>{number}</span>
+                  <span
+                    class="ticketzMention"
+                    onClick={() => handleContactClick(name, metaNumber)}
+                  >
+                    {number}
+                  </span>
                 </Typography>
               </div>
-
             </div>
-
           </div>
         </div>
-      )
-
+      );
     });
   };
-  
-  const convertToDMS = (degrees) => {
+
+  const convertToDMS = degrees => {
     const deg = Math.floor(degrees);
     const minFloat = (degrees - deg) * 60;
     const min = Math.floor(minFloat);
     const sec = Math.floor((minFloat - min) * 60);
     const frac = ((minFloat - min) * 60 - sec).toFixed(2).substring(1);
     return `${deg}°${min}'${sec}${frac}"`;
-  }
-  
+  };
+
   const convertCoordinates = (lat, lon) => {
     const latitude = convertToDMS(Math.abs(lat)) + (lat >= 0 ? " N" : " S");
     const longitude = convertToDMS(Math.abs(lon)) + (lon >= 0 ? " E" : " W");
     return `${latitude}, ${longitude}`;
-  }
+  };
 
   const messageLocation = (data, createdAt) => {
     const location = data?.message?.locationMessage;
     if (!location) {
-      return (<></>);
+      return <></>;
     }
 
     const mapUrl = `https://www.google.com/maps?q=${location?.degreesLatitude},${location?.degreesLongitude}`;
 
     return (
-      <div onClick={
-        () => {
-          window.open(mapUrl, '_blank');
-        }
-      } className={[clsx(classes.textContentItem, classes.messageLocation)]}>
+      <div
+        onClick={() => {
+          window.open(mapUrl, "_blank");
+        }}
+        className={[clsx(classes.textContentItem, classes.messageLocation)]}
+      >
         <div>
-        { location?.jpegThumbnail ? 
-        <img src={`data:image/png;base64, ${location.jpegThumbnail}`} className={classes.imageLocation} />
-        :
-        <LocationOn className={classes.imageLocation} fontSize="large" color="red" />
-        }
+          {location?.jpegThumbnail ? (
+            <img
+              src={`data:image/png;base64, ${location.jpegThumbnail}`}
+              className={classes.imageLocation}
+            />
+          ) : (
+            <LocationOn
+              className={classes.imageLocation}
+              fontSize="large"
+              color="red"
+            />
+          )}
         </div>
         <div className={classes.messageLocationText}>
-           { location.name ? <><b>{location.name}</b><br /></> : "" }
-           { location.url ? <><a href={location.url} target="_blank" rel="noreferrer">{location.url}</a><br /></> : "" }
-           { location.address ? <>{location.address}<br /></> : "" }
-           { convertCoordinates(location.degreesLatitude, location.degreesLongitude) }
+          {location.name ? (
+            <>
+              <b>{location.name}</b>
+              <br />
+            </>
+          ) : (
+            ""
+          )}
+          {location.url ? (
+            <>
+              <a href={location.url} target="_blank" rel="noreferrer">
+                {location.url}
+              </a>
+              <br />
+            </>
+          ) : (
+            ""
+          )}
+          {location.address ? (
+            <>
+              {location.address}
+              <br />
+            </>
+          ) : (
+            ""
+          )}
+          {convertCoordinates(
+            location.degreesLatitude,
+            location.degreesLongitude
+          )}
         </div>
         <span className={classes.timestamp}>
           {format(parseISO(createdAt), "HH:mm")}
         </span>
       </div>
-    )
+    );
   };
 
-  const getDataContextInfo = (data) => {
+  const getDataContextInfo = data => {
     if (!data) {
       return null;
     }
 
-    return data.message?.extendedTextMessage?.contextInfo ||
+    return (
+      data.message?.extendedTextMessage?.contextInfo ||
       data.message?.imageMessage?.contextInfo ||
       data.message?.videoMessage?.contextInfo ||
       data.message?.audioMessage?.contextInfo ||
@@ -1535,107 +1638,133 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       data.message?.productCatalogMessage?.contextInfo ||
       data.message?.templateButtonReplyMessage?.contextInfo ||
       data.message?.templateMessage?.contextInfo ||
-      data.message?.documentWithCaptionMessage?.contextInfo || null;
+      data.message?.documentWithCaptionMessage?.contextInfo ||
+      null
+    );
   };
-        
+
   const renderMessages = () => {
     const stickedMessages = [];
     const viewMessagesList = messagesList.map((message, index) => {
       if (message.mediaType === "reactionMessage") {
         return;
       }
-      
+
       const data = JSON.parse(message.dataJson);
       const dataContext = getDataContextInfo(data);
-      const isSticker = data?.message && ("stickerMessage" in data.message);
+      const isSticker = data?.message && "stickerMessage" in data.message;
       if (!message.fromMe) {
         const messageFragment = (
           <React.Fragment key={message.id}>
             {renderDailyTimestamps(message, index)}
             {renderMessageDivider(message, index)}
-            <div id={message.id}
-              className={[clsx(classes.messageContainer, classes.messageLeft, {
-                [classes.messageMediaSticker]: isSticker,
-              })]}
+            <div
+              id={message.id}
+              className={[
+                clsx(classes.messageContainer, classes.messageLeft, {
+                  [classes.messageMediaSticker]: isSticker
+                })
+              ]}
               title={message.queueId && message.queue?.name}
             >
-              { readOnly || <IconButton
-                variant="contained"
-                size="small"
-                id={`messageActionsButton-${message.id}`}
-                disabled={message.isDeleted}
-                className={classes.messageActionsButton}
-                onClick={(e) => handleOpenMessageOptionsMenu(e, message, data)}
-              >
-                <ExpandMore />
-              </IconButton> }
-              { dataContext?.isForwarded && (
+              {readOnly || (
+                <IconButton
+                  variant="contained"
+                  size="small"
+                  id={`messageActionsButton-${message.id}`}
+                  disabled={message.isDeleted}
+                  className={classes.messageActionsButton}
+                  onClick={e => handleOpenMessageOptionsMenu(e, message, data)}
+                >
+                  <ExpandMore />
+                </IconButton>
+              )}
+              {dataContext?.isForwarded && (
                 <span className={classes.forwardedMessage}>
-                  <Forward fontSize="small" className={classes.forwardedIcon}/> {i18n.t("message.forwarded")}
+                  <Forward fontSize="small" className={classes.forwardedIcon} />{" "}
+                  {i18n.t("message.forwarded")}
                 </span>
               )}
               {isGroup && (
-                <span className={classes.messageContactName} onClick={() => {
-                  window.mentionClick({
-                    contactId: message.contact?.id,
-                    name: message.contact?.name,
-                    number: message.contact?.number
-                  })
-                }}>
+                <span
+                  className={classes.messageContactName}
+                  onClick={() => {
+                    window.mentionClick({
+                      contactId: message.contact?.id,
+                      name: message.contact?.name,
+                      number: message.contact?.number
+                    });
+                  }}
+                >
                   {message.contact?.name}
                 </span>
               )}
 
               {message.thumbnailUrl && !message.mediaUrl && (
-                <img className={classes.previewThumbnail} src={message.thumbnailUrl} />
+                <img
+                  className={classes.previewThumbnail}
+                  src={message.thumbnailUrl}
+                />
               )}
 
-              {data?.message?.locationMessage ? messageLocation(data, message.createdAt)
-                :
-                isVCard(message.body) ?
-                  <div
-                    className={[clsx(classes.textContentItem, {
+              {data?.message?.locationMessage ? (
+                messageLocation(data, message.createdAt)
+              ) : isVCard(message.body) ? (
+                <div
+                  className={[
+                    clsx(classes.textContentItem, {
                       [classes.textContentItemEdited]: message.isEdited
-                    }), { marginRight: 0 }]}>
-                    {renderVCard(message.body)}
-                  </div>
-
-                  :
-
-                  (<div className={[clsx(classes.textContentItem, {
-                    [classes.textContentItemDeleted]: message.isDeleted,
-                    [classes.textContentItemEdited]: message.isEdited
-                  }),]}>
-                    {message.quotedMsg && renderQuotedMessage(message)}
-                    {renderLinkPreview(message)}
-                    {!isSticker && (
-                      message.mediaUrl && !data?.message?.extendedTextMessage ?
-                        ""
-                        :
-                        <>
-                          {message.isDeleted && (
-                            <Block
-                              color="disabled"
-                              fontSize="small"
-                              className={classes.deletedIcon}
-                            />
-                          )}
-                          <WhatsMarked>
-                            {message.body}
-                          </WhatsMarked>
-                        </>
-                    )
-                    }
-                    <span className={[clsx(classes.timestamp, {
-                      [classes.timestampStickerLeft]: isSticker
-                    })]}>
-                      {message.isEdited && <span> {i18n.t("message.edited")} </span>}
-                      {format(parseISO(message.createdAt), "HH:mm")}
-                    </span>
-                  </div>)}
-                  {message.mediaUrl && !data?.message?.extendedTextMessage && checkMessageMedia(message, data, isSticker)}
-                  {renderButtons(data?.message)}
-                  {renderReplies(message.replies)}
+                    }),
+                    { marginRight: 0 }
+                  ]}
+                >
+                  {renderVCard(message.body)}
+                </div>
+              ) : (
+                <div
+                  className={[
+                    clsx(classes.textContentItem, {
+                      [classes.textContentItemDeleted]: message.isDeleted,
+                      [classes.textContentItemEdited]: message.isEdited
+                    })
+                  ]}
+                >
+                  {message.quotedMsg && renderQuotedMessage(message)}
+                  {renderLinkPreview(message)}
+                  {!isSticker &&
+                    (message.mediaUrl && !data?.message?.extendedTextMessage ? (
+                      ""
+                    ) : (
+                      <>
+                        {message.isDeleted && (
+                          <Block
+                            color="disabled"
+                            fontSize="small"
+                            className={classes.deletedIcon}
+                          />
+                        )}
+                        <WhatsMarked>{message.body}</WhatsMarked>
+                      </>
+                    ))}
+                  <span
+                    className={[
+                      clsx(classes.timestamp, {
+                        [classes.timestampStickerLeft]: isSticker
+                      })
+                    ]}
+                  >
+                    {message.isEdited && (
+                      <span> {i18n.t("message.edited")} </span>
+                    )}
+                    {format(parseISO(message.createdAt), "HH:mm")}
+                  </span>
+                </div>
+              )}
+              {message.mediaUrl &&
+                !data?.message?.extendedTextMessage &&
+                checkMessageMedia(message, data, isSticker)}
+              {renderButtons(data?.message)}
+              {renderReplies(message.replies)}
             </div>
           </React.Fragment>
         );
@@ -1648,37 +1777,46 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           <React.Fragment key={message.id}>
             {renderDailyTimestamps(message, index)}
             {renderMessageDivider(message, index)}
-            <div id={message.id}
-              className={[clsx(classes.messageContainer, classes.messageRight, {
-                [classes.messageMediaSticker]: isSticker,
-              })]}
+            <div
+              id={message.id}
+              className={[
+                clsx(classes.messageContainer, classes.messageRight, {
+                  [classes.messageMediaSticker]: isSticker
+                })
+              ]}
               title={message.queueId && message.queue?.name}
             >
-              { readOnly || <IconButton
-                variant="contained"
-                size="small"
-                id={`messageActionsButton-${message.id}`}
-                disabled={message.isDeleted}
-                className={classes.messageActionsButton}
-                onClick={(e) => handleOpenMessageOptionsMenu(e, message, data)}
-              >
-                <ExpandMore />
-              </IconButton> }
+              {readOnly || (
+                <IconButton
+                  variant="contained"
+                  size="small"
+                  id={`messageActionsButton-${message.id}`}
+                  disabled={message.isDeleted}
+                  className={classes.messageActionsButton}
+                  onClick={e => handleOpenMessageOptionsMenu(e, message, data)}
+                >
+                  <ExpandMore />
+                </IconButton>
+              )}
 
-              { dataContext?.isForwarded && (
+              {dataContext?.isForwarded && (
                 <span className={classes.forwardedMessage}>
-                   <Forward fontSize="small" className={classes.forwardedIcon}/> {i18n.t("message.forwarded")}
+                  <Forward fontSize="small" className={classes.forwardedIcon} />{" "}
+                  {i18n.t("message.forwarded")}
                 </span>
               )}
 
               {message.thumbnailUrl && !message.mediaUrl && (
-                <img className={classes.previewThumbnail} src={message.thumbnailUrl} />
-              )}                                
+                <img
+                  className={classes.previewThumbnail}
+                  src={message.thumbnailUrl}
+                />
+              )}
 
               <div
                 className={clsx(classes.textContentItem, {
                   [classes.textContentItemDeleted]: message.isDeleted,
-                  [classes.textContentItemEdited]: message.isEdited,
+                  [classes.textContentItemEdited]: message.isEdited
                 })}
               >
                 {message.isDeleted && (
@@ -1689,24 +1827,32 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                   />
                 )}
 
-                { data?.message?.locationMessage ? messageLocation(data, message.createdAt)
-                  :
-                  isVCard(message.body) ?
-                    <div className={[classes.textContentItem]}>
-                      {renderVCard(message.body)}
-                    </div>
-
-                    :
-                    message.quotedMsg && renderQuotedMessage(message)}
+                {data?.message?.locationMessage ? (
+                  messageLocation(data, message.createdAt)
+                ) : isVCard(message.body) ? (
+                  <div className={[classes.textContentItem]}>
+                    {renderVCard(message.body)}
+                  </div>
+                ) : (
+                  message.quotedMsg && renderQuotedMessage(message)
+                )}
                 {renderLinkPreview(message)}
-                {!isSticker && (
-                  message.mediaUrl ? "" : <WhatsMarked>{message.body}</WhatsMarked>
-                )
-                }
-                <span className={[clsx(classes.timestamp, {
-                  [classes.timestampStickerRight]: isSticker
-                })]}>
-                  {message.isEdited && <span> {i18n.t("message.edited")} </span>}
+                {!isSticker &&
+                  (message.mediaUrl ? (
+                    ""
+                  ) : (
+                    <WhatsMarked>{message.body}</WhatsMarked>
+                  ))}
+                <span
+                  className={[
+                    clsx(classes.timestamp, {
+                      [classes.timestampStickerRight]: isSticker
+                    })
+                  ]}
+                >
+                  {message.isEdited && (
+                    <span> {i18n.t("message.edited")} </span>
+                  )}
                   {format(parseISO(message.createdAt), "HH:mm")}
                   {renderMessageAck(message)}
                 </span>
@@ -1724,12 +1870,12 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
         <div
           ref={stickedRef}
           className={classes.stickedMessages}
-          style={{ display: stickedMessages.length > 0 ? 'flex' : 'none' }}
+          style={{ display: stickedMessages.length > 0 ? "flex" : "none" }}
         >
           {stickedMessages}
         </div>
       </>
-    )
+    );
   };
 
   return (
@@ -1769,28 +1915,29 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           </div>
         )}
       </div>
-      {ticket?.channel !== "whatsapp" || ticket.channel === undefined && (
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            padding: "10px",
-            alignItems: "center",
-            backgroundColor: "#E1F3FB",
-          }}
-        >
-          {ticket?.channel === "facebook" ? (
-            <Facebook small />
-          ) : (
-            <Instagram small />
-          )}
+      {ticket?.channel !== "whatsapp" ||
+        (ticket.channel === undefined && (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              padding: "10px",
+              alignItems: "center",
+              backgroundColor: "#E1F3FB"
+            }}
+          >
+            {ticket?.channel === "facebook" ? (
+              <Facebook small />
+            ) : (
+              <Instagram small />
+            )}
 
-          <span>
-            Você tem 24h para responder após receber uma mensagem, de acordo
-            com as políticas do Facebook.
-          </span>
-        </div>
-      )}
+            <span>
+              Você tem 24h para responder após receber uma mensagem, de acordo
+              com as políticas do Facebook.
+            </span>
+          </div>
+        ))}
       {loading && (
         <div>
           <CircularProgress className={classes.circleLoading} />

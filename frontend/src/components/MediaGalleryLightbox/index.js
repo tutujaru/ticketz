@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Lightbox, { IconButton as YarlIconButton } from "yet-another-react-lightbox";
+import Lightbox, {
+  IconButton as YarlIconButton
+} from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
@@ -9,21 +11,41 @@ import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import "yet-another-react-lightbox/styles.css";
 
-const RotateLeftIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const RotateLeftIcon = props => (
+  <svg
+    viewBox="0 0 24 24"
+    width="24"
+    height="24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
     <path d="M3 12a9 9 0 1 0 3-6.7" />
     <polyline points="3 4 3 10 9 10" />
   </svg>
 );
 
-const RotateRightIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const RotateRightIcon = props => (
+  <svg
+    viewBox="0 0 24 24"
+    width="24"
+    height="24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
     <path d="M21 12a9 9 0 1 1-3-6.7" />
     <polyline points="21 4 21 10 15 10" />
   </svg>
 );
 
-const normalizeRotation = (value) => ((value % 360) + 360) % 360;
+const normalizeRotation = value => ((value % 360) + 360) % 360;
 
 const buildCacheBustedUrl = (url, seed) => {
   if (!url) {
@@ -63,14 +85,14 @@ const VIDEO_THUMBNAIL_FALLBACK = `data:image/svg+xml,${encodeURIComponent(
 export const buildMediaGalleryData = (
   messages,
   {
-    getId = (message) => message?.id,
-    getMediaType = (message) => message?.mediaType,
-    getMediaUrl = (message) => message?.mediaUrl,
-    getThumbnailUrl = (message) => message?.thumbnailUrl,
-    getDescription = (message) => message?.body,
-    getUpdatedAt = (message) => message?.updatedAt,
-    getCreatedAt = (message) => message?.createdAt,
-    getDataJson = (message) => message?.dataJson,
+    getId = message => message?.id,
+    getMediaType = message => message?.mediaType,
+    getMediaUrl = message => message?.mediaUrl,
+    getThumbnailUrl = message => message?.thumbnailUrl,
+    getDescription = message => message?.body,
+    getUpdatedAt = message => message?.updatedAt,
+    getCreatedAt = message => message?.createdAt,
+    getDataJson = message => message?.dataJson
   } = {}
 ) => {
   return messages.reduce(
@@ -91,14 +113,15 @@ export const buildMediaGalleryData = (
         data = null;
       }
 
-      const isSticker = !!(data?.message && ("stickerMessage" in data.message));
+      const isSticker = !!(data?.message && "stickerMessage" in data.message);
       if (isSticker) {
         return acc;
       }
 
       const thumbnailUrl = getThumbnailUrl(message);
       const description = getDescription(message) || undefined;
-      const cacheSeed = getUpdatedAt(message) || getCreatedAt(message) || messageId;
+      const cacheSeed =
+        getUpdatedAt(message) || getCreatedAt(message) || messageId;
       const downloadUrl = buildCacheBustedUrl(mediaUrl, cacheSeed);
 
       acc.byMessageId[messageId] = acc.slides.length;
@@ -116,9 +139,9 @@ export const buildMediaGalleryData = (
           poster: thumbnailUrl || mediaUrl,
           download: {
             url: downloadUrl,
-            filename: extractFileName(mediaUrl, `video-${messageId}`),
+            filename: extractFileName(mediaUrl, `video-${messageId}`)
           },
-          sources: [{ src: mediaUrl }],
+          sources: [{ src: mediaUrl }]
         });
       } else {
         acc.slides.push({
@@ -128,8 +151,8 @@ export const buildMediaGalleryData = (
           description,
           download: {
             url: downloadUrl,
-            filename: extractFileName(mediaUrl, `image-${messageId}`),
-          },
+            filename: extractFileName(mediaUrl, `image-${messageId}`)
+          }
         });
       }
 
@@ -144,7 +167,7 @@ const MediaGalleryLightbox = ({
   index,
   slides,
   onClose,
-  onViewIndexChange,
+  onViewIndexChange
 }) => {
   const [currentIndex, setCurrentIndex] = useState(index || 0);
   const [rotationBySlide, setRotationBySlide] = useState({});
@@ -159,16 +182,16 @@ const MediaGalleryLightbox = ({
     }
   }, [open]);
 
-  const rotateCurrentSlide = (degrees) => {
+  const rotateCurrentSlide = degrees => {
     const currentSlide = slides[currentIndex];
     const slideKey = currentSlide?.key;
     if (!slideKey) {
       return;
     }
 
-    setRotationBySlide((previous) => ({
+    setRotationBySlide(previous => ({
       ...previous,
-      [slideKey]: normalizeRotation((previous[slideKey] || 0) + degrees),
+      [slideKey]: normalizeRotation((previous[slideKey] || 0) + degrees)
     }));
   };
 
@@ -184,7 +207,7 @@ const MediaGalleryLightbox = ({
           if (onViewIndexChange) {
             onViewIndexChange(viewedIndex);
           }
-        },
+        }
       }}
       render={{
         slideContainer: ({ slide, children }) => {
@@ -197,17 +220,17 @@ const MediaGalleryLightbox = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transform: `rotate(${rotation}deg)`,
+                transform: `rotate(${rotation}deg)`
               }}
             >
               {children}
             </div>
           );
-        },
+        }
       }}
       captions={{
         descriptionTextAlign: "start",
-        descriptionMaxLines: 4,
+        descriptionMaxLines: 4
       }}
       thumbnails={{
         position: "bottom",
@@ -217,7 +240,7 @@ const MediaGalleryLightbox = ({
         borderRadius: 8,
         padding: 2,
         gap: 10,
-        vignette: false,
+        vignette: false
       }}
       toolbar={{
         buttons: [
@@ -237,8 +260,8 @@ const MediaGalleryLightbox = ({
             onClick={() => rotateCurrentSlide(90)}
             disabled={!slides.length}
           />,
-          "close",
-        ],
+          "close"
+        ]
       }}
       plugins={[Video, Zoom, Download, Thumbnails, Captions]}
     />

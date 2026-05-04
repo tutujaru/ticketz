@@ -1,7 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import clsx from "clsx";
-import moment from "moment";
 import {
   makeStyles,
   Drawer,
@@ -14,7 +13,7 @@ import {
   IconButton,
   Menu,
   useTheme,
-  useMediaQuery,
+  useMediaQuery
 } from "@material-ui/core";
 
 import MenuIcon from "@material-ui/icons/Menu";
@@ -44,74 +43,102 @@ import { useDate } from "../hooks/useDate";
 import useAuth from "../hooks/useAuth.js";
 
 import ColorModeContext from "../layout/themeContext";
-import Brightness4Icon from '@material-ui/icons/Brightness4';
-import Brightness7Icon from '@material-ui/icons/Brightness7';
-import LanguageIcon from '@material-ui/icons/Language';
+import Brightness4Icon from "@material-ui/icons/Brightness4";
+import Brightness7Icon from "@material-ui/icons/Brightness7";
+import LanguageIcon from "@material-ui/icons/Language";
 import { getBackendURL } from "../services/config";
 import NestedMenuItem from "material-ui-nested-menu-item";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import OnlyForSuperUser from "../components/OnlyForSuperUser";
 import NewTicketModal from "../components/NewTicketModal/index.js";
 
-
-
 const drawerWidth = 240;
+const DRAWER_STORAGE_KEY = "drawerOpen";
 
-const useStyles = makeStyles((theme) => ({
+function getStoredDrawerOpen() {
+  return localStorage.getItem(DRAWER_STORAGE_KEY) === "true";
+}
+
+function persistDrawerOpenState(value) {
+  localStorage.setItem(DRAWER_STORAGE_KEY, String(value));
+}
+
+const useStyles = makeStyles(theme => ({
   root: {
     display: "flex",
     height: "var(--vh)",
     backgroundColor: theme.palette.fancyBackground,
-    '& .MuiButton-outlinedPrimary': {
+    "& .MuiButton-outlinedPrimary": {
       color: theme.palette.primary,
-      border: theme.mode === 'light' ? '1px solid rgba(0 124 102)' : '1px solid rgba(255, 255, 255, 0.5)',
+      border:
+        theme.mode === "light"
+          ? "1px solid rgba(0 124 102)"
+          : "1px solid rgba(255, 255, 255, 0.5)"
     },
-    '& .MuiTab-textColorPrimary.Mui-selected': {
-      color: theme.palette.primary,
+    "& .MuiTab-textColorPrimary.Mui-selected": {
+      color: theme.palette.primary
     }
   },
   avatar: {
-    width: "100%",
+    width: "100%"
   },
   toolbar: {
     paddingRight: 24, // keep right padding when drawer closed
-    color: localStorage.getItem("impersonated") === "true" ? theme.palette.secondary.contrastText : theme.palette.primary.contrastText,
-    background: localStorage.getItem("impersonated") === "true" ? theme.palette.secondary.main : theme.palette.primary.main,
+    color:
+      localStorage.getItem("impersonated") === "true"
+        ? theme.palette.secondary.contrastText
+        : theme.palette.primary.contrastText,
+    background:
+      localStorage.getItem("impersonated") === "true"
+        ? theme.palette.secondary.main
+        : theme.palette.primary.main
   },
   toolbarIcon: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: "48px",
+    minHeight: "48px"
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
     transition: theme.transitions.create(["width", "margin"], {
       easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
+      duration: theme.transitions.duration.leavingScreen
     }),
+    [theme.breakpoints.up("sm")]: {
+      marginLeft: theme.spacing(9),
+      width: `calc(100% - ${theme.spacing(9)}px)`
+    }
   },
   appBarShift: {
     marginLeft: drawerWidth,
     width: `calc(100% - ${drawerWidth}px)`,
     transition: theme.transitions.create(["width", "margin"], {
       easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
+      duration: theme.transitions.duration.enteringScreen
     }),
     [theme.breakpoints.down("sm")]: {
       display: "none"
     }
   },
   menuButton: {
-    marginRight: 36,
+    marginRight: 36
   },
   menuButtonHidden: {
-    display: "none",
+    display: "none"
   },
   title: {
     flexGrow: 1,
     fontSize: 14,
-    color: "white",
+    color: "white"
+  },
+  userMenuInfoContainer: {
+    padding: theme.spacing(1.5, 2),
+    maxWidth: 320
+  },
+  userMenuInfoLine: {
+    fontSize: 13,
+    lineHeight: 1.4
   },
   drawerPaper: {
     position: "relative",
@@ -119,7 +146,7 @@ const useStyles = makeStyles((theme) => ({
     width: drawerWidth,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
+      duration: theme.transitions.duration.enteringScreen
     }),
     overflowY: "clip",
     ...theme.scrollbarStylesSoft
@@ -129,23 +156,23 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "clip",
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
+      duration: theme.transitions.duration.leavingScreen
     }),
     width: theme.spacing(7),
     [theme.breakpoints.up("sm")]: {
-      width: theme.spacing(9),
-    },
+      width: theme.spacing(9)
+    }
   },
   appBarSpacer: {
-    minHeight: "48px",
+    minHeight: "48px"
   },
   content: {
     flex: 1,
-    overflow: "auto",
+    overflow: "auto"
   },
   container: {
     paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
+    paddingBottom: theme.spacing(4)
   },
   paper: {
     padding: theme.spacing(2),
@@ -158,7 +185,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1),
     overflowY: "auto",
     overflowX: "clip",
-    ...theme.scrollbarStyles,
+    ...theme.scrollbarStyles
   },
   NotificationsPopOver: {
     // color: theme.barraSuperior.secondary.main,
@@ -170,8 +197,15 @@ const useStyles = makeStyles((theme) => ({
     margin: "auto",
     content: `url("${theme.calculatedLogo()}")`
   },
+  logoIcon: {
+    width: "40px",
+    height: "40px",
+    logo: theme.logo,
+    margin: "auto",
+    content: `url("${theme.appLogoFavicon ? theme.appLogoFavicon : "/vector/favicon.svg"}")`
+  },
   hideLogo: {
-	display: "none",
+    display: "none"
   }
 }));
 
@@ -184,28 +218,38 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { handleLogout, loading } = useContext(AuthContext);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(() => {
+    const isDesktop = window.matchMedia("(min-width:600px)").matches;
+
+    if (!isDesktop) {
+      return false;
+    }
+
+    return getStoredDrawerOpen();
+  });
   const [drawerVariant, setDrawerVariant] = useState("permanent");
   // const [dueDate, setDueDate] = useState("");
   const { user } = useContext(AuthContext);
 
   const theme = useTheme();
-  const { colorMode } = useContext(ColorModeContext);
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { colorMode } = useContext(ColorModeContext);
 
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
   const { getCurrentUserInfo } = useAuth();
   const [currentUser, setCurrentUser] = useState({});
+  const canAccessBackendlogs =
+    currentUser?.super || localStorage.getItem("impersonated") === "true";
 
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
 
   const { dateToClient } = useDate();
 
   const socketManager = useContext(SocketContext);
-  
+
   const [newTicketContact, setNewTicketContact] = useState(null);
-  
 
   //################### CODIGOS DE TESTE #########################################
   // useEffect(() => {
@@ -255,20 +299,12 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   //##############################################################################
 
   useEffect(() => {
-    if (document.body.offsetWidth > 600) {
-      setDrawerOpen(true);
-    }
+    getCurrentUserInfo().then(user => {
+      setCurrentUser(user);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  useEffect(() => {
-    getCurrentUserInfo().then(
-      (user) => {
-        setCurrentUser(user);
-      }
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
+
   useEffect(() => {
     const currentLang = localStorage.getItem("language");
     if (currentLang) {
@@ -277,23 +313,34 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   }, []);
 
   useEffect(() => {
-    window.mentionClick = (mention) => {
+    window.mentionClick = mention => {
       const contact = {
         id: mention.contactId || mention.id,
         name: mention.name,
         number: mention.number
-      }
+      };
       setNewTicketContact(contact);
-    }
+    };
   }, []);
 
   useEffect(() => {
-    if (document.body.offsetWidth < 600) {
-      setDrawerVariant("temporary");
-    } else {
+    if (greaterThenSm) {
       setDrawerVariant("permanent");
+      setDrawerOpen(getStoredDrawerOpen());
+      return;
     }
-  }, [drawerOpen]);
+
+    setDrawerVariant("temporary");
+    setDrawerOpen(false);
+  }, [greaterThenSm]);
+
+  useEffect(() => {
+    if (!greaterThenSm) {
+      return;
+    }
+
+    persistDrawerOpenState(drawerOpen);
+  }, [drawerOpen, greaterThenSm]);
 
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
@@ -301,23 +348,30 @@ const LoggedInLayout = ({ children, themeToggle }) => {
 
     const socket = socketManager.GetSocket(companyId);
 
-    const onCompanyAuthLayout = (data) => {
+    const onCompanyAuthLayout = data => {
       const impersonated = localStorage.getItem("impersonated") === "true";
-      if (!impersonated && !data.user.impersonated && data.user.id === +userId) {
+      if (
+        !impersonated &&
+        !data.user.impersonated &&
+        data.user.id === +userId
+      ) {
         toastError("Sua conta foi acessada em outro computador.");
         setTimeout(() => {
           localStorage.clear();
           window.location.reload();
         }, 1000);
       }
-    }
+    };
 
     socket.on(`company-${companyId}-auth`, onCompanyAuthLayout);
 
     socket.emit("userStatus");
-    const interval = setInterval(() => {
-      socket.emit("userStatus");
-    }, 1000 * 60 * 5);
+    const interval = setInterval(
+      () => {
+        socket.emit("userStatus");
+      },
+      1000 * 60 * 5
+    );
 
     return () => {
       socket.disconnect();
@@ -325,7 +379,7 @@ const LoggedInLayout = ({ children, themeToggle }) => {
     };
   }, [socketManager]);
 
-  const handleProfileMenu = (event) => {
+  const handleProfileMenu = event => {
     setAnchorEl(event.currentTarget);
     setMenuOpen(true);
   };
@@ -361,6 +415,16 @@ const LoggedInLayout = ({ children, themeToggle }) => {
     }
   };
 
+  const handleDrawerToggle = () => {
+    setDrawerOpen(prevState => {
+      const nextState = !prevState;
+      if (greaterThenSm) {
+        persistDrawerOpenState(nextState);
+      }
+      return nextState;
+    });
+  };
+
   const handleMenuItemClick = () => {
     const { innerWidth: width } = window;
     if (width <= 600) {
@@ -370,12 +434,19 @@ const LoggedInLayout = ({ children, themeToggle }) => {
 
   const toggleColorMode = () => {
     colorMode.toggleColorMode();
-  }
+  };
 
-  const handleChooseLanguage = (language) => {
-    localStorage.setItem("language",language);
+  const handleChooseLanguage = language => {
+    localStorage.setItem("language", language);
     window.location.reload(false);
-  }
+  };
+
+  const userCompanyId = Number(user?.companyId ?? user?.company?.id ?? 0);
+  const shouldShowCompanyDueDate =
+    user?.profile === "admin" && userCompanyId !== 1;
+  const companyDueDateText = user?.company?.dueDate
+    ? dateToClient(user.company.dueDate)
+    : "-";
 
   if (loading) {
     return <BackdropLoading />;
@@ -386,23 +457,38 @@ const LoggedInLayout = ({ children, themeToggle }) => {
       <Drawer
         variant={drawerVariant}
         className={drawerOpen ? classes.drawerPaper : classes.drawerPaperClose}
+        onClose={drawerClose}
         classes={{
           paper: clsx(
             classes.drawerPaper,
             !drawerOpen && classes.drawerPaperClose
-          ),
+          )
         }}
         open={drawerOpen}
       >
-        <div className={classes.toolbarIcon}>
-          <img  className={drawerOpen ? classes.logo : classes.hideLogo } alt="logo" />
-          <IconButton onClick={() => setDrawerOpen(!drawerOpen)}>
-            <ChevronLeftIcon />
-          </IconButton>
+        <div
+          className={classes.toolbarIcon}
+          onClick={handleDrawerToggle}
+          style={{ cursor: "pointer" }}
+        >
+          <img
+            className={
+              drawerOpen
+                ? classes.logo
+                : !isMobile
+                  ? classes.logoIcon
+                  : classes.hideLogo
+            }
+            alt="logo"
+          />
         </div>
         <Divider />
         <List className={classes.containerWithScroll}>
-          <MainListItems drawerClose={drawerClose} drawerOpen={drawerOpen} collapsed={!drawerOpen} />
+          <MainListItems
+            drawerClose={drawerClose}
+            drawerOpen={drawerOpen}
+            collapsed={!drawerOpen}
+          />
         </List>
         <Divider />
       </Drawer>
@@ -425,13 +511,10 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             edge="start"
             variant="contained"
             aria-label="open drawer"
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            className={clsx(
-              classes.menuButton,
-              drawerOpen && classes.menuButtonHidden
-            )}
+            onClick={handleDrawerToggle}
+            className={classes.menuButton}
           >
-            <MenuIcon />
+            {drawerOpen ? <ChevronLeftIcon /> : <MenuIcon />}
           </IconButton>
 
           <Typography
@@ -440,30 +523,13 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             color="inherit"
             noWrap
             className={classes.title}
-          >
-             {greaterThenSm && user?.profile === "admin" && user?.company?.dueDate ? (
-              <>
-                {i18n.t("settings.WelcomeGreeting.greetings")} <b>{user.name}</b>, {i18n.t("settings.WelcomeGreeting.welcome")} <b>{user?.company?.name}</b>! ({i18n.t("settings.WelcomeGreeting.expirationTime")} {dateToClient(user?.company?.dueDate)})
-              </>
-            ) : (
-              <>
-                {i18n.t("settings.WelcomeGreeting.greetings")} <b>{user.name}</b>, {i18n.t("settings.WelcomeGreeting.welcome")} <b>{user?.company?.name}</b>! ({i18n.t("settings.WelcomeGreeting.expirationTime")} {dateToClient(user?.company?.dueDate)})
-              </>
-            )}
-          </Typography>
-
-          <OnlyForSuperUser
-            user={currentUser}
-            yes={() => (
-              <Backendlogs />
-            )} />
-            
-          <PhoneCall />
-          
-          <NotificationsVolume
-            setVolume={setVolume}
-            volume={volume}
           />
+
+          {canAccessBackendlogs && <Backendlogs />}
+
+          <PhoneCall />
+
+          <NotificationsVolume setVolume={setVolume} volume={volume} />
 
           {user.id && <NotificationsPopOver volume={volume} />}
 
@@ -488,50 +554,71 @@ const LoggedInLayout = ({ children, themeToggle }) => {
               getContentAnchorEl={null}
               anchorOrigin={{
                 vertical: "bottom",
-                horizontal: "right",
+                horizontal: "right"
               }}
               transformOrigin={{
                 vertical: "top",
-                horizontal: "right",
+                horizontal: "right"
               }}
               open={menuOpen}
               onClose={handleCloseProfileMenu}
             >
+              <div className={classes.userMenuInfoContainer}>
+                <Typography className={classes.userMenuInfoLine}>
+                  {i18n.t("common.name")}: {user?.name || "-"}
+                </Typography>
+                <Typography className={classes.userMenuInfoLine}>
+                  {i18n.t("common.company")}: {user?.company?.name || "-"}
+                </Typography>
+                {shouldShowCompanyDueDate && (
+                  <Typography className={classes.userMenuInfoLine}>
+                    {i18n.t(
+                      "mainDrawer.appBar.user.subscriptionValidUntilLabel"
+                    )}
+                    : {companyDueDateText}
+                  </Typography>
+                )}
+              </div>
+              <Divider />
               <MenuItem onClick={handleOpenUserModal}>
                 {i18n.t("mainDrawer.appBar.user.profile")}
               </MenuItem>
               <MenuItem onClick={toggleColorMode}>
-                {theme.mode === 'dark' ? i18n.t("mainDrawer.appBar.user.lightmode") : i18n.t("mainDrawer.appBar.user.darkmode")}
+                {theme.mode === "dark"
+                  ? i18n.t("mainDrawer.appBar.user.lightmode")
+                  : i18n.t("mainDrawer.appBar.user.darkmode")}
               </MenuItem>
               <NestedMenuItem
                 label={i18n.t("mainDrawer.appBar.user.language")}
                 parentMenuOpen={menuOpen}
               >
-                {
-                  Object.keys(messages).map((m) => (
-                    <MenuItem onClick={() => handleChooseLanguage(m)}>
-                      <div style={{ fontWeight: currentLanguage === m ? "bold" : "normal" }}>
-                        {messages[m].translations.mainDrawer.appBar.i18n.language}
-                      </div>
-                    </MenuItem>
-                  ))
-                }
+                {Object.keys(messages).map(m => (
+                  <MenuItem onClick={() => handleChooseLanguage(m)}>
+                    <div
+                      style={{
+                        fontWeight: currentLanguage === m ? "bold" : "normal"
+                      }}
+                    >
+                      {messages[m].translations.mainDrawer.appBar.i18n.language}
+                    </div>
+                  </MenuItem>
+                ))}
               </NestedMenuItem>
               <MenuItem onClick={handleOpenAboutModal}>
-                {i18n.t("about.aboutthe")} {currentUser?.super ? "ticketz" : theme.appName}
+                {i18n.t("about.aboutthe")}{" "}
+                {currentUser?.super ? "ticketz" : theme.appName}
               </MenuItem>
               <MenuItem onClick={handleClickLogout}>
                 {i18n.t("mainDrawer.appBar.user.logout")}
               </MenuItem>
             </Menu>
           </div>
-
         </Toolbar>
       </AppBar>
       <NewTicketModal
         modalOpen={!!newTicketContact}
         contact={newTicketContact}
-        onClose={(ticket) => {
+        onClose={ticket => {
           setNewTicketContact(null);
           if (ticket !== undefined && ticket.uuid !== undefined) {
             history.push(`/tickets/${ticket.uuid}`);
@@ -540,11 +627,7 @@ const LoggedInLayout = ({ children, themeToggle }) => {
       />
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <OnlyForSuperUser
-          user={currentUser}
-          yes={() => (
-            <GoogleAnalytics />
-          )} />
+        <OnlyForSuperUser user={currentUser} yes={() => <GoogleAnalytics />} />
         {children ? children : null}
       </main>
     </div>
