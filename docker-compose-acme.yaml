@@ -113,7 +113,7 @@ services:
       - ticketz
 
   sidekick:
-    image: ghcr.io/ticketz-oss/ticketz-sidekick:latest
+    image: ghcr.io/tutujaru/ticketz-sidekick:latest
     profiles: ["do-not-start"]
     env_file:
       - .env-backend-acme
