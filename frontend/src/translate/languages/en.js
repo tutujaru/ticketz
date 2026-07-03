@@ -183,11 +183,17 @@ const messages = {
             content:
               "Make sure your phone is connected to the internet and WhatsApp is open, or click 'Disconnect' to get a new QR Code."
           },
+          passkey: {
+            title: "Passkey authentication required",
+            content:
+              "Click the passkey button and use the browser extension to capture the authenticated WhatsApp Web session."
+          },
           refresh: "Refresh",
           disconnect: "Disconnect",
           scan: "Scan QR Code",
           newQr: "Request new QR Code",
-          retry: "Try Again"
+          retry: "Try Again",
+          resetPasskey: "Reset passkey session"
         },
         table: {
           name: "Name",
@@ -218,7 +224,50 @@ const messages = {
         success: "WhatsApp saved successfully."
       },
       qrCode: {
-        message: "Scan the QR Code to start the session"
+        message: "Scan the QR Code to start the session",
+        extensionHint: "Authenticate through WhatsApp Web",
+        startCapture: "Capture WhatsApp Web session",
+        installExtension: "Install Capture Extension"
+      },
+      passkeyModal: {
+        title: "Capture WhatsApp Web Extension",
+        instructions:
+          "Use the browser extension to capture the authenticated WhatsApp Web session and send it to the server.",
+        connectorNotFound:
+          "Extension not detected. Install the passkey capture extension and reload the page.",
+        connectorReady:
+          "Extension detected. Click below to authenticate through WhatsApp Web.",
+        startCapture: "Start Capture",
+        waitingForCapture: "Waiting for WhatsApp Web session capture…",
+        existingSession: "WhatsApp Web already has a session for {{number}}.",
+        captureExisting: "Capture this session",
+        clearAndContinue: "Clear local session and continue",
+        importSent: "Session captured and sent successfully.",
+        importError: "Capture failed: {{reason}}.",
+        missingToken: "Capture token is missing. Please reload the page.",
+        downloadExtension: "Download capture extension",
+        installInstructions: "How to install",
+        hideInstructions: "Hide instructions",
+        instructionsIntro: "Follow the steps below to install the extension:",
+        installStep1: "Download the extension ZIP file.",
+        installStep2: "Extract the ZIP file to a folder on your computer.",
+        installStep3: "Open Google Chrome and go to chrome://extensions/.",
+        installStep4:
+          "Enable Developer mode using the toggle in the top-right corner.",
+        installStep5: 'Click "Load unpacked".',
+        installStep6: "Select the extracted dist folder.",
+        installStep7: "The extension is now installed and ready to use.",
+        installStep8: "Refresh this page with F5 and try to connect again."
+      },
+      extensionDownloadModal: {
+        title: "Extension ready",
+        errorTitle: "Extension build failed",
+        ready:
+          "The WA Session Capture extension has been built and is ready to download.",
+        instructions:
+          "Unzip the file and load the dist folder as an unpacked extension in Chrome, or distribute it to your users.",
+        download: "Download extension",
+        unknownError: "Unknown build error."
       },
       contacts: {
         title: "Contacts",
@@ -847,7 +896,15 @@ const messages = {
         backgroundContent: "Login background content",
         backgroundContentHint:
           "Supports images, SVG files, and MP4 videos for the login screen background.",
-        noFileSelected: "No file selected yet."
+        noFileSelected: "No file selected yet.",
+        buildExtension: "Build WA Session Capture extension",
+        buildingExtension: "Building extension…",
+        downloadExtension: "Download extension",
+        extensionHint:
+          "Builds a whitelabeled Chrome extension using the current app name, favicon and frontend URL.",
+        extensionBuildStarted:
+          "Extension build started. You will be notified when it is ready.",
+        extensionBuildFailed: "Could not start the extension build."
       },
       settings: {
         group: {

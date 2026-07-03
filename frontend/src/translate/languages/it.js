@@ -124,7 +124,13 @@ const messages = {
             title: "Connessione con il telefono persa",
             content:
               "Assicurati che il tuo telefono sia connesso a Internet e che WhatsApp sia aperto, oppure clicca sul pulsante 'Disconnetti' per ottenere un nuovo QR Code"
-          }
+          },
+          passkey: {
+            title: "Passkey authentication required",
+            content:
+              "Click the passkey button and use the browser extension to capture the authenticated WhatsApp Web session."
+          },
+          resetPasskey: "Reimposta sessione passkey"
         },
         table: {
           name: "Nome",
@@ -155,7 +161,52 @@ const messages = {
         success: "WhatsApp salvato con successo."
       },
       qrCode: {
-        message: "Scansiona il QR Code per avviare la sessione"
+        message: "Scansiona il QR Code per avviare la sessione",
+        extensionHint: "Autenticati tramite WhatsApp Web",
+        startCapture: "Cattura sessione WhatsApp Web",
+        installExtension: "Installa estensione di cattura"
+      },
+      passkeyModal: {
+        title: "Estensione di cattura WhatsApp Web",
+        instructions:
+          "Use the browser extension to capture the authenticated WhatsApp Web session and send it to the server.",
+        connectorNotFound:
+          "Extension not detected. Install the passkey capture extension and reload the page.",
+        connectorReady:
+          "Estensione rilevata. Clicca qui sotto per autenticarti tramite WhatsApp Web.",
+        startCapture: "Start Capture",
+        waitingForCapture: "Waiting for WhatsApp Web session capture…",
+        existingSession: "WhatsApp Web already has a session for {{number}}.",
+        captureExisting: "Capture this session",
+        clearAndContinue: "Clear local session and continue",
+        importSent: "Session captured and sent successfully.",
+        importError: "Capture failed: {{reason}}.",
+        missingToken: "Capture token is missing. Please reload the page.",
+        downloadExtension: "Scarica l'estensione di cattura",
+        installInstructions: "Come installare",
+        hideInstructions: "Nascondi istruzioni",
+        instructionsIntro:
+          "Segui i passaggi seguenti per installare l'estensione:",
+        installStep1: "Scarica il file ZIP dell'estensione.",
+        installStep2: "Estrai il file ZIP in una cartella del tuo computer.",
+        installStep3: "Apri Google Chrome e vai a chrome://extensions/.",
+        installStep4:
+          "Attiva la Modalità sviluppatore con l'interruttore in alto a destra.",
+        installStep5: 'Clicca su "Carica estensione non pacchettizzata".',
+        installStep6: "Seleziona la cartella dist estratta.",
+        installStep7: "L'estensione è installata e pronta all'uso.",
+        installStep8:
+          "Aggiorna questa pagina con F5 e prova a connetterti di nuovo."
+      },
+      extensionDownloadModal: {
+        title: "Estensione pronta",
+        errorTitle: "Creazione estensione fallita",
+        ready:
+          "L'estensione WA Session Capture è stata creata ed è pronta per il download.",
+        instructions:
+          "Decomprimi il file e carica la cartella dist come estensione non pacchettizzata in Chrome, oppure distribuiscila ai tuoi utenti.",
+        download: "Scarica estensione",
+        unknownError: "Errore di creazione sconosciuto."
       },
       contacts: {
         title: "Contatti",
@@ -773,7 +824,16 @@ const messages = {
         backgroundContent: "Contenuto di sfondo del login",
         backgroundContentHint:
           "Supporta immagini, file SVG e video MP4 per lo sfondo della schermata di login.",
-        noFileSelected: "Nessun file selezionato."
+        noFileSelected: "Nessun file selezionato.",
+        buildExtension: "Crea estensione WA Session Capture",
+        buildingExtension: "Creazione estensione in corso…",
+        downloadExtension: "Scarica estensione",
+        extensionHint:
+          "Crea un'estensione Chrome whitelabel utilizzando il nome app, la favicon e l'URL del frontend attuali.",
+        extensionBuildStarted:
+          "Creazione dell'estensione avviata. Riceverai una notifica quando sarà pronta.",
+        extensionBuildFailed:
+          "Impossibile avviare la creazione dell'estensione."
       },
       settings: {
         group: {

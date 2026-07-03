@@ -7,8 +7,10 @@ import {
   DialogContent,
   Paper,
   Typography,
+  Button,
   makeStyles
 } from "@material-ui/core";
+import { ExtensionOutlined } from "@material-ui/icons";
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import { SocketContext } from "../../context/Socket/SocketContext";
@@ -17,10 +19,27 @@ const useStyles = makeStyles(theme => ({
   qrcodeFrame: {
     padding: "10px",
     backgroundColor: "#fff"
+  },
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+    padding: theme.spacing(2),
+    gap: theme.spacing(2)
+  },
+  extensionAction: {
+    marginTop: theme.spacing(1)
   }
 }));
 
-const QrcodeModal = ({ open, onClose, whatsAppId }) => {
+const QrcodeModal = ({
+  open,
+  onClose,
+  whatsAppId,
+  onOpenPasskeyModal,
+  connectorReady = false
+}) => {
   const classes = useStyles();
   const [qrCode, setQrCode] = useState("");
 
@@ -65,14 +84,30 @@ const QrcodeModal = ({ open, onClose, whatsAppId }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" scroll="paper">
       <DialogContent>
-        <Paper elevation={0}>
+        <Paper elevation={0} className={classes.content}>
           <Typography color="primary" gutterBottom>
             {i18n.t("qrCode.message")}
           </Typography>
           {qrCode ? (
             <QRCode className={classes.qrcodeFrame} value={qrCode} size={256} />
           ) : (
-            <span>Waiting for QR Code</span>
+            <Typography component="span" variant="body1">
+              Waiting for QR Code
+            </Typography>
+          )}
+          {onOpenPasskeyModal && (
+            <Button
+              className={classes.extensionAction}
+              variant={connectorReady ? "contained" : "outlined"}
+              color="primary"
+              size="small"
+              startIcon={<ExtensionOutlined />}
+              onClick={onOpenPasskeyModal}
+            >
+              {connectorReady
+                ? i18n.t("qrCode.startCapture")
+                : i18n.t("qrCode.installExtension")}
+            </Button>
           )}
         </Paper>
       </DialogContent>
