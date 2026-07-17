@@ -9,6 +9,7 @@ on:
       - 'test-**'
     tags:
       - 'v*.*.*'
+
 env:
   REGISTRY: ghcr.io
   IMAGE_BACKEND: tutujaru/ticketz-backend
@@ -21,6 +22,8 @@ jobs:
       contents: read
       packages: write
       attestations: write
+      id-token: write   # 👈 Adicionado para suporte a attestations
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -61,7 +64,7 @@ jobs:
 
       - name: Docker meta Backend
         id: metabackend
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5   # 👈 Atualizado de v3 para v5
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}
@@ -76,7 +79,7 @@ jobs:
 
       - name: Docker meta Frontend
         id: metafrontend
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5   # 👈 Atualizado de v3 para v5
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}
@@ -91,21 +94,25 @@ jobs:
 
       - name: Build and push backend Docker image
         id: backend
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6   # 👈 ATUALIZADO DE v2 PARA v6!
         with:
           context: ./backend
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metabackend.outputs.tags }}
           labels: ${{ steps.metabackend.outputs.labels }}
-          build-args: TICKETZ_REGISTRY_URL=${{secrets.TICKETZ_REGISTRY_URL}}
+          build-args: TICKETZ_REGISTRY_URL=${{ secrets.TICKETZ_REGISTRY_URL }}
+          # 👇 NOVIDADE: suporte a attestations (opcional)
+          provenance: false   # Desativa attestations se não precisar
 
       - name: Build and push frontend Docker image
         id: frontend
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6   # 👈 ATUALIZADO DE v2 PARA v6!
         with:
           context: ./frontend
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metafrontend.outputs.tags }}
           labels: ${{ steps.metafrontend.outputs.labels }}
+          # 👇 NOVIDADE: suporte a attestations (opcional)
+          provenance: false   # Desativa attestations se não precisar
