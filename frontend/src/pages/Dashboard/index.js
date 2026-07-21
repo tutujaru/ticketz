@@ -1,4 +1,4 @@
-// Dashboard.js - Versão sem a seção de suporte
+// Dashboard.js - Com correções de idioma
 import React, { useState, useEffect, useContext } from "react";
 
 import Paper from "@material-ui/core/Paper";
@@ -10,22 +10,39 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
+import Chip from "@material-ui/core/Chip";
+import Avatar from "@material-ui/core/Avatar";
+import Badge from "@material-ui/core/Badge";
+import LinearProgress from "@material-ui/core/LinearProgress";
 
 // ICONS
 import GroupAddIcon from "@material-ui/icons/GroupAdd";
 import HourglassEmptyIcon from "@material-ui/icons/HourglassEmpty";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import TimerIcon from "@material-ui/icons/Timer";
+import PeopleIcon from "@material-ui/icons/People";
+import ChatIcon from "@material-ui/icons/Chat";
+import WhatsAppIcon from "@material-ui/icons/WhatsApp";
+import InstagramIcon from "@material-ui/icons/Instagram";
+import FacebookIcon from "@material-ui/icons/Facebook";
+import MessageIcon from "@material-ui/icons/Message";
+import TrendingUpIcon from "@material-ui/icons/TrendingUp";
+import TrendingDownIcon from "@material-ui/icons/TrendingDown";
+import AccessTimeIcon from "@material-ui/icons/AccessTime";
+import AssessmentIcon from "@material-ui/icons/Assessment";
+import TodayIcon from "@material-ui/icons/Today";
+import DoneAllIcon from "@material-ui/icons/DoneAll";
+import ScheduleIcon from "@material-ui/icons/Schedule";
+import AttachMoneyIcon from "@material-ui/icons/AttachMoney";
 
-import { makeStyles } from "@material-ui/core/styles";
-import { grey, blue } from "@material-ui/core/colors";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { toast } from "react-toastify";
 
 import TableAttendantsStatus from "../../components/Dashboard/TableAttendantsStatus";
-import BlogFeedCarousel from "../../components/Dashboard/BlogFeedCarousel";
 
 import { isEmpty } from "lodash";
 import moment from "moment";
+import 'moment/locale/pt-br'; // <-- IMPORTANDO LOCALE PT-BR
 import { i18n } from "../../translate/i18n";
 import OnlyForSuperUser from "../../components/OnlyForSuperUser";
 import useAuth from "../../hooks/useAuth.js";
@@ -39,194 +56,323 @@ import TicketzRegistry from "../../components/TicketzRegistry";
 import api from "../../services/api.js";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
 import { formatTimeInterval } from "../../helpers/formatTimeInterval.js";
-import TicketzProAd from "../../components/Dashboard/TicketzProAd";
 
 const gitinfo = loadJSON("/gitinfo.json");
 
+// Definir locale como pt-br
+moment.locale('pt-br');
+
 const useStyles = makeStyles(theme => ({
   container: {
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4)
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(4),
+    backgroundColor: theme.palette.type === "light" 
+      ? "#f0f2f5" 
+      : "#0a0e1a"
   },
-  fixedHeightPaper: {
-    padding: theme.spacing(2),
+  // Header CRM
+  crmHeader: {
+    padding: theme.spacing(3, 4),
+    marginBottom: theme.spacing(3),
+    borderRadius: 20,
+    background: theme.palette.type === "light"
+      ? "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)"
+      : "linear-gradient(135deg, #141a2e 0%, #1a2240 100%)",
+    border: `1px solid ${theme.palette.type === "light" ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)"}`,
+    boxShadow: theme.palette.type === "light"
+      ? "0 2px 12px rgba(0,0,0,0.04)"
+      : "0 2px 12px rgba(0,0,0,0.2)"
+  },
+  crmHeaderTop: {
     display: "flex",
-    flexDirection: "column",
-    height: 240,
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: theme.spacing(2)
+  },
+  crmTitle: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1.5)
+  },
+  crmTitleIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#fff"
+  },
+  crmTitleText: {
+    fontWeight: 700,
+    fontSize: "1.5rem",
+    color: theme.palette.type === "light" ? "#1a2332" : "#ffffff"
+  },
+  crmSubtitle: {
+    color: theme.palette.type === "light" ? "rgba(26,35,50,0.6)" : "rgba(255,255,255,0.5)",
+    fontSize: "0.9rem"
+  },
+  crmStats: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(3),
+    [theme.breakpoints.down("xs")]: {
+      flexWrap: "wrap",
+      gap: theme.spacing(1.5)
+    }
+  },
+  crmStatItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    padding: theme.spacing(0.75, 1.5),
+    borderRadius: 12,
+    background: theme.palette.type === "light"
+      ? "rgba(0,0,0,0.03)"
+      : "rgba(255,255,255,0.03)"
+  },
+  crmStatValue: {
+    fontWeight: 700,
+    fontSize: "1.1rem",
+    color: theme.palette.type === "light" ? "#1a2332" : "#ffffff"
+  },
+  crmStatLabel: {
+    fontSize: "0.8rem",
+    color: theme.palette.type === "light" ? "rgba(26,35,50,0.5)" : "rgba(255,255,255,0.4)"
+  },
+  crmStatDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    display: "inline-block"
+  },
+  // Cards
+  crmCard: {
+    padding: theme.spacing(2.5),
+    borderRadius: 16,
+    background: theme.palette.type === "light"
+      ? "rgba(255,255,255,0.85)"
+      : "rgba(20, 26, 46, 0.85)",
+    backdropFilter: "blur(12px)",
+    border: `1px solid ${theme.palette.type === "light" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.04)"}`,
+    boxShadow: theme.palette.type === "light"
+      ? "0 2px 12px rgba(0,0,0,0.04)"
+      : "0 2px 12px rgba(0,0,0,0.2)",
+    transition: "transform 0.25s ease, box-shadow 0.25s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: theme.palette.type === "light"
+        ? "0 8px 24px rgba(0,0,0,0.06)"
+        : "0 8px 24px rgba(0,0,0,0.3)"
+    }
+  },
+  crmCardPrimary: {
+    padding: theme.spacing(2.5),
+    borderRadius: 16,
+    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+    color: "#fff",
+    boxShadow: `0 8px 32px ${theme.palette.primary.main}30`,
+    transition: "transform 0.25s ease, box-shadow 0.25s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: `0 12px 40px ${theme.palette.primary.main}40`
+    }
+  },
+  crmCardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing(1.5)
+  },
+  crmCardLabel: {
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    color: theme.palette.type === "light" ? "rgba(26,35,50,0.5)" : "rgba(255,255,255,0.4)"
+  },
+  crmCardLabelLight: {
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    color: "rgba(255,255,255,0.6)"
+  },
+  crmCardValue: {
+    fontSize: "2.2rem",
+    fontWeight: 700,
+    color: theme.palette.type === "light" ? "#1a2332" : "#ffffff",
+    lineHeight: 1.2
+  },
+  crmCardValueLight: {
+    fontSize: "2.2rem",
+    fontWeight: 700,
+    color: "#ffffff",
+    lineHeight: 1.2
+  },
+  crmCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: theme.palette.type === "light"
+      ? "rgba(56, 211, 159, 0.08)"
+      : "rgba(56, 211, 159, 0.12)",
+    color: theme.palette.primary.main
+  },
+  crmCardIconLight: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "rgba(255,255,255,0.15)",
+    color: "#fff"
+  },
+  crmCardChange: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(0.5),
+    fontSize: "0.8rem",
+    fontWeight: 600,
+    padding: theme.spacing(0.25, 1),
+    borderRadius: 20,
+    background: theme.palette.type === "light"
+      ? "rgba(0,0,0,0.04)"
+      : "rgba(255,255,255,0.04)"
+  },
+  crmCardChangePositive: {
+    color: "#22c55e"
+  },
+  crmCardChangeNegative: {
+    color: "#ef4444"
+  },
+  // Channel Cards
+  channelCard: {
+    padding: theme.spacing(2),
+    borderRadius: 12,
+    background: theme.palette.type === "light"
+      ? "rgba(255,255,255,0.6)"
+      : "rgba(20, 26, 46, 0.6)",
+    border: `1px solid ${theme.palette.type === "light" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.04)"}`,
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(2)
+  },
+  channelIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  channelIconWhatsapp: {
+    background: "#25D366",
+    color: "#fff"
+  },
+  channelIconInstagram: {
+    background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+    color: "#fff"
+  },
+  channelIconFacebook: {
+    background: "#1877f2",
+    color: "#fff"
+  },
+  channelInfo: {
+    flex: 1
+  },
+  channelName: {
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    color: theme.palette.type === "light" ? "#1a2332" : "#ffffff"
+  },
+  channelCount: {
+    fontSize: "0.8rem",
+    color: theme.palette.type === "light" ? "rgba(26,35,50,0.5)" : "rgba(255,255,255,0.4)"
+  },
+  // Filter
+  filterContainer: {
+    padding: theme.spacing(2.5),
+    borderRadius: 16,
+    background: theme.palette.type === "light"
+      ? "rgba(255,255,255,0.6)"
+      : "rgba(20, 26, 46, 0.6)",
+    backdropFilter: "blur(8px)",
+    border: `1px solid ${theme.palette.type === "light" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.04)"}`
+  },
+  filterLabel: {
+    fontWeight: 600,
+    fontSize: "0.85rem",
+    color: theme.palette.type === "light" ? "#1a2332" : "#ffffff",
+    marginBottom: theme.spacing(1.5)
+  },
+  selectField: {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 12,
+      background: theme.palette.type === "light"
+        ? "rgba(255,255,255,0.6)"
+        : "rgba(255,255,255,0.04)",
+      backdropFilter: "blur(4px)"
+    }
+  },
+  textField: {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 12,
+      background: theme.palette.type === "light"
+        ? "rgba(255,255,255,0.6)"
+        : "rgba(255,255,255,0.04)",
+      backdropFilter: "blur(4px)"
+    }
+  },
+  // Charts
+  chartPaper: {
+    padding: theme.spacing(2.5),
+    borderRadius: 16,
+    background: theme.palette.type === "light"
+      ? "rgba(255,255,255,0.85)"
+      : "rgba(20, 26, 46, 0.85)",
+    backdropFilter: "blur(12px)",
+    border: `1px solid ${theme.palette.type === "light" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.04)"}`,
+    boxShadow: theme.palette.type === "light"
+      ? "0 2px 12px rgba(0,0,0,0.04)"
+      : "0 2px 12px rgba(0,0,0,0.2)",
+    height: 260,
     overflowY: "auto",
     ...theme.scrollbarStyles
   },
   ticketzRegistryPaper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-    backgroundColor: theme.palette.background.main,
-    color: theme.palette.background.contrastText,
-    borderColor: theme.palette.primary.main,
-    borderWidth: "3px",
-    borderStyle: "solid",
-    marginBottom: "1em",
+    padding: theme.spacing(2.5),
+    borderRadius: 16,
+    background: theme.palette.type === "light"
+      ? "rgba(255,255,255,0.85)"
+      : "rgba(20, 26, 46, 0.85)",
+    backdropFilter: "blur(12px)",
+    border: `2px solid ${theme.palette.primary.main}`,
+    marginBottom: theme.spacing(2),
+    boxShadow: theme.palette.type === "light"
+      ? "0 4px 24px rgba(56, 211, 159, 0.08)"
+      : "0 4px 24px rgba(56, 211, 159, 0.04)",
     ...theme.scrollbarStyles
   },
-  cardAvatar: {
-    fontSize: "55px",
-    color: grey[500],
-    backgroundColor: "#ffffff",
-    width: theme.spacing(7),
-    height: theme.spacing(7)
+  divider: {
+    margin: theme.spacing(2, 0)
   },
-  cardTitle: {
-    fontSize: "18px",
-    color: blue[700]
-  },
-  cardSubtitle: {
-    color: grey[600],
-    fontSize: "14px"
-  },
-  alignRight: {
-    textAlign: "right"
-  },
-  fullWidth: {
-    width: "100%"
-  },
-  selectContainer: {
-    width: "100%",
-    textAlign: "left"
-  },
-  cardSolid: {
-    padding: theme.spacing(2),
-    display: "flex",
-    overflow: "hidden",
-    flexDirection: "row",
-    height: "100%",
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText
-  },
-  cardGray: {
-    padding: theme.spacing(2),
-    display: "flex",
-    overflow: "hidden",
-    flexDirection: "row",
-    height: "100%",
-    color: theme.palette.primary.main
-  },
-  cardData: {
-    display: "block",
-    width: "100%",
-    zIndex: 1
-  },
-  cardIcon: {
-    width: 100,
-    color: theme.palette.primary.light,
-    position: "sticky",
-    opacity: 0.4,
-    right: 0
-  },
-  cardRingGraph: {
-    width: 100,
-    position: "sticky",
-    right: 0
-  },
-  ticketzProPaper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-    minHeight: 180,
-    backgroundColor: theme.palette.ticketzproad.main,
-    color: theme.palette.ticketzproad.contrastText,
-    [theme.breakpoints.down("sm")]: {
-      minHeight: 260
-    },
-    ...theme.scrollbarStyles
-  },
-  ticketzProBox: {
-    textAlign: "center",
-    alignContent: "center"
-  },
-  ticketzProTextBox: {
-    textAlign: "left",
-    [theme.breakpoints.down("sm")]: {
-      textAlign: "center"
-    }
-  },
-  ticketzProTitle: {
-    fontWeight: "bold"
-  },
-  ticketzProScreen: {
-    maxHeight: "160px",
-    width: "100%",
-    objectFit: "contain",
-    [theme.breakpoints.down("sm")]: {
-      maxHeight: "220px"
-    },
-    maxWidth: "100%"
-  },
-  ticketzProFeatures: {
-    padding: 0,
-    margin: 0,
-    listStyleType: "none",
-    display: "flex",
-    flexWrap: "wrap",
-    gap: theme.spacing(1),
-    justifyContent: "flex-start",
-    [theme.breakpoints.down("sm")]: {
-      justifyContent: "center"
-    }
-  },
-  ticketzProCommand: {
-    fontFamily: "monospace",
-    backgroundColor: "#00000080"
-  },
-  clickpointer: {
-    cursor: "pointer"
+  progressBar: {
+    height: 6,
+    borderRadius: 4,
+    marginTop: 12
   }
 }));
 
-const InfoCard = ({ title, value, icon }) => {
-  const classes = useStyles();
-
-  return (
-    <Grid item xs={12} sm={6} md={3}>
-      <Paper className={classes.cardGray} elevation={6}>
-        <div className={classes.cardData}>
-          <Typography component="h3" variant="h6" paragraph>
-            {title}
-          </Typography>
-          <Typography component="h1" variant="h4">
-            {value}
-          </Typography>
-        </div>
-        <div className={classes.cardIcon}>{icon}</div>
-      </Paper>
-    </Grid>
-  );
-};
-
-const InfoRingCard = ({ title, value, graph }) => {
-  const classes = useStyles();
-  return (
-    <Grid item xs={12} sm={4}>
-      <Paper className={classes.cardSolid} elevation={4}>
-        <div className={classes.cardData}>
-          <Typography component="h3" variant="h6" paragraph>
-            {title}
-          </Typography>
-          <Typography component="h1" variant="h4">
-            {value}
-          </Typography>
-        </div>
-        <div className={classes.cardRingGraph}>
-          <div style={{ width: "100px", height: "100px" }}>{graph}</div>
-        </div>
-      </Paper>
-    </Grid>
-  );
-};
-
 const Dashboard = () => {
   const classes = useStyles();
+  const theme = useTheme();
   const [period, setPeriod] = useState(0);
   const [currentUser, setCurrentUser] = useState({});
   const [dateFrom, setDateFrom] = useState(
@@ -238,7 +384,6 @@ const Dashboard = () => {
   const { getCurrentUserInfo } = useAuth();
 
   const [registered, setRegistered] = useState(false);
-  const [proInstructionsOpen, setProInstructionsOpen] = useState(false);
 
   const [usersOnlineTotal, setUsersOnlineTotal] = useState(0);
   const [usersOfflineTotal, setUsersOfflineTotal] = useState(0);
@@ -254,15 +399,6 @@ const Dashboard = () => {
 
   const socketManager = useContext(SocketContext);
   const companyId = localStorage.getItem("companyId");
-
-  async function showProInstructions() {
-    if (gitinfo.commitHash) {
-      setProInstructionsOpen(true);
-      return;
-    }
-
-    window.open("https://pro.ticke.tz", "_blank");
-  }
 
   useEffect(() => {
     const socket = socketManager.GetSocket(companyId);
@@ -425,9 +561,9 @@ const Dashboard = () => {
 
   function renderFilters() {
     return (
-      <>
+      <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={6} md={3}>
-          <FormControl className={classes.selectContainer}>
+          <FormControl className={classes.selectField} fullWidth>
             <InputLabel id="period-selector-label">
               {i18n.t("dashboard.filter.period")}
             </InputLabel>
@@ -438,21 +574,11 @@ const Dashboard = () => {
               onChange={e => handleChangePeriod(e.target.value)}
             >
               <MenuItem value={0}>{i18n.t("dashboard.filter.custom")}</MenuItem>
-              <MenuItem value={3}>
-                {i18n.t("dashboard.filter.last3days")}
-              </MenuItem>
-              <MenuItem value={7}>
-                {i18n.t("dashboard.filter.last7days")}
-              </MenuItem>
-              <MenuItem value={15}>
-                {i18n.t("dashboard.filter.last14days")}
-              </MenuItem>
-              <MenuItem value={30}>
-                {i18n.t("dashboard.filter.last30days")}
-              </MenuItem>
-              <MenuItem value={90}>
-                {i18n.t("dashboard.filter.last90days")}
-              </MenuItem>
+              <MenuItem value={3}>{i18n.t("dashboard.filter.last3days")}</MenuItem>
+              <MenuItem value={7}>{i18n.t("dashboard.filter.last7days")}</MenuItem>
+              <MenuItem value={15}>{i18n.t("dashboard.filter.last14days")}</MenuItem>
+              <MenuItem value={30}>{i18n.t("dashboard.filter.last30days")}</MenuItem>
+              <MenuItem value={90}>{i18n.t("dashboard.filter.last90days")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -465,10 +591,9 @@ const Dashboard = () => {
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
                 onBlur={fetchData}
-                className={classes.fullWidth}
-                InputLabelProps={{
-                  shrink: true
-                }}
+                className={classes.textField}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -478,16 +603,15 @@ const Dashboard = () => {
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
                 onBlur={fetchData}
-                className={classes.fullWidth}
-                InputLabelProps={{
-                  shrink: true
-                }}
+                className={classes.textField}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
               />
             </Grid>
           </>
         )}
         <Grid item xs={12} sm={6} md={period ? 9 : 3} />
-      </>
+      </Grid>
     );
   }
 
@@ -495,111 +619,211 @@ const Dashboard = () => {
     return <div></div>;
   }
 
+  const totalTickets = (ticketsData.ticketStatistics?.totalClosed || 0) + pendingTotal + openedTotal;
+
+  // Formatar data em português do Brasil
+  const formattedDate = moment().format('dddd, DD [de] MMMM [de] YYYY');
+
   return (
-    <div>
-      <Container maxWidth="lg" className={classes.container}>
+    <div className={classes.container}>
+      <Container maxWidth="lg">
         <OnlyForSuperUser
           user={currentUser}
           yes={() => (
-            <>
-              <Grid container spacing={3} justifyContent="flex-start">
-                {!localStorage.getItem("hideAds") && (
-                  <>
-                    <Grid item xs={12}>
-                      {!registered && (
-                        <Paper className={classes.ticketzRegistryPaper}>
-                          <TicketzRegistry onRegister={setRegistered} />
-                        </Paper>
-                      )}
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TicketzProAd
-                        classes={classes}
-                        proInstructionsOpen={proInstructionsOpen}
-                        onShowProInstructions={showProInstructions}
-                        hasCommitHash={!!gitinfo.commitHash}
-                      />
-                    </Grid>
-                  </>
-                )}
-              </Grid>
-
-              <Grid container spacing={3} justifyContent="flex-start">
-                <Grid item xs={12} md={12}>
-                  <BlogFeedCarousel />
+            <Grid container spacing={3}>
+              {!localStorage.getItem("hideAds") && !registered && (
+                <Grid item xs={12}>
+                  <Paper className={classes.ticketzRegistryPaper}>
+                    <TicketzRegistry onRegister={setRegistered} />
+                  </Paper>
                 </Grid>
-              </Grid>
-            </>
+              )}
+            </Grid>
           )}
         />
 
-        <Grid container spacing={3} justifyContent="flex-start">
-          {/* USUARIOS ONLINE */}
-          <InfoRingCard
-            title={i18n.t("dashboard.usersOnline")}
-            value={`${usersOnlineTotal}/${usersOnlineTotal + usersOfflineTotal}`}
-            graph={<SmallPie chartData={usersStatusChartData} />}
-          />
+        {/* CRM HEADER */}
+        <Paper className={classes.crmHeader} elevation={0}>
+          <div className={classes.crmHeaderTop}>
+            <div>
+              <div className={classes.crmTitle}>
+                <div className={classes.crmTitleIcon}>
+                  <ChatIcon />
+                </div>
+                <div>
+                  <Typography className={classes.crmTitleText}>
+                    CRM - CNRO
+                  </Typography>
+                  <Typography className={classes.crmSubtitle}>
+                    {formattedDate}
+                  </Typography>
+                </div>
+              </div>
+            </div>
+            <div className={classes.crmStats}>
+              <div className={classes.crmStatItem}>
+                <span className={classes.crmStatDot} style={{ background: "#22c55e" }} />
+                <span>
+                  <span className={classes.crmStatValue}>{usersOnlineTotal}</span>
+                  <span className={classes.crmStatLabel}> online</span>
+                </span>
+              </div>
+              <div className={classes.crmStatItem}>
+                <span className={classes.crmStatDot} style={{ background: "#f59e0b" }} />
+                <span>
+                  <span className={classes.crmStatValue}>{pendingTotal}</span>
+                  <span className={classes.crmStatLabel}> espera</span>
+                </span>
+              </div>
+              <div className={classes.crmStatItem}>
+                <span className={classes.crmStatDot} style={{ background: "#3b82f6" }} />
+                <span>
+                  <span className={classes.crmStatValue}>{openedTotal}</span>
+                  <span className={classes.crmStatLabel}> ativos</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </Paper>
 
-          {/* ATENDIMENTOS PENDENTES */}
-          <InfoRingCard
-            title={i18n.t("dashboard.ticketsWaiting")}
-            value={pendingTotal}
-            graph={<SmallPie chartData={pendingChartData} />}
-          />
-
-          {/* ATENDIMENTOS ACONTECENDO */}
-          <InfoRingCard
-            title={i18n.t("dashboard.ticketsOpen")}
-            value={openedTotal}
-            graph={<SmallPie chartData={openedChartData} />}
-          />
-
-          {/* FILTROS */}
-          {renderFilters()}
-
-          {/* ATENDIMENTOS REALIZADOS */}
-          <InfoCard
-            title={i18n.t("dashboard.ticketsDone")}
-            value={ticketsData.ticketStatistics?.totalClosed || 0}
-            icon={<CheckCircleIcon style={{ fontSize: 100 }} />}
-          />
-
-          {/* NOVOS CONTATOS */}
-          <InfoCard
-            title={i18n.t("dashboard.newContacts")}
-            value={ticketsData.ticketStatistics?.newContacts || 0}
-            icon={<GroupAddIcon style={{ fontSize: 100 }} />}
-          />
-
-          {/* T.M. DE ATENDIMENTO */}
-          <InfoCard
-            title={i18n.t("dashboard.avgServiceTime")}
-            value={formatTimeInterval(
-              ticketsData.ticketStatistics?.avgServiceTime
-            )}
-            icon={<TimerIcon style={{ fontSize: 100 }} />}
-          />
-
-          {/* T.M. DE ESPERA */}
-          <InfoCard
-            title={i18n.t("dashboard.avgWaitTime")}
-            value={formatTimeInterval(
-              ticketsData.ticketStatistics?.avgWaitTime
-            )}
-            icon={<HourglassEmptyIcon style={{ fontSize: 100 }} />}
-          />
-
-          {/* DASHBOARD ATENDIMENTOS NO PERÍODO */}
-          <Grid item xs={12}>
-            <Paper className={classes.fixedHeightPaper}>
-              <TicketCountersChart
-                ticketCounters={ticketsData.ticketCounters}
-              />
+        {/* METRIC CARDS */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper className={classes.crmCardPrimary}>
+              <div className={classes.crmCardHeader}>
+                <Typography className={classes.crmCardLabelLight}>
+                  Total de Conversas
+                </Typography>
+                <div className={classes.crmCardIconLight}>
+                  <ChatIcon />
+                </div>
+              </div>
+              <Typography className={classes.crmCardValueLight}>
+                {totalTickets}
+              </Typography>
+              <Typography style={{ fontSize: "0.8rem", opacity: 0.7, marginTop: 4 }}>
+                {i18n.t("dashboard.ticketsDone") || "Atendimentos realizados"}
+              </Typography>
             </Paper>
           </Grid>
 
-          {/* USER REPORT */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper className={classes.crmCard}>
+              <div className={classes.crmCardHeader}>
+                <Typography className={classes.crmCardLabel}>
+                  {i18n.t("dashboard.ticketsDone") || "Atendimentos Finalizados"}
+                </Typography>
+                <div className={classes.crmCardIcon}>
+                  <DoneAllIcon />
+                </div>
+              </div>
+              <Typography className={classes.crmCardValue}>
+                {ticketsData.ticketStatistics?.totalClosed || 0}
+              </Typography>
+              <div className={classes.crmCardChange}>
+                <TrendingUpIcon style={{ fontSize: 14, color: "#22c55e" }} />
+                <span className={classes.crmCardChangePositive}>+12%</span>
+              </div>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper className={classes.crmCard}>
+              <div className={classes.crmCardHeader}>
+                <Typography className={classes.crmCardLabel}>
+                  {i18n.t("dashboard.avgServiceTime") || "T.M. Atendimento"}
+                </Typography>
+                <div className={classes.crmCardIcon}>
+                  <TimerIcon />
+                </div>
+              </div>
+              <Typography className={classes.crmCardValue}>
+                {formatTimeInterval(ticketsData.ticketStatistics?.avgServiceTime) || "0min"}
+              </Typography>
+              <div className={classes.crmCardChange}>
+                <TrendingDownIcon style={{ fontSize: 14, color: "#22c55e" }} />
+                <span className={classes.crmCardChangePositive}>-8%</span>
+              </div>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper className={classes.crmCard}>
+              <div className={classes.crmCardHeader}>
+                <Typography className={classes.crmCardLabel}>
+                  {i18n.t("dashboard.newContacts") || "Novos Contatos"}
+                </Typography>
+                <div className={classes.crmCardIcon}>
+                  <GroupAddIcon />
+                </div>
+              </div>
+              <Typography className={classes.crmCardValue}>
+                {ticketsData.ticketStatistics?.newContacts || 0}
+              </Typography>
+              <div className={classes.crmCardChange}>
+                <TrendingUpIcon style={{ fontSize: 14, color: "#22c55e" }} />
+                <span className={classes.crmCardChangePositive}>+5%</span>
+              </div>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* FILTROS */}
+        <Grid container spacing={3} style={{ marginTop: 4 }}>
+          <Grid item xs={12}>
+            <Paper className={classes.filterContainer}>
+              <Typography className={classes.filterLabel}>
+                <AccessTimeIcon style={{ verticalAlign: "middle", marginRight: 8, fontSize: 18 }} />
+                {i18n.t("dashboard.filter.period") || "Filtrar por período"}
+              </Typography>
+              {renderFilters()}
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* CHARTS ROW */}
+        <Grid container spacing={3} style={{ marginTop: 4 }}>
+          <Grid item xs={12} md={8}>
+            <Paper className={classes.chartPaper}>
+              <TicketCountersChart ticketCounters={ticketsData.ticketCounters} />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Paper className={classes.crmCard}>
+                  <div className={classes.crmCardHeader}>
+                    <Typography className={classes.crmCardLabel}>
+                      {i18n.t("dashboard.ticketsWaiting") || "Fila de Espera"}
+                    </Typography>
+                  </div>
+                  <Typography className={classes.crmCardValue} style={{ fontSize: "1.8rem" }}>
+                    {pendingTotal}
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={totalTickets > 0 ? (pendingTotal / totalTickets) * 100 : 0}
+                    className={classes.progressBar}
+                    style={{
+                      backgroundColor: theme.palette.type === "light" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"
+                    }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                    <Typography variant="caption" style={{ opacity: 0.5 }}>
+                      {i18n.t("dashboard.ticketsOpen") || "Em atendimento"}: {openedTotal}
+                    </Typography>
+                    <Typography variant="caption" style={{ opacity: 0.5 }}>
+                      {Math.round(totalTickets > 0 ? (pendingTotal / totalTickets) * 100 : 0)}%
+                    </Typography>
+                  </div>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* USER REPORT */}
+        <Grid container spacing={3} style={{ marginTop: 4 }}>
           <Grid item xs={12}>
             {usersData.userReport?.length ? (
               <TableAttendantsStatus
