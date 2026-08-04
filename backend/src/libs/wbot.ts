@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import makeWASocket, {
+import makeWASocketSingleProcess, {
   WASocket,
   DisconnectReason,
   isJidBroadcast,
@@ -10,6 +10,7 @@ import makeWASocket, {
   jidNormalizedUser,
   BinaryNode
 } from "libzapitu-rf";
+import makeWASocketMultiThreaded from "libzapitu-rf/worker";
 
 import { Boom } from "@hapi/boom";
 // import MAIN_LOGGER from "@whiskeysockets/baileys/lib/Utils/logger";
@@ -41,6 +42,7 @@ import { getJidOf } from "../services/WbotServices/getJidOf";
 import WhatsappLidMap from "../models/WhatsappLidMap";
 import { reach } from "yup";
 import crypto from "crypto";
+import { GetCompanySetting } from "../helpers/CheckSettings";
 
 // const loggerBaileys = MAIN_LOGGER.child({});
 // loggerBaileys.level = process.env.BAILEYS_LOG_LEVEL || "error";
@@ -122,6 +124,24 @@ export const removeWbot = async (
       where: { whatsappId }
     });
   }
+};
+
+/**
+ * Closes every active WhatsApp session without logging out, so credentials
+ * are preserved and sessions can be resumed after a restart. Used during
+ * graceful shutdown.
+ */
+export const closeAllSessions = async (): Promise<void> => {
+  const ids = sessions.map(s => s.id).filter((id): id is number => !!id);
+
+  if (ids.length === 0) {
+    logger.info("No active WhatsApp sessions to close.");
+    return;
+  }
+
+  logger.info(`Closing ${ids.length} WhatsApp session(s)...`);
+  await Promise.allSettled(ids.map(id => removeWbot(id, false)));
+  logger.info("All WhatsApp sessions closed.");
 };
 
 function getGreaterVersion(a, b) {
@@ -330,6 +350,16 @@ export const initWASocket = async (
           hostName ? ` - ${hostName}` : ""
         }`;
 
+        let makeWASocket: typeof makeWASocketSingleProcess;
+        if (
+          (await GetCompanySetting(1, "useMultiThreadedWbot", "disabled")) ===
+          "enabled"
+        ) {
+          makeWASocket = makeWASocketMultiThreaded;
+        } else {
+          makeWASocket = makeWASocketSingleProcess;
+        }
+
         wsocket = makeWASocket({
           logger: loggerBaileys,
           printQRInTerminal: false,
@@ -453,7 +483,7 @@ export const initWASocket = async (
               });
 
               wsocket.fetchNewChatMessageCap().then(cap => {
-                logger.debug({ cap }, "Fetched new chat message cap");
+                logger.info({ cap }, "Fetched new chat message cap");
               });
 
               await whatsapp.reload({
@@ -499,9 +529,11 @@ export const initWASocket = async (
                   sessions.push(wsocket);
                 }
 
-                const anotherSameJid = sessions.find(
-                  s => s.id !== whatsapp.id && s.myJid === wsocket.myJid
-                );
+                const anotherSameJid =
+                  !!wsocket.myJid &&
+                  sessions.find(
+                    s => s.id !== whatsapp.id && s.myJid === wsocket.myJid
+                  );
 
                 if (anotherSameJid) {
                   logger.warn(
