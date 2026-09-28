@@ -9,8 +9,11 @@ import {
   ForeignKey,
   BelongsTo,
   DataType,
-  HasMany
+  HasMany,
+  Default,
+  BeforeCreate
 } from "sequelize-typescript";
+import { v4 as uuidv4 } from "uuid";
 import Contact from "./Contact";
 import Message from "./Message";
 
@@ -30,6 +33,15 @@ class Company extends Model<Company> {
   @AutoIncrement
   @Column
   id: number;
+
+  @Default(uuidv4())
+  @Column(DataType.UUID)
+  uuid: string;
+
+  @BeforeCreate
+  static setUUID(company: Company) {
+    company.uuid = uuidv4();
+  }
 
   @Column
   name: string;

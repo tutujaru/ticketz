@@ -15,6 +15,7 @@ import {
   ForeignKey,
   BelongsTo
 } from "sequelize-typescript";
+import { v4 as uuidv4 } from "uuid";
 import { hash, compare } from "bcryptjs";
 import Ticket from "./Ticket";
 import Queue from "./Queue";
@@ -29,6 +30,15 @@ class User extends Model<User> {
   @AutoIncrement
   @Column
   id: number;
+
+  @Default(uuidv4())
+  @Column(DataType.UUID)
+  uuid: string;
+
+  @BeforeCreate
+  static setUUID(user: User) {
+    user.uuid = uuidv4();
+  }
 
   @Column
   name: string;
