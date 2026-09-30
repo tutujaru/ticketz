@@ -119,6 +119,8 @@ const TicketOptionsMenu = ({
         modalOpen={transferTicketModalOpen}
         onClose={handleCloseTransferTicketModal}
         ticketid={ticket.id}
+        currentWhatsappId={ticket.whatsappId}
+        currentCompanyId={ticket.companyId}
         hideUserSelection={showTabGroups && ticket.isGroup}
       />
       <ScheduleModal

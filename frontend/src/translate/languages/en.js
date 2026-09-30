@@ -496,6 +496,9 @@ const messages = {
       transferTicketModal: {
         title: "Transfer Ticket",
         fieldLabel: "Type to search for users",
+        fieldCompanyLabel: "Transfer to company",
+        fieldWhatsappLabel: "Transfer to connection",
+        keepCurrentWhatsapp: "Keep current connection",
         fieldQueueLabel: "Transfer to queue",
         fieldQueuePlaceholder: "Select a queue",
         noOptions: "No user found with that name",

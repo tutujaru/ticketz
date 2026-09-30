@@ -3,6 +3,10 @@ import CheckContactOpenTickets from "../../helpers/CheckContactOpenTickets";
 import SetTicketMessagesAsRead from "../../helpers/SetTicketMessagesAsRead";
 import { getIO } from "../../libs/socket";
 import Ticket from "../../models/Ticket";
+import Contact from "../../models/Contact";
+import Company from "../../models/Company";
+import Message from "../../models/Message";
+import TicketNote from "../../models/TicketNote";
 import ShowTicketService from "./ShowTicketService";
 import SendWhatsAppMessage from "../WbotServices/SendWhatsAppMessage";
 import FindOrCreateATicketTrakingService from "./FindOrCreateATicketTrakingService";
@@ -16,12 +20,15 @@ import { logger } from "../../utils/logger";
 import { incrementCounter } from "../CounterServices/IncrementCounter";
 import { getJidOf } from "../WbotServices/getJidOf";
 import Queue from "../../models/Queue";
+import Whatsapp from "../../models/Whatsapp";
 import { _t } from "../TranslationServices/i18nService";
 
 export interface UpdateTicketData {
   status?: string;
   userId?: number | null;
   queueId?: number | null;
+  whatsappId?: number;
+  targetCompanyId?: number;
   chatbot?: boolean;
   queueOptionId?: number;
   justClose?: boolean;
@@ -99,7 +106,8 @@ const UpdateTicketService = async ({
     }
     const { justClose } = ticketData;
     let { status } = ticketData;
-    let { queueId, userId } = ticketData;
+    let { queueId, userId, whatsappId } = ticketData;
+    const sourceCompanyId = companyId;
     const fromChatbot = ticketData.chatbot || false;
     let chatbot: boolean | null = fromChatbot;
     let queueOptionId: number | null = ticketData.queueOptionId || null;
@@ -114,6 +122,97 @@ const UpdateTicketService = async ({
 
     const ticket = await ShowTicketService(ticketId, companyId);
     const isGroup = ticket.contact?.isGroup || ticket.isGroup;
+    let targetCompanyId = companyId;
+    let targetContactId = ticket.contactId;
+    let targetWhatsappId = ticket.whatsappId;
+    const requestedCompanyId = ticketData.targetCompanyId
+      ? Number(ticketData.targetCompanyId)
+      : companyId;
+    const changingWhatsapp =
+      whatsappId !== undefined &&
+      whatsappId !== null &&
+      whatsappId !== ticket.whatsappId;
+
+    if (changingWhatsapp) {
+      const targetWhatsapp = await Whatsapp.findOne({
+        where: { id: whatsappId, companyId }
+      });
+      if (!targetWhatsapp) {
+        throw new AppError("ERR_WAPP_NOT_FOUND", 404);
+      }
+      targetWhatsappId = targetWhatsapp.id;
+      const targetOpenTicket = await CheckContactOpenTickets(
+        ticket.contactId,
+        targetWhatsapp.id,
+        true
+      );
+      if (targetOpenTicket && targetOpenTicket.id !== ticket.id) {
+        throw new AppError("ERR_OTHER_OPEN_TICKET", 400);
+      }
+    }
+
+    const changingCompany = requestedCompanyId !== companyId;
+    if (changingCompany) {
+      if (!Number.isInteger(requestedCompanyId)) {
+        throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
+      }
+      if (!whatsappId) {
+        throw new AppError("ERR_WAPP_NOT_FOUND", 400);
+      }
+      const targetCompany = await Company.findOne({
+        where: { id: requestedCompanyId, status: true }
+      });
+      const targetWhatsapp = await Whatsapp.findOne({
+        where: { id: Number(whatsappId), companyId: requestedCompanyId }
+      });
+      if (!targetCompany || !targetWhatsapp) {
+        throw new AppError("ERR_WAPP_NOT_FOUND", 404);
+      }
+      let targetContact = await Contact.findOne({
+        where: {
+          number: ticket.contact.number,
+          companyId: requestedCompanyId
+        }
+      });
+      if (!targetContact) {
+        targetContact = await Contact.create({
+          name: ticket.contact.name,
+          number: ticket.contact.number,
+          email: ticket.contact.email || "",
+          profilePicUrl: ticket.contact.profilePicUrl || "",
+          disableBot: ticket.contact.disableBot,
+          companyId: requestedCompanyId
+        });
+      }
+      const targetOpenTicket = await CheckContactOpenTickets(
+        targetContact.id,
+        targetWhatsapp.id,
+        true
+      );
+      if (targetOpenTicket && targetOpenTicket.id !== ticket.id) {
+        throw new AppError("ERR_OTHER_OPEN_TICKET", 400);
+      }
+
+      await Message.update(
+        {
+          companyId: requestedCompanyId,
+          contactId: targetContact.id,
+          queueId: null
+        },
+        { where: { ticketId: ticket.id } }
+      );
+      await TicketNote.update(
+        { contactId: targetContact.id },
+        { where: { ticketId: ticket.id } }
+      );
+      targetCompanyId = requestedCompanyId;
+      targetContactId = targetContact.id;
+      targetWhatsappId = targetWhatsapp.id;
+      status = "pending";
+      queueId = null;
+      userId = null;
+      companyId = targetCompanyId;
+    }
 
     if (queueId && queueId !== ticket.queueId) {
       const newQueue = await Queue.findByPk(queueId);
@@ -285,10 +384,20 @@ const UpdateTicketService = async ({
       status,
       queueId,
       userId,
-      whatsappId: ticket.whatsappId,
+      companyId: targetCompanyId,
+      contactId: targetContactId,
+      whatsappId: targetWhatsappId,
       chatbot,
       queueOptionId
     });
+
+    if (changingCompany) {
+      ticketTraking.companyId = targetCompanyId;
+      ticketTraking.userId = null;
+    }
+    if (changingWhatsapp || changingCompany) {
+      ticketTraking.whatsappId = targetWhatsappId;
+    }
 
     if (oldStatus !== status) {
       if (oldStatus === "closed" && status === "open") {
@@ -428,6 +537,13 @@ const UpdateTicketService = async ({
     }
 
     websocketUpdateTicket(ticket, [`user-${oldUserId}`]);
+
+    if (changingCompany) {
+      io.to(`company-${sourceCompanyId}-ticket`).emit(
+        `company-${sourceCompanyId}-ticket`,
+        { action: "delete", ticketId: ticket.id }
+      );
+    }
 
     return { ticket, oldStatus, oldUserId };
   } catch (err) {

@@ -38,6 +38,8 @@ const TransferTicketModalCustom = ({
   modalOpen,
   onClose,
   ticketid,
+  currentWhatsappId,
+  currentCompanyId,
   hideUserSelection = false
 }) => {
   const history = useHistory();
@@ -48,6 +50,11 @@ const TransferTicketModalCustom = ({
   const [searchParam, setSearchParam] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedQueue, setSelectedQueue] = useState("");
+  const [selectedWhatsapp, setSelectedWhatsapp] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState(
+    currentCompanyId || ""
+  );
+  const [targetCompanies, setTargetCompanies] = useState([]);
   const classes = useStyles();
   const { findAll: findAllQueues } = useQueues();
   const isMounted = useRef(true);
@@ -95,16 +102,33 @@ const TransferTicketModalCustom = ({
     return () => clearTimeout(delayDebounceFn);
   }, [searchParam, modalOpen, hideUserSelection]);
 
+  useEffect(() => {
+    if (!modalOpen) return;
+    const loadTransferTargets = async () => {
+      try {
+        const { data } = await api.get("/companies/transfer-targets");
+        setTargetCompanies(data);
+        setSelectedCompanyId(currentCompanyId || data[0]?.id || "");
+      } catch (err) {
+        toastError(err);
+      }
+    };
+    loadTransferTargets();
+  }, [modalOpen, currentCompanyId]);
+
   const handleClose = () => {
     onClose();
     setSearchParam("");
     setSelectedUser(null);
+    setSelectedQueue("");
+    setSelectedWhatsapp("");
+    setSelectedCompanyId(currentCompanyId || "");
   };
 
   const handleSaveTicket = async e => {
     e.preventDefault();
     if (!ticketid) return;
-    if (!selectedQueue || selectedQueue === "") return;
+    if (!selectedQueue && !selectedWhatsapp) return;
     setLoading(true);
     try {
       let data = {};
@@ -122,8 +146,14 @@ const TransferTicketModalCustom = ({
         }
       }
 
+      if (selectedWhatsapp) {
+        data.whatsappId = Number(selectedWhatsapp);
+        data.targetCompanyId = Number(selectedCompanyId);
+        data.status = "pending";
+        data.userId = null;
+      }
+
       await api.put(`/tickets/${ticketid}`, data);
-      console.log(data);
 
       history.push(`/tickets`);
     } catch (err) {
@@ -180,6 +210,64 @@ const TransferTicketModalCustom = ({
               )}
             />
           )}
+          <FormControl
+            variant="outlined"
+            className={classes.maxWidth}
+            style={{ marginBottom: 20 }}
+          >
+            <InputLabel>
+              {i18n.t("transferTicketModal.fieldCompanyLabel")}
+            </InputLabel>
+            <Select
+              value={selectedCompanyId}
+              onChange={e => {
+                setSelectedCompanyId(e.target.value);
+                setSelectedWhatsapp("");
+              }}
+              label={i18n.t("transferTicketModal.fieldCompanyLabel")}
+            >
+              {targetCompanies.map(company => (
+                <MenuItem key={company.id} value={company.id}>
+                  {company.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl
+            variant="outlined"
+            className={classes.maxWidth}
+            style={{ marginBottom: 20 }}
+          >
+            <InputLabel>
+              {i18n.t("transferTicketModal.fieldWhatsappLabel")}
+            </InputLabel>
+            <Select
+              value={selectedWhatsapp}
+              onChange={e => setSelectedWhatsapp(e.target.value)}
+              label={i18n.t("transferTicketModal.fieldWhatsappLabel")}
+            >
+              <MenuItem value="">
+                {i18n.t("transferTicketModal.keepCurrentWhatsapp")}
+              </MenuItem>
+              {(
+                targetCompanies.find(
+                  company => company.id === Number(selectedCompanyId)
+                )?.whatsapps || []
+              )
+                .filter(
+                  whatsapp =>
+                    !(
+                      Number(selectedCompanyId) === Number(currentCompanyId) &&
+                      whatsapp.id === currentWhatsappId
+                    )
+                )
+                .map(whatsapp => (
+                  <MenuItem key={whatsapp.id} value={whatsapp.id}>
+                    {whatsapp.name} ({whatsapp.status})
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
           <FormControl variant="outlined" className={classes.maxWidth}>
             <InputLabel>
               {i18n.t("transferTicketModal.fieldQueueLabel")}

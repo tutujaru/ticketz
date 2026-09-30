@@ -13,6 +13,7 @@ import UpdateSchedulesService from "../services/CompanyService/UpdateSchedulesSe
 import DeleteCompanyService from "../services/CompanyService/DeleteCompanyService";
 import FindAllCompaniesService from "../services/CompanyService/FindAllCompaniesService";
 import User from "../models/User";
+import Whatsapp from "../models/Whatsapp";
 
 import CheckSettings from "../helpers/CheckSettings";
 import { OpenHoursData } from "../helpers/checkOpenHours";
@@ -47,6 +48,26 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
   });
 
   return res.json({ companies, count, hasMore });
+};
+
+export const transferTargets = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const companies = await Company.findAll({
+    where: { status: true },
+    attributes: ["id", "name"],
+    include: [
+      {
+        model: Whatsapp,
+        as: "whatsapps",
+        attributes: ["id", "name", "status", "channel"],
+        required: false
+      }
+    ],
+    order: [["name", "ASC"]]
+  });
+  return res.json(companies);
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
