@@ -499,8 +499,10 @@ const messages = {
         fieldCompanyLabel: "Transfer to company",
         fieldWhatsappLabel: "Transfer to connection",
         keepCurrentWhatsapp: "Keep current connection",
+        fieldWhatsappRequired: "Select a connection from the target company",
         fieldQueueLabel: "Transfer to queue",
         fieldQueuePlaceholder: "Select a queue",
+        noQueues: "No queue available in this company",
         noOptions: "No user found with that name",
         buttons: {
           ok: "Transfer",

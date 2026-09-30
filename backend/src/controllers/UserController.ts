@@ -14,15 +14,24 @@ import User from "../models/User";
 type IndexQuery = {
   searchParam: string;
   pageNumber: string;
-};
-
-type ListQueryParams = {
   companyId: string;
 };
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
-  const { searchParam, pageNumber } = req.query as IndexQuery;
-  const { companyId, profile } = req.user;
+  const {
+    searchParam,
+    pageNumber,
+    companyId: queryCompanyId
+  } = req.query as IndexQuery;
+  const { companyId: userCompanyId, profile } = req.user;
+  // The transfer modal searches users of the company selected as transfer
+  // target, so the company can be informed in the query string. Invalid values
+  // fall back to the company of the authenticated user.
+  const parsedCompanyId = Number(queryCompanyId);
+  const companyId =
+    Number.isInteger(parsedCompanyId) && parsedCompanyId > 0
+      ? parsedCompanyId
+      : userCompanyId;
 
   const { users, count, hasMore } = await ListUsersService({
     searchParam,

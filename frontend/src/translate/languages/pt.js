@@ -496,8 +496,10 @@ const messages = {
         fieldCompanyLabel: "Transferir para empresa",
         fieldWhatsappLabel: "Transferir para conexão",
         keepCurrentWhatsapp: "Manter conexão atual",
+        fieldWhatsappRequired: "Selecione uma conexão da empresa de destino",
         fieldQueueLabel: "Transferir para fila",
         fieldQueuePlaceholder: "Selecione uma fila",
+        noQueues: "Nenhuma fila disponível nesta empresa",
         noOptions: "Nenhum usuário encontrado com esse nome",
         buttons: {
           ok: "Transferir",
