@@ -436,21 +436,28 @@ const UpdateTicketService = async ({
     const queueChanged = sourceQueueId !== ticket.queueId;
     const transferChanged = changingCompany || changingWhatsapp || queueChanged;
     if (transferChanged) {
-      await TicketTransferLog.create({
-        ticketId: ticket.id,
-        userId: reqUserId ? Number(reqUserId) : null,
-        sourceCompanyId: Number(sourceCompanyId),
-        targetCompanyId: Number(ticket.companyId),
-        sourceWhatsappId,
-        targetWhatsappId: ticket.whatsappId,
-        sourceQueueId,
-        targetQueueId: ticket.queueId,
-        transferType: changingCompany
-          ? "company"
-          : changingWhatsapp
-            ? "connection"
-            : "queue"
-      });
+      try {
+        await TicketTransferLog.create({
+          ticketId: ticket.id,
+          userId: reqUserId ? Number(reqUserId) : null,
+          sourceCompanyId: Number(sourceCompanyId),
+          targetCompanyId: Number(ticket.companyId),
+          sourceWhatsappId,
+          targetWhatsappId: ticket.whatsappId,
+          sourceQueueId,
+          targetQueueId: ticket.queueId,
+          transferType: changingCompany
+            ? "company"
+            : changingWhatsapp
+              ? "connection"
+              : "queue"
+        });
+      } catch (auditError) {
+        logger.error(
+          { ticketId: ticket.id, error: auditError?.message },
+          "Could not write ticket transfer audit log"
+        );
+      }
     }
 
     status = ticket.status;
@@ -576,7 +583,10 @@ const UpdateTicketService = async ({
         });
     }
 
-    websocketUpdateTicket(ticket, [`user-${oldUserId}`]);
+    const ticketForSocket = changingCompany
+      ? await ShowTicketService(ticket.id, targetCompanyId)
+      : ticket;
+    websocketUpdateTicket(ticketForSocket, [`user-${oldUserId}`]);
 
     if (changingCompany) {
       io.to(`company-${sourceCompanyId}-ticket`).emit(
