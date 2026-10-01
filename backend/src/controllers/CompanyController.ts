@@ -68,8 +68,7 @@ export const transferTargets = async (
           {
             model: Queue,
             as: "queues",
-            attributes: ["id", "name", "color"],
-            through: { attributes: [] }
+            attributes: ["id", "name", "color"]
           }
         ]
       },
