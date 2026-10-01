@@ -58,37 +58,42 @@ export const transferTargets = async (
   const companies = await Company.findAll({
     where: { status: true },
     attributes: ["id", "name"],
-    include: [
-      {
-        model: Whatsapp,
-        as: "whatsapps",
-        attributes: ["id", "name", "status", "channel"],
-        required: false,
-        include: [
-          {
-            model: Queue,
-            as: "queues",
-            attributes: ["id", "name", "color"]
-          }
-        ]
-      },
-      {
-        model: User,
-        as: "users",
-        attributes: ["id", "name", "email", "profile", "companyId"],
-        include: [
-          { model: Queue, as: "queues", attributes: ["id", "name", "color"] }
-        ]
-      },
-      {
-        model: Queue,
-        as: "queues",
-        attributes: ["id", "name", "color"]
-      }
-    ],
     order: [["name", "ASC"]]
   });
-  return res.json(companies);
+  const targets = await Promise.all(
+    companies.map(async company => {
+      const companyId = company.id;
+      const [whatsapps, users, queues] = await Promise.all([
+        Whatsapp.findAll({
+          where: { companyId },
+          attributes: ["id", "name", "status", "channel"],
+          include: [
+            {
+              model: Queue,
+              as: "queues",
+              attributes: ["id", "name", "color"]
+            }
+          ],
+          order: [["name", "ASC"]]
+        }),
+        User.findAll({
+          where: { companyId },
+          attributes: ["id", "name", "email", "profile", "companyId"],
+          include: [
+            { model: Queue, as: "queues", attributes: ["id", "name", "color"] }
+          ],
+          order: [["name", "ASC"]]
+        }),
+        Queue.findAll({
+          where: { companyId },
+          attributes: ["id", "name", "color"],
+          order: [["name", "ASC"]]
+        })
+      ]);
+      return { ...company.toJSON(), whatsapps, users, queues };
+    })
+  );
+  return res.json(targets);
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
