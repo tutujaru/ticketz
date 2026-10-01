@@ -114,6 +114,34 @@ const TransferTicketModalCustom = ({
     setSelectedQueue("");
   }, [selectedCompanyId, targetCompanies]);
 
+  useEffect(() => {
+    const company = targetCompanies.find(
+      item => item.id === Number(selectedCompanyId)
+    );
+    const connection = company?.whatsapps?.find(
+      item => item.id === Number(selectedWhatsapp)
+    );
+    if (!selectedWhatsapp) {
+      setAllQueues(company?.queues || []);
+      setQueues(selectedUser?.queues || company?.queues || []);
+      return;
+    }
+    const connectionQueues = connection?.queues || [];
+    setAllQueues(connectionQueues);
+    setQueues(
+      selectedUser?.queues?.filter(queue =>
+        connectionQueues.some(
+          connectionQueue => connectionQueue.id === queue.id
+        )
+      ) || connectionQueues
+    );
+    setSelectedQueue(currentQueue =>
+      connectionQueues.some(queue => queue.id === Number(currentQueue))
+        ? currentQueue
+        : ""
+    );
+  }, [selectedWhatsapp, selectedCompanyId, targetCompanies, selectedUser]);
+
   const handleClose = () => {
     onClose();
     setSearchParam("");
@@ -147,8 +175,8 @@ const TransferTicketModalCustom = ({
       if (selectedWhatsapp) {
         data.whatsappId = Number(selectedWhatsapp);
         data.targetCompanyId = Number(selectedCompanyId);
-        data.status = "pending";
-        data.userId = null;
+        data.status = selectedUser ? "open" : "pending";
+        if (!selectedUser) data.userId = null;
       }
 
       await api.put(`/tickets/${ticketid}`, data);

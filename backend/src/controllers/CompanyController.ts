@@ -63,7 +63,15 @@ export const transferTargets = async (
         model: Whatsapp,
         as: "whatsapps",
         attributes: ["id", "name", "status", "channel"],
-        required: false
+        required: false,
+        include: [
+          {
+            model: Queue,
+            as: "queues",
+            attributes: ["id", "name", "color"],
+            through: { attributes: [] }
+          }
+        ]
       },
       {
         model: User,
