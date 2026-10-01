@@ -131,6 +131,7 @@ const UpdateTicketService = async ({
     const requestedCompanyId = ticketData.targetCompanyId
       ? Number(ticketData.targetCompanyId)
       : companyId;
+    const changingCompany = requestedCompanyId !== companyId;
     const changingWhatsapp =
       whatsappId !== undefined &&
       whatsappId !== null &&
@@ -138,7 +139,10 @@ const UpdateTicketService = async ({
 
     if (changingWhatsapp) {
       const targetWhatsapp = await Whatsapp.findOne({
-        where: { id: whatsappId, companyId }
+        where: {
+          id: whatsappId,
+          companyId: changingCompany ? requestedCompanyId : companyId
+        }
       });
       if (!targetWhatsapp) {
         throw new AppError("ERR_WAPP_NOT_FOUND", 404);
@@ -154,7 +158,6 @@ const UpdateTicketService = async ({
       }
     }
 
-    const changingCompany = requestedCompanyId !== companyId;
     if (changingCompany) {
       if (!Number.isInteger(requestedCompanyId)) {
         throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
