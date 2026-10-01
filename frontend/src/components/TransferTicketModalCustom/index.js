@@ -159,12 +159,12 @@ const TransferTicketModalCustom = ({
     try {
       let data = {};
 
-      if (selectedUser) {
-        data.userId = selectedUser.id;
+      if (selectedUser?.id) {
+        data.userId = Number(selectedUser.id);
       }
 
       if (selectedQueue && selectedQueue !== null) {
-        data.queueId = selectedQueue;
+        data.queueId = Number(selectedQueue);
 
         if (!selectedUser) {
           data.status = "pending";
@@ -200,17 +200,21 @@ const TransferTicketModalCustom = ({
               style={{ width: 300, marginBottom: 20 }}
               getOptionLabel={option => `${option.name}`}
               onChange={(e, newValue) => {
-                setSelectedUser(newValue);
-                if (newValue != null && Array.isArray(newValue.queues)) {
-                  setQueues(newValue.queues);
+                const user =
+                  newValue && typeof newValue === "object" && newValue.id
+                    ? newValue
+                    : null;
+                setSelectedUser(user);
+                if (user != null && Array.isArray(user.queues)) {
+                  setQueues(user.queues);
                 } else {
                   setQueues(allQueues);
                 }
               }}
               options={options}
               filterOptions={filterOptions}
-              freeSolo
               autoHighlight
+              isOptionEqualToValue={(option, value) => option.id === value.id}
               noOptionsText={i18n.t("transferTicketModal.noOptions")}
               loading={loading}
               renderInput={params => (

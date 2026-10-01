@@ -108,6 +108,37 @@ const UpdateTicketService = async ({
     const { justClose } = ticketData;
     let { status } = ticketData;
     let { queueId, userId, whatsappId } = ticketData;
+    const hasTargetCompany =
+      ticketData.targetCompanyId !== undefined &&
+      ticketData.targetCompanyId !== null;
+    const parsedTargetCompanyId = hasTargetCompany
+      ? Number(ticketData.targetCompanyId)
+      : companyId;
+
+    if (
+      !Number.isInteger(parsedTargetCompanyId) ||
+      parsedTargetCompanyId <= 0
+    ) {
+      throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
+    }
+
+    const normalizeOptionalId = (
+      value: number | string | null | undefined,
+      errorMessage: string
+    ): number | null | undefined => {
+      if (value === undefined) return undefined;
+      if (value === null || value === "") return null;
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new AppError(errorMessage, 400);
+      }
+      return parsed;
+    };
+
+    queueId = normalizeOptionalId(queueId, "ERR_QUEUE_NOT_FOUND");
+    userId = normalizeOptionalId(userId, "ERR_USER_NOT_FOUND");
+    whatsappId = normalizeOptionalId(whatsappId, "ERR_WAPP_NOT_FOUND") as
+      number | undefined;
     const sourceCompanyId = companyId;
     const fromChatbot = ticketData.chatbot || false;
     let chatbot: boolean | null = fromChatbot;
@@ -128,9 +159,7 @@ const UpdateTicketService = async ({
     let targetCompanyId = companyId;
     let targetContactId = ticket.contactId;
     let targetWhatsappId = ticket.whatsappId;
-    const requestedCompanyId = ticketData.targetCompanyId
-      ? Number(ticketData.targetCompanyId)
-      : companyId;
+    const requestedCompanyId = parsedTargetCompanyId;
     const changingCompany = requestedCompanyId !== companyId;
     const changingWhatsapp =
       whatsappId !== undefined &&
@@ -241,6 +270,15 @@ const UpdateTicketService = async ({
       }
       if (newQueue.companyId !== targetCompanyId) {
         throw new AppError("Queue does not belong to the same company", 403);
+      }
+    }
+
+    if (userId) {
+      const targetUser = await User.findOne({
+        where: { id: Number(userId), companyId: targetCompanyId }
+      });
+      if (!targetUser) {
+        throw new AppError("ERR_USER_NOT_FOUND", 404);
       }
     }
 
@@ -503,7 +541,7 @@ const UpdateTicketService = async ({
       );
     }
 
-    ticketTraking.save();
+    await ticketTraking.save();
 
     if (
       !dontRunChatbot &&
