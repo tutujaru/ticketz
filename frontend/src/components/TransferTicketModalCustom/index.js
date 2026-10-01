@@ -124,19 +124,21 @@ const TransferTicketModalCustom = ({
     if (!selectedWhatsapp) {
       setAllQueues(company?.queues || []);
       setQueues(selectedUser?.queues || company?.queues || []);
+      setSelectedQueue(currentQueue =>
+        (selectedUser?.queues || company?.queues || []).some(
+          queue => queue.id === Number(currentQueue)
+        )
+          ? currentQueue
+          : ""
+      );
       return;
     }
     const connectionQueues = connection?.queues || [];
-    setAllQueues(connectionQueues);
-    setQueues(
-      selectedUser?.queues?.filter(queue =>
-        connectionQueues.some(
-          connectionQueue => connectionQueue.id === queue.id
-        )
-      ) || connectionQueues
-    );
+    const availableQueues = selectedUser?.queues || connectionQueues;
+    setAllQueues(availableQueues);
+    setQueues(availableQueues);
     setSelectedQueue(currentQueue =>
-      connectionQueues.some(queue => queue.id === Number(currentQueue))
+      availableQueues.some(queue => queue.id === Number(currentQueue))
         ? currentQueue
         : ""
     );
