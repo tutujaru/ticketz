@@ -6,7 +6,6 @@ import TextField from "@material-ui/core/TextField";
 import Dialog from "@material-ui/core/Dialog";
 import Select from "@material-ui/core/Select";
 import FormControl from "@material-ui/core/FormControl";
-import FormHelperText from "@material-ui/core/FormHelperText";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import { makeStyles } from "@material-ui/core";
@@ -23,7 +22,6 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import toastError from "../../errors/toastError";
-import useQueues from "../../hooks/useQueues";
 
 const useStyles = makeStyles(theme => ({
   maxWidth: {
@@ -48,7 +46,6 @@ const TransferTicketModalCustom = ({
   const [queues, setQueues] = useState([]);
   const [allQueues, setAllQueues] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingQueues, setLoadingQueues] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedQueue, setSelectedQueue] = useState("");
@@ -58,13 +55,7 @@ const TransferTicketModalCustom = ({
   );
   const [targetCompanies, setTargetCompanies] = useState([]);
   const classes = useStyles();
-  const { findAll: findAllQueues } = useQueues();
   const isMounted = useRef(true);
-
-  // The ticket will be moved to another company, so the users, queues and
-  // connections must be the ones of the selected company.
-  const changingCompany =
-    Number(selectedCompanyId) !== Number(currentCompanyId);
 
   useEffect(() => {
     return () => {
@@ -72,64 +63,37 @@ const TransferTicketModalCustom = ({
     };
   }, []);
 
-  // Users of the selected company
   useEffect(() => {
-    if (
-      hideUserSelection ||
-      !modalOpen ||
-      !selectedCompanyId ||
-      searchParam.length < 3
-    ) {
+    if (hideUserSelection || !modalOpen) {
       setLoading(false);
       return;
     }
-    const delayDebounceFn = setTimeout(() => {
-      setLoading(true);
-      const fetchUsers = async () => {
-        try {
-          const { data } = await api.get("/users/", {
-            params: { searchParam, companyId: selectedCompanyId }
-          });
-          if (!isMounted.current) return;
-          setOptions(data.users);
-          setLoading(false);
-        } catch (err) {
-          setLoading(false);
-          toastError(err);
-        }
-      };
-
-      fetchUsers();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchParam, modalOpen, hideUserSelection, selectedCompanyId]);
-
-  // Queues of the selected company
-  useEffect(() => {
-    if (!modalOpen || !selectedCompanyId) return;
-    const loadQueues = async () => {
-      setLoadingQueues(true);
-      try {
-        const list = await findAllQueues(selectedCompanyId);
-        if (!isMounted.current) return;
-        setAllQueues(list);
-        setQueues(list);
-      } catch (err) {
-        if (isMounted.current) toastError(err);
-      } finally {
-        if (isMounted.current) setLoadingQueues(false);
-      }
-    };
-    loadQueues();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalOpen, selectedCompanyId]);
+    const company = targetCompanies.find(
+      item => item.id === Number(selectedCompanyId)
+    );
+    const search = searchParam.trim().toLowerCase();
+    setOptions(
+      (company?.users || []).filter(
+        user =>
+          !search ||
+          user.name.toLowerCase().includes(search) ||
+          user.email.toLowerCase().includes(search)
+      )
+    );
+    setLoading(false);
+  }, [
+    searchParam,
+    modalOpen,
+    hideUserSelection,
+    selectedCompanyId,
+    targetCompanies
+  ]);
 
   useEffect(() => {
     if (!modalOpen) return;
     const loadTransferTargets = async () => {
       try {
         const { data } = await api.get("/companies/transfer-targets");
-        if (!isMounted.current) return;
         setTargetCompanies(data);
         setSelectedCompanyId(currentCompanyId || data[0]?.id || "");
       } catch (err) {
@@ -139,6 +103,17 @@ const TransferTicketModalCustom = ({
     loadTransferTargets();
   }, [modalOpen, currentCompanyId]);
 
+  useEffect(() => {
+    const company = targetCompanies.find(
+      item => item.id === Number(selectedCompanyId)
+    );
+    setOptions(company?.users || []);
+    setQueues(company?.queues || []);
+    setAllQueues(company?.queues || []);
+    setSelectedUser(null);
+    setSelectedQueue("");
+  }, [selectedCompanyId, targetCompanies]);
+
   const handleClose = () => {
     onClose();
     setSearchParam("");
@@ -146,38 +121,12 @@ const TransferTicketModalCustom = ({
     setSelectedQueue("");
     setSelectedWhatsapp("");
     setSelectedCompanyId(currentCompanyId || "");
-    setOptions([]);
-    setQueues([]);
-    setAllQueues([]);
-  };
-
-  const handleCompanyChange = e => {
-    setSelectedCompanyId(e.target.value);
-    setSelectedWhatsapp("");
-    setSelectedQueue("");
-    setSelectedUser(null);
-    setSearchParam("");
-    setOptions([]);
-  };
-
-  const handleUserChange = (e, newValue) => {
-    setSelectedUser(newValue);
-    setSelectedQueue("");
-    if (newValue != null && Array.isArray(newValue.queues)) {
-      const userQueues = newValue.queues.filter(queue =>
-        allQueues.some(companyQueue => companyQueue.id === queue.id)
-      );
-      setQueues(userQueues.length > 0 ? userQueues : allQueues);
-    } else {
-      setQueues(allQueues);
-    }
   };
 
   const handleSaveTicket = async e => {
     e.preventDefault();
     if (!ticketid) return;
     if (!selectedQueue && !selectedWhatsapp) return;
-    if (changingCompany && !selectedWhatsapp) return;
     setLoading(true);
     try {
       let data = {};
@@ -199,11 +148,7 @@ const TransferTicketModalCustom = ({
         data.whatsappId = Number(selectedWhatsapp);
         data.targetCompanyId = Number(selectedCompanyId);
         data.status = "pending";
-        if (!selectedUser) {
-          data.userId = null;
-        }
-      } else if (changingCompany) {
-        data.targetCompanyId = Number(selectedCompanyId);
+        data.userId = null;
       }
 
       await api.put(`/tickets/${ticketid}`, data);
@@ -214,17 +159,6 @@ const TransferTicketModalCustom = ({
       toastError(err);
     }
   };
-
-  const targetCompany = targetCompanies.find(
-    company => company.id === Number(selectedCompanyId)
-  );
-  const targetWhatsapps = (targetCompany?.whatsapps || []).filter(
-    whatsapp =>
-      !(
-        Number(selectedCompanyId) === Number(currentCompanyId) &&
-        whatsapp.id === currentWhatsappId
-      )
-  );
 
   return (
     <Dialog open={modalOpen} onClose={handleClose} maxWidth="lg" scroll="paper">
@@ -237,7 +171,14 @@ const TransferTicketModalCustom = ({
             <Autocomplete
               style={{ width: 300, marginBottom: 20 }}
               getOptionLabel={option => `${option.name}`}
-              onChange={handleUserChange}
+              onChange={(e, newValue) => {
+                setSelectedUser(newValue);
+                if (newValue != null && Array.isArray(newValue.queues)) {
+                  setQueues(newValue.queues);
+                } else {
+                  setQueues(allQueues);
+                }
+              }}
               options={options}
               filterOptions={filterOptions}
               freeSolo
@@ -276,7 +217,10 @@ const TransferTicketModalCustom = ({
             </InputLabel>
             <Select
               value={selectedCompanyId}
-              onChange={handleCompanyChange}
+              onChange={e => {
+                setSelectedCompanyId(e.target.value);
+                setSelectedWhatsapp("");
+              }}
               label={i18n.t("transferTicketModal.fieldCompanyLabel")}
             >
               {targetCompanies.map(company => (
@@ -299,22 +243,27 @@ const TransferTicketModalCustom = ({
               onChange={e => setSelectedWhatsapp(e.target.value)}
               label={i18n.t("transferTicketModal.fieldWhatsappLabel")}
             >
-              {!changingCompany && (
-                <MenuItem value="">
-                  {i18n.t("transferTicketModal.keepCurrentWhatsapp")}
-                </MenuItem>
-              )}
-              {targetWhatsapps.map(whatsapp => (
-                <MenuItem key={whatsapp.id} value={whatsapp.id}>
-                  {whatsapp.name} ({whatsapp.status})
-                </MenuItem>
-              ))}
+              <MenuItem value="">
+                {i18n.t("transferTicketModal.keepCurrentWhatsapp")}
+              </MenuItem>
+              {(
+                targetCompanies.find(
+                  company => company.id === Number(selectedCompanyId)
+                )?.whatsapps || []
+              )
+                .filter(
+                  whatsapp =>
+                    !(
+                      Number(selectedCompanyId) === Number(currentCompanyId) &&
+                      whatsapp.id === currentWhatsappId
+                    )
+                )
+                .map(whatsapp => (
+                  <MenuItem key={whatsapp.id} value={whatsapp.id}>
+                    {whatsapp.name} ({whatsapp.status})
+                  </MenuItem>
+                ))}
             </Select>
-            {changingCompany && !selectedWhatsapp && (
-              <FormHelperText>
-                {i18n.t("transferTicketModal.fieldWhatsappRequired")}
-              </FormHelperText>
-            )}
           </FormControl>
           <FormControl variant="outlined" className={classes.maxWidth}>
             <InputLabel>
@@ -323,14 +272,8 @@ const TransferTicketModalCustom = ({
             <Select
               value={selectedQueue}
               onChange={e => setSelectedQueue(e.target.value)}
-              label={i18n.t("transferTicketModal.fieldQueueLabel")}
-              disabled={loadingQueues}
+              label={i18n.t("transferTicketModal.fieldQueuePlaceholder")}
             >
-              {!loadingQueues && queues.length === 0 && (
-                <MenuItem value="" disabled>
-                  {i18n.t("transferTicketModal.noQueues")}
-                </MenuItem>
-              )}
               {queues.map(queue => (
                 <MenuItem key={queue.id} value={queue.id}>
                   {queue.name}
@@ -353,7 +296,6 @@ const TransferTicketModalCustom = ({
             type="submit"
             color="primary"
             loading={loading}
-            disabled={loading || (changingCompany && !selectedWhatsapp)}
           >
             {i18n.t("transferTicketModal.buttons.ok")}
           </ButtonWithSpinner>

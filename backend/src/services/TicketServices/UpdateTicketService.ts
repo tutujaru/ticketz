@@ -21,6 +21,7 @@ import { incrementCounter } from "../CounterServices/IncrementCounter";
 import { getJidOf } from "../WbotServices/getJidOf";
 import Queue from "../../models/Queue";
 import Whatsapp from "../../models/Whatsapp";
+import TicketTransferLog from "../../models/TicketTransferLog";
 import { _t } from "../TranslationServices/i18nService";
 
 export interface UpdateTicketData {
@@ -122,20 +123,13 @@ const UpdateTicketService = async ({
 
     const ticket = await ShowTicketService(ticketId, companyId);
     const isGroup = ticket.contact?.isGroup || ticket.isGroup;
+    const sourceWhatsappId = ticket.whatsappId;
+    const sourceQueueId = ticket.queueId;
     let targetCompanyId = companyId;
     let targetContactId = ticket.contactId;
     let targetWhatsappId = ticket.whatsappId;
     const requestedCompanyId = ticketData.targetCompanyId
       ? Number(ticketData.targetCompanyId)
-      : companyId;
-    const changingCompany = requestedCompanyId !== companyId;
-    // When the ticket is moving to another company, the target connection
-    // belongs to that company, so it must be validated against it.
-    const validTargetCompanyId = Number.isInteger(requestedCompanyId)
-      ? requestedCompanyId
-      : companyId;
-    const whatsappCompanyId = changingCompany
-      ? validTargetCompanyId
       : companyId;
     const changingWhatsapp =
       whatsappId !== undefined &&
@@ -144,7 +138,7 @@ const UpdateTicketService = async ({
 
     if (changingWhatsapp) {
       const targetWhatsapp = await Whatsapp.findOne({
-        where: { id: whatsappId, companyId: whatsappCompanyId }
+        where: { id: whatsappId, companyId }
       });
       if (!targetWhatsapp) {
         throw new AppError("ERR_WAPP_NOT_FOUND", 404);
@@ -160,6 +154,7 @@ const UpdateTicketService = async ({
       }
     }
 
+    const changingCompany = requestedCompanyId !== companyId;
     if (changingCompany) {
       if (!Number.isInteger(requestedCompanyId)) {
         throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
@@ -175,6 +170,22 @@ const UpdateTicketService = async ({
       });
       if (!targetCompany || !targetWhatsapp) {
         throw new AppError("ERR_WAPP_NOT_FOUND", 404);
+      }
+      if (userId) {
+        const targetUser = await User.findOne({
+          where: { id: Number(userId), companyId: requestedCompanyId }
+        });
+        if (!targetUser) {
+          throw new AppError("ERR_USER_NOT_FOUND", 404);
+        }
+      }
+      if (queueId) {
+        const targetQueue = await Queue.findOne({
+          where: { id: Number(queueId), companyId: requestedCompanyId }
+        });
+        if (!targetQueue) {
+          throw new AppError("ERR_QUEUE_NOT_FOUND", 404);
+        }
       }
       let targetContact = await Contact.findOne({
         where: {
@@ -213,30 +224,10 @@ const UpdateTicketService = async ({
         { contactId: targetContact.id },
         { where: { ticketId: ticket.id } }
       );
-
-      // Keep the selected queue and the selected user when they belong to the
-      // target company, so a transfer between companies can also define the
-      // queue and the attendant of the destination.
-      // The queue and the user of the source company must not be kept, since
-      // they do not exist in the target company.
-      const targetQueue = queueId
-        ? await Queue.findOne({
-            where: { id: queueId, companyId: requestedCompanyId }
-          })
-        : null;
-      queueId = targetQueue ? targetQueue.id : null;
-
-      const targetUser = userId
-        ? await User.findOne({
-            where: { id: userId, companyId: requestedCompanyId }
-          })
-        : null;
-      userId = targetUser ? targetUser.id : null;
-
       targetCompanyId = requestedCompanyId;
       targetContactId = targetContact.id;
       targetWhatsappId = targetWhatsapp.id;
-      status = "pending";
+      status = userId ? "open" : "pending";
       companyId = targetCompanyId;
     }
 
@@ -245,7 +236,7 @@ const UpdateTicketService = async ({
       if (!newQueue) {
         throw new AppError("Queue not found", 404);
       }
-      if (newQueue.companyId !== companyId) {
+      if (newQueue.companyId !== targetCompanyId) {
         throw new AppError("Queue does not belong to the same company", 403);
       }
     }
@@ -419,7 +410,7 @@ const UpdateTicketService = async ({
 
     if (changingCompany) {
       ticketTraking.companyId = targetCompanyId;
-      ticketTraking.userId = userId ?? null;
+      ticketTraking.userId = null;
     }
     if (changingWhatsapp || changingCompany) {
       ticketTraking.whatsappId = targetWhatsappId;
@@ -438,6 +429,26 @@ const UpdateTicketService = async ({
     }
 
     await ticket.reload();
+
+    const queueChanged = sourceQueueId !== ticket.queueId;
+    const transferChanged = changingCompany || changingWhatsapp || queueChanged;
+    if (transferChanged) {
+      await TicketTransferLog.create({
+        ticketId: ticket.id,
+        userId: reqUserId ? Number(reqUserId) : null,
+        sourceCompanyId: Number(sourceCompanyId),
+        targetCompanyId: Number(ticket.companyId),
+        sourceWhatsappId,
+        targetWhatsappId: ticket.whatsappId,
+        sourceQueueId,
+        targetQueueId: ticket.queueId,
+        transferType: changingCompany
+          ? "company"
+          : changingWhatsapp
+            ? "connection"
+            : "queue"
+      });
+    }
 
     status = ticket.status;
 

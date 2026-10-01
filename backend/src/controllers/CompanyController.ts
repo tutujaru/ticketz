@@ -14,6 +14,7 @@ import DeleteCompanyService from "../services/CompanyService/DeleteCompanyServic
 import FindAllCompaniesService from "../services/CompanyService/FindAllCompaniesService";
 import User from "../models/User";
 import Whatsapp from "../models/Whatsapp";
+import Queue from "../models/Queue";
 
 import CheckSettings from "../helpers/CheckSettings";
 import { OpenHoursData } from "../helpers/checkOpenHours";
@@ -63,6 +64,19 @@ export const transferTargets = async (
         as: "whatsapps",
         attributes: ["id", "name", "status", "channel"],
         required: false
+      },
+      {
+        model: User,
+        as: "users",
+        attributes: ["id", "name", "email", "profile", "companyId"],
+        include: [
+          { model: Queue, as: "queues", attributes: ["id", "name", "color"] }
+        ]
+      },
+      {
+        model: Queue,
+        as: "queues",
+        attributes: ["id", "name", "color"]
       }
     ],
     order: [["name", "ASC"]]
