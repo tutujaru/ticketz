@@ -87,6 +87,19 @@ class Queue extends Model {
   @Column
   mediaName: string;
 
+  @Default("none")
+  @Column
+  automationType: "none" | "n8n" | "typebot";
+
+  @Column(DataType.TEXT)
+  automationUrl: string;
+
+  @Column(DataType.STRING)
+  automationBotId: string;
+
+  @Column(DataType.TEXT)
+  automationToken: string;
+
   @HasMany(() => Ticket)
   tickets: Ticket[];
 }

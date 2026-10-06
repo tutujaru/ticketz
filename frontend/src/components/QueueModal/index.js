@@ -24,7 +24,11 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Tab,
   Tabs
 } from "@material-ui/core";
@@ -92,7 +96,11 @@ const QueueModal = ({ open, onClose, queueId }) => {
     name: "",
     color: "",
     greetingMessage: "",
-    outOfHoursMessage: ""
+    outOfHoursMessage: "",
+    automationType: "none",
+    automationUrl: "",
+    automationBotId: "",
+    automationToken: ""
   };
 
   const [colorPickerModalOpen, setColorPickerModalOpen] = useState(false);
@@ -102,7 +110,7 @@ const QueueModal = ({ open, onClose, queueId }) => {
   const greetingRef = useRef();
   const [attachment, setAttachment] = useState(null);
   const attachmentFile = useRef(null);
-  const [queueEditable, setQueueEditable] = useState(true);
+  const [queueEditable] = useState(true);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   const [schedules, setSchedules] = useState({});
@@ -351,6 +359,65 @@ const QueueModal = ({ open, onClose, queueId }) => {
                         />
                       )}
                     </div>
+                    <FormControl
+                      variant="outlined"
+                      margin="dense"
+                      fullWidth
+                      style={{ marginTop: 16 }}
+                    >
+                      <InputLabel id="queue-automation-type-label">
+                        Automação da fila
+                      </InputLabel>
+                      <Field
+                        as={Select}
+                        labelId="queue-automation-type-label"
+                        label="Automação da fila"
+                        name="automationType"
+                      >
+                        <MenuItem value="none">Nenhum</MenuItem>
+                        <MenuItem value="n8n">n8n</MenuItem>
+                        <MenuItem value="typebot">Typebot</MenuItem>
+                      </Field>
+                    </FormControl>
+                    {values.automationType !== "none" && (
+                      <>
+                        <Field
+                          as={TextField}
+                          label={
+                            values.automationType === "n8n"
+                              ? "Webhook do n8n"
+                              : "URL da API do Typebot"
+                          }
+                          name="automationUrl"
+                          type="url"
+                          fullWidth
+                          required
+                          variant="outlined"
+                          margin="dense"
+                          helperText="Use HTTPS em produção."
+                        />
+                        {values.automationType === "typebot" && (
+                          <Field
+                            as={TextField}
+                            label="ID do bot Typebot"
+                            name="automationBotId"
+                            fullWidth
+                            required
+                            variant="outlined"
+                            margin="dense"
+                          />
+                        )}
+                        <Field
+                          as={TextField}
+                          label="Token da automação (opcional)"
+                          name="automationToken"
+                          type="password"
+                          fullWidth
+                          variant="outlined"
+                          margin="dense"
+                        />
+                      </>
+                    )}
                     <QueueOptions queueId={queueId} />
                     {(queue.mediaPath || attachment) && (
                       <Grid xs={12} item>

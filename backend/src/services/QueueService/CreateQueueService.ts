@@ -11,10 +11,34 @@ interface QueueData {
   greetingMessage?: string;
   outOfHoursMessage?: string;
   schedules?: unknown[];
+  automationType?: "none" | "n8n" | "typebot";
+  automationUrl?: string;
+  automationBotId?: string;
+  automationToken?: string;
 }
 
 const CreateQueueService = async (queueData: QueueData): Promise<Queue> => {
-  const { color, name, companyId } = queueData;
+  const {
+    color,
+    name,
+    companyId,
+    automationType = "none",
+    automationUrl,
+    automationBotId,
+    automationToken
+  } = queueData;
+
+  if (!["none", "n8n", "typebot"].includes(automationType)) {
+    throw new AppError("Tipo de automação inválido");
+  }
+
+  if (automationType !== "none" && !automationUrl) {
+    throw new AppError("URL da automação é obrigatória");
+  }
+
+  if (automationType === "typebot" && !automationBotId) {
+    throw new AppError("ID do bot Typebot é obrigatório");
+  }
 
   const company = await Company.findOne({
     where: {
@@ -83,7 +107,13 @@ const CreateQueueService = async (queueData: QueueData): Promise<Queue> => {
     throw new AppError(err.message);
   }
 
-  const queue = await Queue.create({ ...queueData });
+  const queue = await Queue.create({
+    ...queueData,
+    automationType,
+    automationUrl: automationType === "none" ? null : automationUrl,
+    automationBotId: automationType === "typebot" ? automationBotId : null,
+    automationToken: automationType === "none" ? null : automationToken
+  });
 
   return queue;
 };

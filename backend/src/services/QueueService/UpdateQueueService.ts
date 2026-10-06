@@ -10,6 +10,10 @@ interface QueueData {
   greetingMessage?: string;
   outOfHoursMessage?: string;
   schedules?: any[];
+  automationType?: "none" | "n8n" | "typebot";
+  automationUrl?: string;
+  automationBotId?: string;
+  automationToken?: string;
 }
 
 const UpdateQueueService = async (
@@ -17,7 +21,25 @@ const UpdateQueueService = async (
   queueData: QueueData,
   companyId: number
 ): Promise<Queue> => {
-  const { color, name } = queueData;
+  const {
+    color,
+    name,
+    automationType = "none",
+    automationUrl,
+    automationBotId
+  } = queueData;
+
+  if (!["none", "n8n", "typebot"].includes(automationType)) {
+    throw new AppError("Tipo de automação inválido");
+  }
+
+  if (automationType !== "none" && !automationUrl) {
+    throw new AppError("URL da automação é obrigatória");
+  }
+
+  if (automationType === "typebot" && !automationBotId) {
+    throw new AppError("ID do bot Typebot é obrigatório");
+  }
 
   const queueSchema = Yup.object().shape({
     name: Yup.string()
@@ -72,7 +94,14 @@ const UpdateQueueService = async (
     throw new AppError("Não é permitido alterar registros de outra empresa");
   }
 
-  await queue.update(queueData);
+  await queue.update({
+    ...queueData,
+    automationType,
+    automationUrl: automationType === "none" ? null : automationUrl,
+    automationBotId: automationType === "typebot" ? automationBotId : null,
+    automationToken:
+      automationType === "none" ? null : queueData.automationToken
+  });
 
   return queue;
 };
