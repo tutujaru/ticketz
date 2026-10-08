@@ -375,7 +375,9 @@ export const initWASocket = async (
           // retryRequestDelayMs: 250,
           // keepAliveIntervalMs: 1000 * 60 * 10 * 3,
           msgRetryCounterCache,
-          // syncFullHistory: true,
+          // Ask WhatsApp for the conversation history on the first connection.
+          // The history is persisted by the messaging-history.set listener.
+          syncFullHistory: true,
           generateHighQualityLinkPreview: true,
           getMessage,
           agent: proxy,

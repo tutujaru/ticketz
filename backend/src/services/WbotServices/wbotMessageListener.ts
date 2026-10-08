@@ -93,6 +93,7 @@ interface IMe {
 
 const wbotMutex = new Mutex();
 const ackMutex = new Mutex();
+const historySyncMutex = new Mutex();
 
 const groupContactCache = new SimpleObjectCache(1000 * 30, logger);
 const outOfHoursCache = new SimpleObjectCache(1000 * 60 * 5, logger);
@@ -1602,7 +1603,8 @@ const handleMessage = async (
   msg: WAMessage,
   wbot: Session,
   companyId: number,
-  queueId?: number
+  queueId?: number,
+  { isHistory = false }: { isHistory?: boolean } = {}
 ): Promise<void> => {
   if (!isValidMsg(msg)) return;
 
@@ -1821,7 +1823,7 @@ const handleMessage = async (
       companyId,
       {
         groupContact,
-        incrementUnread: !msg.key.fromMe,
+        incrementUnread: !msg.key.fromMe && !isHistory,
         findOnly,
         queue: queueId
           ? (await Queue.findByPk(queueId)) || defaultQueue
@@ -1932,6 +1934,12 @@ const handleMessage = async (
       });
     }
 
+    if (isHistory) {
+      if (justCreated && newMessage) {
+        websocketCreateMessage(newMessage);
+      }
+      return;
+    }
     if (isGroup || contact.disableBot || msg.key.fromMe) {
       if (ticket.chatbot) {
         await updateTicket(ticket, { chatbot: false });
@@ -2268,6 +2276,55 @@ const wbotMessageListener = async (
   companyId: number
 ): Promise<void> => {
   try {
+    wbot.ev.on("messaging-history.set", async history => {
+      await historySyncMutex.runExclusive(async () => {
+        const messages = (history.messages || [])
+          .filter(filterMessages)
+          .filter(message => Boolean(message?.key?.id && message?.message))
+          .sort(
+            (left, right) =>
+              Number(left.messageTimestamp || 0) -
+              Number(right.messageTimestamp || 0)
+          );
+
+        logger.info(
+          {
+            companyId,
+            chats: history.chats?.length || 0,
+            contacts: history.contacts?.length || 0,
+            messages: messages.length,
+            progress: history.progress,
+            isLatest: history.isLatest
+          },
+          "Importing WhatsApp conversation history"
+        );
+
+        await messages.reduce(async (previous, message) => {
+          await previous;
+          const existingMessage = await Message.findByPk(message.key.id, {
+            attributes: ["id"]
+          });
+          if (existingMessage) return;
+
+          try {
+            await handleMessage(message, wbot, companyId, undefined, {
+              isHistory: true
+            });
+          } catch (error) {
+            logger.error(
+              { error, messageId: message.key.id, companyId },
+              "Could not import WhatsApp history message"
+            );
+          }
+        }, Promise.resolve());
+
+        logger.info(
+          { companyId, messages: messages.length, progress: history.progress },
+          "WhatsApp conversation history imported"
+        );
+      });
+    });
+
     wbot.ev.on("messages.upsert", async (messageUpsert: ImessageUpsert) => {
       logger.trace({ messageUpsert }, "wbotMessageListener: messages.upsert");
       const messages = messageUpsert.messages
@@ -2285,7 +2342,9 @@ const wbotMessageListener = async (
           return;
         }
 
-        await wbot.sendReceipts([message.key], undefined);
+        if (messageUpsert.type !== "append") {
+          await wbot.sendReceipts([message.key], undefined);
+        }
 
         if (await verifyRecentCampaign(message, companyId)) {
           return;
