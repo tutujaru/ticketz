@@ -7,6 +7,8 @@ import Dashboard from "../pages/Dashboard/";
 import TicketResponsiveContainer from "../pages/TicketResponsiveContainer";
 import Signup from "../pages/Signup/";
 import Login from "../pages/Login/";
+import ForgotPassword from "../pages/ForgotPassword/";
+import ResetPassword from "../pages/ResetPassword/";
 import Connections from "../pages/Connections/";
 import SettingsCustom from "../pages/SettingsCustom/";
 import Financeiro from "../pages/Financeiro/";
@@ -49,6 +51,12 @@ const Routes = () => {
         <TicketsContextProvider>
           <Switch>
             <Route exact path="/login" component={Login} />
+            <Route exact path="/forgot-password" component={ForgotPassword} />
+            <Route
+              exact
+              path="/reset-password/:token"
+              component={ResetPassword}
+            />
             <Route exact path="/signup" component={Signup} />
             {/* <Route exact path="/create-company" component={Companies} /> */}
             <WhatsAppsProvider>

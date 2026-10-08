@@ -56,6 +56,12 @@ class User extends Model<User> {
   @Column
   tokenVersion: number;
 
+  @Column(DataType.TEXT)
+  passwordResetToken: string;
+
+  @Column(DataType.DATE)
+  passwordResetExpires: Date;
+
   @Default("admin")
   @Column
   profile: string;

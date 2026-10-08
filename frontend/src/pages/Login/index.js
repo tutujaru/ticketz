@@ -555,6 +555,17 @@ const Login = () => {
                     >
                       {i18n.t("login.buttons.submit")}
                     </Button>
+                    <Grid container justifyContent="center">
+                      <Grid item>
+                        <Link
+                          component={RouterLink}
+                          to="/forgot-password"
+                          variant="body2"
+                        >
+                          Esqueci minha senha
+                        </Link>
+                      </Grid>
+                    </Grid>
                     {allowSignup && (
                       <Grid container>
                         <Grid item>
