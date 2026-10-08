@@ -20,6 +20,9 @@ interface MessageData {
   ack?: number;
   queueId?: number;
   channel?: string;
+  remoteJid?: string;
+  participant?: string;
+  dataJson?: string;
 }
 interface Request {
   messageData: MessageData;

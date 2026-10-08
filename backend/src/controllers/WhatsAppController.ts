@@ -27,6 +27,11 @@ interface WhatsappData {
   status?: string;
   isDefault?: boolean;
   token?: string;
+  provider?: string;
+  tokenMeta?: string;
+  metaPhoneNumberId?: string;
+  metaVerifyToken?: string;
+  metaAppSecret?: string;
 }
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
@@ -52,7 +57,12 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     ratingMessage,
     transferMessage,
     queueIds,
-    token
+    token,
+    provider,
+    tokenMeta,
+    metaPhoneNumberId,
+    metaVerifyToken,
+    metaAppSecret
   }: WhatsappData = req.body;
   const { companyId } = req.user;
 
@@ -67,7 +77,12 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     transferMessage,
     queueIds,
     companyId,
-    token
+    token,
+    provider,
+    tokenMeta,
+    metaPhoneNumberId,
+    metaVerifyToken,
+    metaAppSecret
   });
 
   sendWhatsappUpdate(whatsapp);
@@ -180,7 +195,10 @@ export const remove = async (
     }
   }
 
-  if (whatsapp.channel === "whatsapp") {
+  if (
+    whatsapp.channel === "whatsapp" &&
+    whatsapp.provider !== "whatsapp-cloud-api"
+  ) {
     await DeleteBaileysService(whatsappId);
     await cacheLayer.delFromPattern(`sessions:${whatsappId}:*`);
     removeWbot(+whatsappId);

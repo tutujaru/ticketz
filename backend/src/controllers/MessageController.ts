@@ -28,6 +28,7 @@ import { verifyMessage } from "../services/WbotServices/wbotMessageListener";
 import { getJidOf } from "../services/WbotServices/getJidOf";
 import ShowContactService from "../services/ContactServices/ShowContactService";
 import { verifyContact } from "../services/WbotServices/verifyContact";
+import { isWhatsappCloudApi } from "../services/WhatsappCloudApiService";
 
 type IndexQuery = {
   nextId?: string;
@@ -138,7 +139,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const { channel } = ticket;
   if (channel === "whatsapp") {
     await SetTicketMessagesAsRead(ticket);
-    if (!ticket.isGroup) {
+    if (!ticket.isGroup && !isWhatsappCloudApi(ticket.whatsapp)) {
       const contact = await ShowContactService(ticket.contactId, companyId);
       if (!contact.number.includes("@") && !contact.whatsappLidMap) {
         await verifyContact(

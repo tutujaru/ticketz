@@ -18,6 +18,9 @@ import {
   FormControlLabel,
   FormControl,
   FormGroup,
+  InputLabel,
+  MenuItem,
+  Select,
   Typography,
   Tooltip,
   Paper,
@@ -79,6 +82,10 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
     isDefault: false,
     token: "",
     provider: "beta",
+    tokenMeta: "",
+    metaPhoneNumberId: "",
+    metaVerifyToken: "",
+    metaAppSecret: "",
     language: localStorage.getItem("language") || ""
   };
   const [whatsApp, setWhatsApp] = useState(initialState);
@@ -152,6 +159,65 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
           {({ values, touched, errors, isSubmitting }) => (
             <Form>
               <DialogContent dividers>
+                <FormControl fullWidth variant="outlined" margin="dense">
+                  <InputLabel id="whatsapp-provider-label">
+                    Tipo de conexão
+                  </InputLabel>
+                  <Field
+                    as={Select}
+                    labelId="whatsapp-provider-label"
+                    label="Tipo de conexão"
+                    name="provider"
+                  >
+                    <MenuItem value="beta">WhatsApp Web (QR Code)</MenuItem>
+                    <MenuItem value="whatsapp-cloud-api">
+                      WhatsApp Cloud API oficial (Meta)
+                    </MenuItem>
+                  </Field>
+                </FormControl>
+                {values.provider === "whatsapp-cloud-api" && (
+                  <>
+                    <Typography variant="caption" color="textSecondary">
+                      Informe o Phone Number ID, token permanente, token de
+                      verificação e App Secret da Meta.
+                    </Typography>
+                    <Field
+                      as={TextField}
+                      label="Phone Number ID"
+                      fullWidth
+                      name="metaPhoneNumberId"
+                      variant="outlined"
+                      margin="dense"
+                    />
+                    <Field
+                      as={TextField}
+                      label="Token de acesso da Meta"
+                      type="password"
+                      fullWidth
+                      name="tokenMeta"
+                      variant="outlined"
+                      margin="dense"
+                    />
+                    <Field
+                      as={TextField}
+                      label="Token de verificação do webhook"
+                      type="password"
+                      fullWidth
+                      name="metaVerifyToken"
+                      variant="outlined"
+                      margin="dense"
+                    />
+                    <Field
+                      as={TextField}
+                      label="App Secret da Meta"
+                      type="password"
+                      fullWidth
+                      name="metaAppSecret"
+                      variant="outlined"
+                      margin="dense"
+                    />
+                  </>
+                )}
                 <div className={classes.multFieldLine}>
                   <Grid spacing={2} container>
                     <Grid item>

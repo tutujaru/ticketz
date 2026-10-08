@@ -34,9 +34,11 @@ import ticketzOSSRoutes from "./ticketzOSSRoutes";
 import i18nRoutes from "./i18nRoutes";
 import wavoipRoutes from "./wavoipRoutes";
 import dockerRoutes from "./dockerRoutes";
+import whatsappCloudWebhookRoutes from "./whatsappCloudWebhookRoutes";
 
 const routes = Router();
 
+routes.use(whatsappCloudWebhookRoutes);
 routes.use(userRoutes);
 routes.use("/auth", authRoutes);
 routes.use(settingRoutes);

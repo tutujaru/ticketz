@@ -14,6 +14,12 @@ export const StartWhatsAppSession = async (
 
   sendWhatsappUpdate(whatsapp);
 
+  if (whatsapp.provider === "whatsapp-cloud-api") {
+    await whatsapp.update({ status: "CONNECTED", qrcode: "" });
+    sendWhatsappUpdate(whatsapp);
+    return;
+  }
+
   try {
     const wbot = await initWASocket(whatsapp, null, isRefresh);
     wbotMessageListener(wbot, companyId);

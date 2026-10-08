@@ -10,6 +10,11 @@ import { verifyMediaMessage, verifyMessage } from "./wbotMessageListener";
 import User from "../../models/User";
 import { getJidOf } from "./getJidOf";
 import Whatsapp from "../../models/Whatsapp";
+import CreateMessageService from "../MessageServices/CreateMessageService";
+import {
+  isWhatsappCloudApi,
+  sendCloudTextMessage
+} from "../WhatsappCloudApiService";
 
 interface Request {
   body: string;
@@ -36,6 +41,41 @@ const SendWhatsAppMessage = async ({
     throw new AppError("ERR_WAPP_NOT_INITIALIZED");
   }
 
+  const user = userId && (await User.findByPk(userId));
+  const formattedBody = formatBody(body, ticket, user);
+
+  if (isWhatsappCloudApi(connection)) {
+    const response = await sendCloudTextMessage(
+      connection,
+      ticket.contact.number,
+      formattedBody
+    );
+    const messageId = response?.messages?.[0]?.id;
+    if (!messageId) throw new AppError("ERR_WHATSAPP_CLOUD_API");
+    await CreateMessageService({
+      messageData: {
+        id: messageId,
+        ticketId: ticket.id,
+        contactId: ticket.contactId,
+        body: formattedBody,
+        fromMe: true,
+        read: true,
+        ack: 1,
+        remoteJid: `${ticket.contact.number}@s.whatsapp.net`,
+        dataJson: JSON.stringify(response)
+      },
+      companyId: ticket.companyId
+    });
+    return {
+      key: {
+        id: messageId,
+        fromMe: true,
+        remoteJid: `${ticket.contact.number}@s.whatsapp.net`
+      },
+      message: { conversation: formattedBody }
+    } as WAMessage;
+  }
+
   const wbot = await GetTicketWbot(ticket);
 
   if (quotedMsg) {
@@ -58,8 +98,6 @@ const SendWhatsAppMessage = async ({
   }
 
   try {
-    const user = userId && (await User.findByPk(userId));
-    const formattedBody = formatBody(body, ticket, user);
     const sentMessage = await wbot.sendMessage(
       getJidOf(ticket),
       {

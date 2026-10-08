@@ -22,6 +22,9 @@ interface Request {
   facebookUserId?: string;
   facebookUserToken?: string;
   tokenMeta?: string;
+  metaPhoneNumberId?: string;
+  metaVerifyToken?: string;
+  metaAppSecret?: string;
   channel?: string;
   facebookPageUserId?: string;
   language?: string;
@@ -49,6 +52,9 @@ const CreateWhatsAppService = async ({
   facebookUserToken,
   facebookPageUserId,
   tokenMeta,
+  metaPhoneNumberId,
+  metaVerifyToken,
+  metaAppSecret,
   channel = "whatsapp",
   language
 }: Request): Promise<Response> => {
@@ -160,6 +166,9 @@ const CreateWhatsAppService = async ({
       facebookUserToken,
       facebookPageUserId,
       tokenMeta,
+      metaPhoneNumberId,
+      metaVerifyToken,
+      metaAppSecret,
       language
     },
     { include: ["queues"] }

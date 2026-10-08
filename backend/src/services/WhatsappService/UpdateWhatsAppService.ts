@@ -20,6 +20,11 @@ export interface WhatsappData {
   companyId?: number;
   token?: string;
   language?: string;
+  provider?: string;
+  tokenMeta?: string;
+  metaPhoneNumberId?: string;
+  metaVerifyToken?: string;
+  metaAppSecret?: string;
 }
 
 interface Request {
@@ -56,7 +61,12 @@ const UpdateWhatsAppService = async ({
     transferMessage,
     queueIds,
     token,
-    language
+    language,
+    provider,
+    tokenMeta,
+    metaPhoneNumberId,
+    metaVerifyToken,
+    metaAppSecret
   } = whatsappData;
 
   try {
@@ -101,6 +111,11 @@ const UpdateWhatsAppService = async ({
     isDefault,
     companyId,
     token,
+    provider,
+    tokenMeta,
+    metaPhoneNumberId,
+    metaVerifyToken,
+    metaAppSecret,
     transferMessage,
     language
   });

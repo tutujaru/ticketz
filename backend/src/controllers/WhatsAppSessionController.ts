@@ -65,7 +65,10 @@ const remove = async (req: Request, res: Response): Promise<Response> => {
     throw new AppError("ERR_NO_WAPP_FOUND", 404);
   }
 
-  if (whatsapp.channel === "whatsapp") {
+  if (
+    whatsapp.channel === "whatsapp" &&
+    whatsapp.provider !== "whatsapp-cloud-api"
+  ) {
     const wbot = getWbot(whatsapp.id);
     wbot.logout();
     wbot.ws.close();
@@ -92,7 +95,10 @@ const refresh = async (req: Request, res: Response): Promise<Response> => {
     throw new AppError("ERR_NO_WAPP_FOUND", 404);
   }
 
-  if (whatsapp.channel === "whatsapp") {
+  if (
+    whatsapp.channel === "whatsapp" &&
+    whatsapp.provider !== "whatsapp-cloud-api"
+  ) {
     const wbot = getWbot(whatsapp.id);
     if (!wbot) {
       return res.status(404).json({ message: "Session not found." });
@@ -163,8 +169,10 @@ const reset = async (req: Request, res: Response): Promise<Response> => {
     throw new AppError("ERR_NO_WAPP_FOUND", 404);
   }
 
-  await removeWbot(whatsapp.id, false);
-  await BaileysKeys.destroy({ where: { whatsappId: whatsapp.id } });
+  if (whatsapp.provider !== "whatsapp-cloud-api") {
+    await removeWbot(whatsapp.id, false);
+    await BaileysKeys.destroy({ where: { whatsappId: whatsapp.id } });
+  }
   await whatsapp.update({
     status: "DISCONNECTED",
     qrcode: "",

@@ -19,6 +19,12 @@ import saveMediaToFile from "../../helpers/saveMediaFile";
 import { getJidOf } from "./getJidOf";
 import { logger } from "../../utils/logger";
 import { URLCharEncoder } from "../../helpers/URLCharEncoder";
+import Whatsapp from "../../models/Whatsapp";
+import CreateMessageService from "../MessageServices/CreateMessageService";
+import {
+  isWhatsappCloudApi,
+  sendCloudMediaMessage
+} from "../WhatsappCloudApiService";
 
 interface Request {
   media: Express.Multer.File;
@@ -196,6 +202,40 @@ export const SendWhatsAppMedia = async ({
       mimetype: media.mimetype,
       filename: fileName || media.originalname
     };
+
+    const whatsapp = await Whatsapp.findByPk(ticket.whatsappId);
+    if (whatsapp && isWhatsappCloudApi(whatsapp)) {
+      const response = await sendCloudMediaMessage(
+        whatsapp,
+        ticket.contact.number,
+        pathMedia,
+        media.mimetype,
+        fileName || media.originalname,
+        caption
+      );
+      const messageId = response?.messages?.[0]?.id;
+      if (!messageId) throw new AppError("ERR_WHATSAPP_CLOUD_API");
+      await CreateMessageService({
+        messageData: {
+          id: messageId,
+          ticketId: ticket.id,
+          contactId: ticket.contactId,
+          body: caption || `[${media.mimetype}]`,
+          fromMe: true,
+          read: true,
+          ack: 1,
+          mediaType: media.mimetype.split("/")[0],
+          mediaUrl: savedPath,
+          dataJson: JSON.stringify(response),
+          remoteJid: `${ticket.contact.number}@s.whatsapp.net`
+        },
+        companyId: ticket.companyId
+      });
+      return {
+        key: { id: messageId, fromMe: true },
+        message: {}
+      } as WAMessage;
+    }
 
     if (media.size > fileLimit * 1024 * 1024) {
       const fileUrl = savedPath.startsWith("http")

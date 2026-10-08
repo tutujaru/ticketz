@@ -124,6 +124,15 @@ class Whatsapp extends Model<Whatsapp> {
   @Column(DataType.TEXT)
   tokenMeta: string;
 
+  @Column(DataType.TEXT)
+  metaPhoneNumberId: string;
+
+  @Column(DataType.TEXT)
+  metaVerifyToken: string;
+
+  @Column(DataType.TEXT)
+  metaAppSecret: string;
+
   @HasOne(() => Wavoip)
   wavoip: Wavoip;
 

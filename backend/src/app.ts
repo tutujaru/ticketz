@@ -42,7 +42,14 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, _res, buffer) => {
+      (req as Request & { rawBody?: Buffer }).rawBody = buffer as Buffer;
+    }
+  })
+);
 app.use(Sentry.Handlers.requestHandler());
 app.get("/public/*", (req, res) => {
   const filePath = path.join(uploadConfig.directory, req.params[0]);
