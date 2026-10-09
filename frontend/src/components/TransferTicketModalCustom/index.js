@@ -150,7 +150,9 @@ const TransferTicketModalCustom = ({
     const connectionQueues = connection?.queues || [];
     // The connection identifies the eligible users. After a user is selected,
     // list all queues associated with that user.
-    const availableQueues = selectedUser?.queues || connectionQueues;
+    const availableQueues = hideUserSelection
+      ? connectionQueues
+      : selectedUser?.queues || [];
     setAllQueues(availableQueues);
     setQueues(availableQueues);
     setSelectedQueue(currentQueue =>
@@ -158,7 +160,13 @@ const TransferTicketModalCustom = ({
         ? currentQueue
         : ""
     );
-  }, [selectedWhatsapp, selectedCompanyId, targetCompanies, selectedUser]);
+  }, [
+    selectedWhatsapp,
+    selectedCompanyId,
+    targetCompanies,
+    selectedUser,
+    hideUserSelection
+  ]);
 
   const handleClose = () => {
     onClose();
@@ -213,51 +221,6 @@ const TransferTicketModalCustom = ({
           {i18n.t("transferTicketModal.title")}
         </DialogTitle>
         <DialogContent dividers>
-          {!hideUserSelection && (
-            <Autocomplete
-              style={{ width: 300, marginBottom: 20 }}
-              getOptionLabel={option => `${option.name}`}
-              onChange={(e, newValue) => {
-                const user =
-                  newValue && typeof newValue === "object" && newValue.id
-                    ? newValue
-                    : null;
-                setSelectedUser(user);
-                if (user != null && Array.isArray(user.queues)) {
-                  setQueues(user.queues);
-                } else {
-                  setQueues(allQueues);
-                }
-              }}
-              options={options}
-              filterOptions={filterOptions}
-              disabled={!selectedWhatsapp}
-              autoHighlight
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              noOptionsText={i18n.t("transferTicketModal.noOptions")}
-              loading={loading}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  label={i18n.t("transferTicketModal.fieldLabel")}
-                  variant="outlined"
-                  autoFocus
-                  onChange={e => setSearchParam(e.target.value)}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <React.Fragment>
-                        {loading ? (
-                          <CircularProgress color="inherit" size={20} />
-                        ) : null}
-                        {params.InputProps.endAdornment}
-                      </React.Fragment>
-                    )
-                  }}
-                />
-              )}
-            />
-          )}
           <FormControl
             variant="outlined"
             className={classes.maxWidth}
@@ -271,6 +234,9 @@ const TransferTicketModalCustom = ({
               onChange={e => {
                 setSelectedCompanyId(e.target.value);
                 setSelectedWhatsapp("");
+                setSelectedUser(null);
+                setSearchParam("");
+                setSelectedQueue("");
               }}
               label={i18n.t("transferTicketModal.fieldCompanyLabel")}
             >
@@ -321,12 +287,58 @@ const TransferTicketModalCustom = ({
                 ))}
             </Select>
           </FormControl>
+          {!hideUserSelection && (
+            <Autocomplete
+              style={{ width: 300, marginBottom: 20 }}
+              getOptionLabel={option => `${option.name}`}
+              onChange={(e, newValue) => {
+                const user =
+                  newValue && typeof newValue === "object" && newValue.id
+                    ? newValue
+                    : null;
+                setSelectedUser(user);
+                if (user != null && Array.isArray(user.queues)) {
+                  setQueues(user.queues);
+                } else {
+                  setQueues(allQueues);
+                }
+              }}
+              options={options}
+              filterOptions={filterOptions}
+              disabled={!selectedWhatsapp}
+              autoHighlight
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              noOptionsText={i18n.t("transferTicketModal.noOptions")}
+              loading={loading}
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label={i18n.t("transferTicketModal.fieldLabel")}
+                  variant="outlined"
+                  autoFocus
+                  onChange={e => setSearchParam(e.target.value)}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <React.Fragment>
+                        {loading ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </React.Fragment>
+                    )
+                  }}
+                />
+              )}
+            />
+          )}
           <FormControl variant="outlined" className={classes.maxWidth}>
             <InputLabel>
               {i18n.t("transferTicketModal.fieldQueueLabel")}
             </InputLabel>
             <Select
               value={selectedQueue}
+              disabled={!hideUserSelection && !selectedUser}
               onChange={e => setSelectedQueue(e.target.value)}
               label={i18n.t("transferTicketModal.fieldQueuePlaceholder")}
             >
