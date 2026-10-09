@@ -71,25 +71,13 @@ const TransferTicketModalCustom = ({
     const company = targetCompanies.find(
       item => item.id === Number(selectedCompanyId)
     );
-    const connection = company?.whatsapps?.find(
-      item => item.id === Number(selectedWhatsapp)
-    );
-    const connectionQueueIds = new Set(
-      (connection?.queues || []).map(queue => Number(queue.id))
-    );
     const search = searchParam.trim().toLowerCase();
     setOptions(
       (company?.users || []).filter(user => {
-        const belongsToConnection =
-          !selectedWhatsapp ||
-          (user.queues || []).some(queue =>
-            connectionQueueIds.has(Number(queue.id))
-          );
         return (
-          belongsToConnection &&
-          (!search ||
-            user.name.toLowerCase().includes(search) ||
-            user.email.toLowerCase().includes(search))
+          !search ||
+          (user.name || "").toLowerCase().includes(search) ||
+          (user.email || "").toLowerCase().includes(search)
         );
       })
     );
