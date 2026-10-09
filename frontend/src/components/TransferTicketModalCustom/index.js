@@ -71,14 +71,27 @@ const TransferTicketModalCustom = ({
     const company = targetCompanies.find(
       item => item.id === Number(selectedCompanyId)
     );
+    const connection = company?.whatsapps?.find(
+      item => item.id === Number(selectedWhatsapp)
+    );
+    const connectionQueueIds = new Set(
+      (connection?.queues || []).map(queue => Number(queue.id))
+    );
     const search = searchParam.trim().toLowerCase();
     setOptions(
-      (company?.users || []).filter(
-        user =>
-          !search ||
-          user.name.toLowerCase().includes(search) ||
-          user.email.toLowerCase().includes(search)
-      )
+      (company?.users || []).filter(user => {
+        const belongsToConnection =
+          !selectedWhatsapp ||
+          (user.queues || []).some(queue =>
+            connectionQueueIds.has(Number(queue.id))
+          );
+        return (
+          belongsToConnection &&
+          (!search ||
+            user.name.toLowerCase().includes(search) ||
+            user.email.toLowerCase().includes(search))
+        );
+      })
     );
     setLoading(false);
   }, [
@@ -86,6 +99,7 @@ const TransferTicketModalCustom = ({
     modalOpen,
     hideUserSelection,
     selectedCompanyId,
+    selectedWhatsapp,
     targetCompanies
   ]);
 
@@ -134,10 +148,9 @@ const TransferTicketModalCustom = ({
       return;
     }
     const connectionQueues = connection?.queues || [];
-    // When a destination connection is selected, its queues are the source
-    // of truth. The selected user's queues must not hide queues configured for
-    // that connection (for example, showing only "ATENDIMENTO").
-    const availableQueues = connectionQueues;
+    // The connection identifies the eligible users. After a user is selected,
+    // list all queues associated with that user.
+    const availableQueues = selectedUser?.queues || connectionQueues;
     setAllQueues(availableQueues);
     setQueues(availableQueues);
     setSelectedQueue(currentQueue =>
@@ -218,6 +231,7 @@ const TransferTicketModalCustom = ({
               }}
               options={options}
               filterOptions={filterOptions}
+              disabled={!selectedWhatsapp}
               autoHighlight
               isOptionEqualToValue={(option, value) => option.id === value.id}
               noOptionsText={i18n.t("transferTicketModal.noOptions")}
@@ -277,7 +291,12 @@ const TransferTicketModalCustom = ({
             </InputLabel>
             <Select
               value={selectedWhatsapp}
-              onChange={e => setSelectedWhatsapp(e.target.value)}
+              onChange={e => {
+                setSelectedWhatsapp(e.target.value);
+                setSelectedUser(null);
+                setSearchParam("");
+                setSelectedQueue("");
+              }}
               label={i18n.t("transferTicketModal.fieldWhatsappLabel")}
             >
               <MenuItem value="">
