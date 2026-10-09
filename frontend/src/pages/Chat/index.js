@@ -13,8 +13,11 @@ import {
   Paper,
   Tab,
   Tabs,
-  TextField
+  TextField,
+  Typography
 } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
+import ForumOutlinedIcon from "@material-ui/icons/ForumOutlined";
 import ChatList from "./ChatList";
 import ChatMessages from "./ChatMessages";
 import { UsersFilter } from "../../components/UsersFilter";
@@ -25,45 +28,138 @@ import { has, isObject } from "lodash";
 
 import { AuthContext } from "../../context/Auth/AuthContext";
 import withWidth, { isWidthUp } from "@material-ui/core/withWidth";
-import whatsBackground from "../../assets/wa-background.png";
-import whatsBackgroundDark from "../../assets/wa-background-dark.png";
 
 import { i18n } from "../../translate/i18n";
 import Title from "../../components/Title";
+
 const useStyles = makeStyles(theme => ({
   mainContainer: {
     display: "flex",
     flexDirection: "column",
     position: "relative",
     flex: 1,
-    padding: theme.spacing(2),
     height: `calc(100% - 48px)`,
     overflowY: "hidden",
-    border: "1px solid rgba(0, 0, 0, 0.12)",
-    backgroundImage:
-      theme.mode === "light"
-        ? `url(${whatsBackground})`
-        : `url(${whatsBackgroundDark})`,
-    backgroundPosition: "center",
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat"
+    borderRadius: "16px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+    border: "1px solid #f1f5f9"
   },
   gridContainer: {
     flex: 1,
     height: "100%",
-    border: "1px solid rgba(0, 0, 0, 0.12)",
-    backgroundColor: "inherit"
+    backgroundColor: "inherit",
+    overflow: "hidden"
   },
   gridItem: {
-    height: "100%"
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "hidden"
   },
   gridItemTab: {
     height: "92%",
-    width: "100%"
+    width: "100%",
+    overflowY: "hidden"
   },
+  // Wrapper lateral esquerdo (lista de chats)
+  sideWrapper: {
+    borderRight: "1px solid #f1f5f9",
+    backgroundColor: "#ffffff",
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    overflowY: "hidden"
+  },
+  // Wrapper lateral direito (mensagens)
+  messagesWrapper: {
+    backgroundColor: "#fafbfc",
+    height: "100%",
+    overflowY: "hidden",
+    display: "flex",
+    flexDirection: "column"
+  },
+  // Container do botão "Nova"
   btnContainer: {
-    textAlign: "right",
-    padding: 10
+    padding: theme.spacing(2),
+    display: "flex",
+    justifyContent: "flex-end",
+    borderBottom: "1px solid #f1f5f9"
+  },
+  // Botão "Nova Conversa" moderno
+  newChatButton: {
+    borderRadius: "10px",
+    textTransform: "none",
+    fontWeight: 600,
+    padding: theme.spacing(1, 3),
+    boxShadow: "0px 4px 12px rgba(59, 130, 246, 0.25)",
+    transition: "all 0.2s ease",
+    "&:hover": {
+      boxShadow: "0px 6px 16px rgba(59, 130, 246, 0.35)",
+      transform: "translateY(-1px)"
+    }
+  },
+  // Tabs modernas
+  tabsWrapper: {
+    padding: theme.spacing(0, 2),
+    backgroundColor: "#ffffff",
+    borderBottom: "1px solid #f1f5f9"
+  },
+  modernTab: {
+    textTransform: "none",
+    fontWeight: 600,
+    fontSize: "0.875rem",
+    letterSpacing: "0.02em",
+    minWidth: "100px",
+    color: "#64748b",
+    "&.Mui-selected": {
+      color: "#3b82f6"
+    }
+  },
+  // Dialog moderno
+  dialogPaper: {
+    borderRadius: "16px",
+    padding: theme.spacing(1)
+  },
+  dialogTitle: {
+    fontWeight: 700,
+    color: "#0f172a",
+    fontSize: "1.25rem"
+  },
+  dialogContent: {
+    paddingTop: theme.spacing(2)
+  },
+  // Botões do dialog
+  cancelButton: {
+    borderRadius: "10px",
+    textTransform: "none",
+    fontWeight: 600,
+    color: "#64748b"
+  },
+  saveButton: {
+    borderRadius: "10px",
+    textTransform: "none",
+    fontWeight: 600,
+    boxShadow: "0px 4px 12px rgba(59, 130, 246, 0.25)"
+  },
+  // Estado vazio do chat
+  emptyChatState: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    textAlign: "center",
+    padding: theme.spacing(4)
+  },
+  emptyChatIcon: {
+    fontSize: "4rem",
+    color: "#cbd5e1",
+    marginBottom: theme.spacing(2)
+  },
+  emptyChatText: {
+    color: "#64748b",
+    fontWeight: 500
   }
 }));
 
@@ -75,6 +171,7 @@ export function ChatModal({
   handleLoadNewChat,
   user
 }) {
+  const classes = useStyles();
   const [users, setUsers] = useState([]);
   const [title, setTitle] = useState("");
 
@@ -125,19 +222,25 @@ export function ChatModal({
       onClose={handleClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
+      classes={{ paper: classes.dialogPaper }}
+      maxWidth="sm"
+      fullWidth
     >
-      <DialogTitle id="alert-dialog-title">Conversa</DialogTitle>
-      <DialogContent>
+      <DialogTitle id="alert-dialog-title" className={classes.dialogTitle}>
+        {type === "edit" ? "Editar Conversa" : "Nova Conversa"}
+      </DialogTitle>
+      <DialogContent className={classes.dialogContent}>
         <Grid spacing={2} container>
-          <Grid xs={12} style={{ padding: 18 }} item>
+          <Grid xs={12} item>
             <TextField
               label="Título"
-              placeholder="Título"
+              placeholder="Digite o título da conversa"
               value={title}
               onChange={e => setTitle(e.target.value)}
               variant="outlined"
               size="small"
               fullWidth
+              style={{ marginBottom: 16 }}
             />
           </Grid>
           <Grid xs={12} item>
@@ -150,11 +253,19 @@ export function ChatModal({
           </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Fechar
+      <DialogActions style={{ padding: 16 }}>
+        <Button
+          onClick={handleClose}
+          className={classes.cancelButton}
+        >
+          Cancelar
         </Button>
-        <Button onClick={handleSave} color="primary" variant="contained">
+        <Button
+          onClick={handleSave}
+          color="primary"
+          variant="contained"
+          className={classes.saveButton}
+        >
           Salvar
         </Button>
       </DialogActions>
@@ -349,12 +460,28 @@ function Chat(props) {
     }
   };
 
+  // Estado vazio para quando nenhum chat está selecionado (Desktop)
+  const renderEmptyChat = () => (
+    <div className={classes.emptyChatState}>
+      <ForumOutlinedIcon className={classes.emptyChatIcon} />
+      <Typography variant="h6" className={classes.emptyChatText}>
+        Selecione uma conversa
+      </Typography>
+      <Typography
+        variant="body2"
+        style={{ color: "#94a3b8", marginTop: 8 }}
+      >
+        Escolha uma conversa na lista à esquerda para começar.
+      </Typography>
+    </div>
+  );
+
   const renderGrid = () => {
     return (
       <>
-        <Title>{i18n.t("internalChat.title")}</Title>
         <Grid className={classes.gridContainer} container>
-          <Grid className={classes.gridItem} md={3} item>
+          {/* Coluna Esquerda - Lista de Chats */}
+          <Grid className={`${classes.gridItem} ${classes.sideWrapper}`} md={3} item>
             <div className={classes.btnContainer}>
               <Button
                 onClick={() => {
@@ -363,6 +490,8 @@ function Chat(props) {
                 }}
                 color="primary"
                 variant="contained"
+                className={classes.newChatButton}
+                startIcon={<AddIcon />}
               >
                 Nova
               </Button>
@@ -380,8 +509,10 @@ function Chat(props) {
               }}
             />
           </Grid>
-          <Grid className={classes.gridItem} md={9} item>
-            {isObject(currentChat) && has(currentChat, "id") && (
+
+          {/* Coluna Direita - Mensagens */}
+          <Grid className={`${classes.gridItem} ${classes.messagesWrapper}`} md={9} item>
+            {isObject(currentChat) && has(currentChat, "id") ? (
               <ChatMessages
                 chat={currentChat}
                 scrollToBottomRef={scrollToBottomRef}
@@ -391,6 +522,8 @@ function Chat(props) {
                 handleSendMessage={sendMessage}
                 handleLoadMore={loadMoreMessages}
               />
+            ) : (
+              renderEmptyChat()
             )}
           </Grid>
         </Grid>
@@ -401,27 +534,35 @@ function Chat(props) {
   const renderTab = () => {
     return (
       <Grid className={classes.gridContainer} container>
-        <Grid md={12} item>
+        <Grid md={12} item className={classes.tabsWrapper}>
           <Tabs
             value={tab}
             indicatorColor="primary"
             textColor="primary"
             onChange={(e, v) => setTab(v)}
-            aria-label="disabled tabs example"
+            variant="fullWidth"
+            TabIndicatorProps={{
+              style: { height: 3, borderRadius: "3px 3px 0 0" }
+            }}
           >
-            <Tab label="Chats" />
-            <Tab label="Mensagens" />
+            <Tab label="Conversas" className={classes.modernTab} />
+            <Tab label="Mensagens" className={classes.modernTab} />
           </Tabs>
         </Grid>
         {tab === 0 && (
           <Grid className={classes.gridItemTab} md={12} item>
             <div className={classes.btnContainer}>
               <Button
-                onClick={() => setShowDialog(true)}
+                onClick={() => {
+                  setDialogType("new");
+                  setShowDialog(true);
+                }}
                 color="primary"
                 variant="contained"
+                className={classes.newChatButton}
+                startIcon={<AddIcon />}
               >
-                Novo
+                Nova
               </Button>
             </div>
             <ChatList
@@ -435,7 +576,7 @@ function Chat(props) {
         )}
         {tab === 1 && (
           <Grid className={classes.gridItemTab} md={12} item>
-            {isObject(currentChat) && has(currentChat, "id") && (
+            {isObject(currentChat) && has(currentChat, "id") ? (
               <ChatMessages
                 chat={currentChat}
                 scrollToBottomRef={scrollToBottomRef}
@@ -445,6 +586,8 @@ function Chat(props) {
                 handleSendMessage={sendMessage}
                 handleLoadMore={loadMoreMessages}
               />
+            ) : (
+              renderEmptyChat()
             )}
           </Grid>
         )}
@@ -468,7 +611,8 @@ function Chat(props) {
         handleClose={() => setShowDialog(false)}
         user={user}
       />
-      <Paper className={classes.mainContainer}>
+      <Title>{i18n.t("internalChat.title")}</Title>
+      <Paper className={classes.mainContainer} elevation={0}>
         {isWidthUp("md", props.width) ? renderGrid() : renderTab()}
       </Paper>
     </>
