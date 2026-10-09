@@ -49,15 +49,133 @@ import { loadJSON } from "../helpers/loadJSON";
 const gitinfo = loadJSON("/gitinfo.json");
 
 const useStyles = makeStyles(theme => ({
-  ListSubheader: {
-    height: 26,
-    marginTop: "-15px",
-    marginBottom: "-10px"
+  // Cabeçalho de seção moderno
+  sectionHeader: {
+    position: "relative",
+    fontSize: "0.7rem",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.1em",
+    color: "#94a3b8",
+    padding: theme.spacing(2, 3, 0.5, 3),
+    lineHeight: 1.2,
+    marginTop: 0,
+    marginBottom: 0
+  },
+
+  // Estilo base dos itens de menu
+  listItem: {
+    margin: theme.spacing(0.25, 1.5),
+    padding: theme.spacing(0.75, 1.5),
+    borderRadius: "10px",
+    width: "calc(100% - 24px)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      backgroundColor: "#f1f5f9",
+      transform: "translateX(2px)",
+      "& $listItemIcon": {
+        color: "#3b82f6" // Azul moderno
+      },
+      "& $listItemText": {
+        color: "#0f172a"
+      }
+    }
+  },
+
+  // Ícone do item
+  listItemIcon: {
+    minWidth: "40px",
+    color: "#64748b", // Cinza suave
+    transition: "color 0.2s ease",
+    "& svg": {
+      fontSize: "20px"
+    }
+  },
+
+  // Texto do item
+  listItemText: {
+    "& span": {
+      fontSize: "0.875rem",
+      fontWeight: 500,
+      color: "#475569",
+      transition: "color 0.2s ease"
+    }
+  },
+
+  // Divisória sutil
+  divider: {
+    margin: theme.spacing(1.5, 2),
+    backgroundColor: "#f1f5f9",
+    height: "1px"
+  },
+
+  // Submenu colapsável
+  submenuItem: {
+    margin: theme.spacing(0.25, 1.5),
+    padding: theme.spacing(0.5, 1.5, 0.5, 4),
+    borderRadius: "10px",
+    width: "calc(100% - 24px)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      backgroundColor: "#f1f5f9",
+      "& $listItemIcon": {
+        color: "#3b82f6"
+      }
+    }
+  },
+
+  submenuCollapse: {
+    position: "relative",
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      left: "32px",
+      top: "0",
+      bottom: "8px",
+      width: "1px",
+      backgroundColor: "#e2e8f0"
+    }
+  },
+
+  // Badge moderno
+  modernBadge: {
+    "& .MuiBadge-badge": {
+      backgroundColor: "#ef4444",
+      color: "#ffffff",
+      boxShadow: "0 0 0 2px #ffffff",
+      fontSize: "0.6rem",
+      fontWeight: 700,
+      minWidth: "8px",
+      height: "8px",
+      padding: 0,
+      borderRadius: "50%"
+    }
+  },
+
+  // Rodapé de versão
+  versionPill: {
+    display: "inline-block",
+    fontSize: "0.65rem",
+    fontWeight: 600,
+    color: "#94a3b8",
+    backgroundColor: "#f8fafc",
+    padding: theme.spacing(0.5, 1.5),
+    borderRadius: "12px",
+    border: "1px solid #f1f5f9",
+    margin: theme.spacing(1, 2),
+    textAlign: "center",
+    letterSpacing: "0.02em"
+  },
+
+  versionWrapper: {
+    textAlign: "center",
+    padding: theme.spacing(1, 0, 2, 0)
   }
 }));
 
 function ListItemLink(props) {
   const { icon, primary, to, className } = props;
+  const classes = useStyles();
 
   const renderLink = React.useMemo(
     () =>
@@ -68,10 +186,16 @@ function ListItemLink(props) {
   );
 
   return (
-    <li>
-      <ListItem button dense component={renderLink} className={className}>
-        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
-        <ListItemText primary={primary} />
+    <li style={{ listStyle: "none" }}>
+      <ListItem
+        button
+        component={renderLink}
+        className={className || classes.listItem}
+      >
+        {icon ? (
+          <ListItemIcon className={classes.listItemIcon}>{icon}</ListItemIcon>
+        ) : null}
+        <ListItemText className={classes.listItemText} primary={primary} />
       </ListItem>
     </li>
   );
@@ -242,7 +366,6 @@ const MainListItems = props => {
   };
 
   const handleClickLogout = () => {
-    //handleCloseMenu();
     handleLogout();
   };
 
@@ -251,21 +374,15 @@ const MainListItems = props => {
       <Can
         role={user.profile}
         perform={"drawer-service-items:view"}
-        style={{
-          overflowY: "scroll"
-        }}
+        style={{ overflowY: "scroll" }}
         no={() => (
           <>
             <ListSubheader
               hidden={!drawerOpen}
-              style={{
-                position: "relative",
-                fontSize: "17px",
-                textAlign: "left",
-                paddingLeft: 20
-              }}
+              className={classes.sectionHeader}
               inset
               color="inherit"
+              disableSticky
             >
               {i18n.t("mainDrawer.listItems.service")}
             </ListSubheader>
@@ -304,7 +421,12 @@ const MainListItems = props => {
                 to="/chats"
                 primary={i18n.t("mainDrawer.listItems.chats")}
                 icon={
-                  <Badge color="secondary" variant="dot" invisible={invisible}>
+                  <Badge
+                    color="secondary"
+                    variant="dot"
+                    invisible={invisible}
+                    className={classes.modernBadge}
+                  >
                     <ForumIcon />
                   </Badge>
                 }
@@ -324,17 +446,13 @@ const MainListItems = props => {
         perform={"drawer-admin-items:view"}
         yes={() => (
           <>
-            <Divider />
+            <Divider className={classes.divider} />
             <ListSubheader
               hidden={!drawerOpen}
-              style={{
-                position: "relative",
-                fontSize: "17px",
-                textAlign: "left",
-                paddingLeft: 20
-              }}
+              className={classes.sectionHeader}
               inset
               color="inherit"
+              disableSticky
             >
               {i18n.t("mainDrawer.listItems.management")}
             </ListSubheader>
@@ -352,17 +470,13 @@ const MainListItems = props => {
         perform="drawer-admin-items:view"
         yes={() => (
           <>
-            <Divider />
+            <Divider className={classes.divider} />
             <ListSubheader
               hidden={!drawerOpen}
-              style={{
-                position: "relative",
-                fontSize: "17px",
-                textAlign: "left",
-                paddingLeft: 20
-              }}
+              className={classes.sectionHeader}
               inset
               color="inherit"
+              disableSticky
             >
               {i18n.t("mainDrawer.listItems.administration")}
             </ListSubheader>
@@ -371,50 +485,67 @@ const MainListItems = props => {
               <>
                 <ListItem
                   button
+                  className={classes.listItem}
                   onClick={() => setOpenCampaignSubmenu(prev => !prev)}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon className={classes.listItemIcon}>
                     <EventAvailableIcon />
                   </ListItemIcon>
                   <ListItemText
+                    className={classes.listItemText}
                     primary={i18n.t("mainDrawer.listItems.campaigns")}
                   />
                   {openCampaignSubmenu ? (
-                    <ExpandLessIcon />
+                    <ExpandLessIcon style={{ color: "#64748b", fontSize: 20 }} />
                   ) : (
-                    <ExpandMoreIcon />
+                    <ExpandMoreIcon style={{ color: "#64748b", fontSize: 20 }} />
                   )}
                 </ListItem>
                 <Collapse
-                  style={{ paddingLeft: 15 }}
                   in={openCampaignSubmenu}
                   timeout="auto"
                   unmountOnExit
+                  className={classes.submenuCollapse}
                 >
                   <List component="div" disablePadding>
-                    <ListItem onClick={() => history.push("/campaigns")} button>
-                      <ListItemIcon>
+                    <ListItem
+                      onClick={() => history.push("/campaigns")}
+                      button
+                      className={classes.submenuItem}
+                    >
+                      <ListItemIcon className={classes.listItemIcon}>
                         <ListIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listagem" />
+                      <ListItemText
+                        className={classes.listItemText}
+                        primary="Listagem"
+                      />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/contact-lists")}
                       button
+                      className={classes.submenuItem}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon className={classes.listItemIcon}>
                         <PeopleIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listas de Contatos" />
+                      <ListItemText
+                        className={classes.listItemText}
+                        primary="Listas de Contatos"
+                      />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/campaigns-config")}
                       button
+                      className={classes.submenuItem}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon className={classes.listItemIcon}>
                         <SettingsOutlinedIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Configurações" />
+                      <ListItemText
+                        className={classes.listItemText}
+                        primary="Configurações"
+                      />
                     </ListItem>
                   </List>
                 </Collapse>
@@ -431,7 +562,11 @@ const MainListItems = props => {
               to="/connections"
               primary={i18n.t("mainDrawer.listItems.connections")}
               icon={
-                <Badge badgeContent={connectionWarning ? "!" : 0} color="error">
+                <Badge
+                  badgeContent={connectionWarning ? "!" : 0}
+                  color="error"
+                  className={classes.modernBadge}
+                >
                   <SyncAltIcon />
                 </Badge>
               }
@@ -465,25 +600,27 @@ const MainListItems = props => {
 
             {drawerOpen && (
               <>
-                <Divider />
-                <Typography
-                  style={{
-                    fontSize: "12px",
-                    padding: "10px",
-                    textAlign: "right",
-                    fontWeight: "bold"
-                  }}
-                >
-                  {`${gitinfo.tagName || gitinfo.branchName + " " + gitinfo.commitHash}`}
-                  &nbsp;/&nbsp;
-                  {`${gitinfo.buildTimestamp}`}
-                </Typography>
+                <Divider className={classes.divider} />
+                <div className={classes.versionWrapper}>
+                  <Typography className={classes.versionPill}>
+                    {`${gitinfo.tagName || gitinfo.branchName + " " + gitinfo.commitHash}`}
+                  </Typography>
+                  <Typography
+                    style={{
+                      fontSize: "0.6rem",
+                      color: "#cbd5e1",
+                      marginTop: "4px"
+                    }}
+                  >
+                    {gitinfo.buildTimestamp}
+                  </Typography>
+                </div>
               </>
             )}
           </>
         )}
       />
-      <Divider />
+      <Divider className={classes.divider} />
     </div>
   );
 };
