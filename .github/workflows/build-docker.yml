@@ -61,7 +61,7 @@ jobs:
 
       - name: Docker meta Backend
         id: metabackend
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}
@@ -76,7 +76,7 @@ jobs:
 
       - name: Docker meta Frontend
         id: metafrontend
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}
@@ -106,6 +106,8 @@ jobs:
         with:
           context: ./frontend
           push: true
-          platforms: linux/amd64,linux/arm64
+          # React production build currently crashes under ARM64 QEMU
+          # (illegal instruction); the VPS deployment target is amd64.
+          platforms: linux/amd64
           tags: ${{ steps.metafrontend.outputs.tags }}
           labels: ${{ steps.metafrontend.outputs.labels }}
