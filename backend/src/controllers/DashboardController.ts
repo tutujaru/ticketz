@@ -7,11 +7,13 @@ import {
   usersReportService
 } from "../services/ReportService/DashboardService";
 import Company from "../models/Company";
+import User from "../models/User";
 
 const getDashboardCompanyScope = async (
   req: Request
 ): Promise<number | number[]> => {
-  if (!req.user.isSuper) return req.user.companyId;
+  const user = await User.findByPk(req.user.id, { attributes: ["super"] });
+  if (!user?.super) return req.user.companyId;
 
   const companies = await Company.findAll({
     where: { status: true },
