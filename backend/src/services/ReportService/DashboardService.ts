@@ -57,8 +57,13 @@ type UserReportData = {
   userReport: UserStatistics[];
 };
 
+type CompanyScope = number | number[];
+
+const companyWhere = (companyId: CompanyScope) =>
+  Array.isArray(companyId) ? { [Op.in]: companyId } : companyId;
+
 export async function calculateTicketStatistics(
-  companyId: number,
+  companyId: CompanyScope,
   start: Date,
   end: Date
 ): Promise<TicketTrackingStatistics> {
@@ -69,7 +74,7 @@ export async function calculateTicketStatistics(
       [fn("COUNT", col("id")), "totalClosed"]
     ],
     where: {
-      companyId,
+      companyId: companyWhere(companyId),
       createdAt: {
         [Op.between]: [start, end]
       },
@@ -100,7 +105,7 @@ export async function calculateTicketStatistics(
         "Contacts" c ON t."contactId" = c.id
     WHERE 
         (tt."createdAt" BETWEEN :startDate AND :endDate)
-        AND (tt."companyId" = :companyId)
+        AND (tt."companyId" IN (:companyIds))
         AND (tt."finishedAt" BETWEEN :startDate AND :endDate)
         AND (c."createdAt" BETWEEN :startDate AND :endDate)
   ) counters_list GROUP BY "contactId") counters_totals
@@ -108,7 +113,7 @@ export async function calculateTicketStatistics(
 
   const newContacts = (await sequelize.query(countContactsQuery, {
     replacements: {
-      companyId,
+      companyIds: Array.isArray(companyId) ? companyId : [companyId],
       startDate: start,
       endDate: end
     },
@@ -120,16 +125,17 @@ export async function calculateTicketStatistics(
   return ticketStatistics;
 }
 
-export async function ticketsStatusSummary(companyId: number) {
+export async function ticketsStatusSummary(companyId: CompanyScope) {
   const where: WhereOptions<Ticket> = {
-    companyId,
+    companyId: companyWhere(companyId),
     status: {
       [Op.or]: ["open", "pending"]
     }
   };
 
-  const groupsEnabled =
-    (await GetCompanySetting(companyId, "groupsTab", "disabled")) === "enabled";
+  const groupsEnabled = Array.isArray(companyId)
+    ? false
+    : (await GetCompanySetting(companyId, "groupsTab", "disabled")) === "enabled";
 
   if (groupsEnabled) {
     where.isGroup = false;
@@ -151,7 +157,7 @@ export async function ticketsStatusSummary(companyId: number) {
   return ticketsSummary;
 }
 
-export async function usersStatusSummary(companyId) {
+export async function usersStatusSummary(companyId: CompanyScope) {
   const usersSummary = await User.findAll({
     attributes: [
       "id",
@@ -168,7 +174,7 @@ export async function usersStatusSummary(companyId) {
       [fn("COUNT", col("tickets.id")), "openTicketsCount"]
     ],
     where: {
-      companyId
+      companyId: companyWhere(companyId)
     },
     include: [
       {
@@ -187,7 +193,7 @@ export async function usersStatusSummary(companyId) {
   return usersSummary;
 }
 
-export async function userReport(companyId: number, start: Date, end: Date) {
+export async function userReport(companyId: CompanyScope, start: Date, end: Date) {
   const result = await User.findAll({
     attributes: [
       "id",
@@ -236,7 +242,7 @@ export async function userReport(companyId: number, start: Date, end: Date) {
       ]
     ],
     where: {
-      companyId
+      companyId: companyWhere(companyId)
     },
     include: [
       {
@@ -281,7 +287,7 @@ export async function userReport(companyId: number, start: Date, end: Date) {
   return result as unknown[] as UserStatistics[];
 }
 
-export async function statusSummaryService(companyId: number) {
+export async function statusSummaryService(companyId: CompanyScope) {
   return {
     ticketsStatusSummary: await ticketsStatusSummary(companyId),
     usersStatusSummary: await usersStatusSummary(companyId)
@@ -289,7 +295,7 @@ export async function statusSummaryService(companyId: number) {
 }
 
 export async function ticketsStatisticsService(
-  companyId: number,
+  companyId: CompanyScope,
   params: DashboardDateRange
 ): Promise<TicketsStatisticsData> {
   let start: Date;
@@ -322,7 +328,7 @@ export async function ticketsStatisticsService(
 }
 
 export async function usersReportService(
-  companyId: number,
+  companyId: CompanyScope,
   params: DashboardDateRange
 ): Promise<UserReportData> {
   let start: Date;

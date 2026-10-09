@@ -9,13 +9,13 @@ export type TicketCounterSeries = {
 };
 
 export async function listCounterSerie(
-  companyId: number,
+  companyId: number | number[],
   serie: string,
   start: Date,
   end: Date
 ): Promise<TicketCounterSeries> {
   const where = {
-    companyId,
+    companyId: Array.isArray(companyId) ? { [Op.in]: companyId } : companyId,
     serie,
     timestamp: {
       [Op.gte]: start,
