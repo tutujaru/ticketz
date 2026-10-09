@@ -134,7 +134,10 @@ const TransferTicketModalCustom = ({
       return;
     }
     const connectionQueues = connection?.queues || [];
-    const availableQueues = selectedUser?.queues || connectionQueues;
+    // When a destination connection is selected, its queues are the source
+    // of truth. The selected user's queues must not hide queues configured for
+    // that connection (for example, showing only "ATENDIMENTO").
+    const availableQueues = connectionQueues;
     setAllQueues(availableQueues);
     setQueues(availableQueues);
     setSelectedQueue(currentQueue =>
