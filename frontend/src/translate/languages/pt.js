@@ -493,7 +493,7 @@ const messages = {
       transferTicketModal: {
         title: "Transferir Ticket",
         fieldLabel: "Digite para buscar usuários",
-        fieldCompanyLabel: "Transferir para empresa",
+        fieldCompanyLabel: "Escolha a Secretaria",
         fieldWhatsappLabel: "Transferir para conexão",
         keepCurrentWhatsapp: "Manter conexão atual",
         fieldWhatsappRequired: "Selecione uma conexão da empresa de destino",
