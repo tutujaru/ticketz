@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 
 # Stage 1: Build the application
-FROM node:24 AS build
+FROM ghcr.io/ticketz-oss/ticketz-node-24:latest AS build
 
 WORKDIR /usr/src/app
 COPY . .
