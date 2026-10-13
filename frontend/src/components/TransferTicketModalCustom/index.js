@@ -293,7 +293,7 @@ const TransferTicketModalCustom = ({
               }}
               options={options}
               filterOptions={filterOptions}
-              disabled={!selectedWhatsapp}
+              disabled={!selectedCompanyId}
               autoHighlight
               isOptionEqualToValue={(option, value) => option.id === value.id}
               noOptionsText={i18n.t("transferTicketModal.noOptions")}
