@@ -1,7 +1,7 @@
 {
-  "name": "ticketz-desktop",
+  "name": "crm-cnro-desktop",
   "version": "1.0.0",
-  "description": "Aplicativo Windows do Ticketz conectado à VPS",
+  "description": "Aplicativo Windows do CRM - CNRO conectado à VPS",
   "main": "main.js",
   "private": true,
   "scripts": {
@@ -18,7 +18,7 @@
   "build": {
     "appId": "br.gov.ro.camponovo.ticketz",
     "productName": "Ticketz",
-    "artifactName": "Ticketz-Setup-${version}.${ext}",
+  "artifactName": "CRM - CNRO-Setup-${version}.${ext}",
     "directories": {
       "output": "dist"
     },
@@ -45,7 +45,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Ticketz"
+      "shortcutName": "CRM - CNRO"
     }
   }
 }

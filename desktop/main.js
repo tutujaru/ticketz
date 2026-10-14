@@ -15,7 +15,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     show: false,
-    title: "Ticketz",
+    title: "CRM - CNRO",
     autoHideMenuBar: true,
     backgroundColor: "#f5f7f9",
     webPreferences: {
