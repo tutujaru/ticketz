@@ -1170,7 +1170,7 @@ const sendMenu = async (
     await verifyMessage(sendMsg, ticket, ticket.contact);
   };
 
-  botText();
+  await botText();
 };
 
 export const startQueue = async (
@@ -1297,7 +1297,7 @@ export const startQueue = async (
       });
       await verifyMediaMessage(sentMediaMessage, ticket, contact);
     }
-    sendMenu(wbot, ticket, queue, sendBackToMain);
+    await sendMenu(wbot, ticket, queue, sendBackToMain);
   }
 };
 
@@ -1353,7 +1353,7 @@ const verifyQueue = async (
   if (choosenQueue) {
     await startQueue(wbot, ticket, choosenQueue);
   } else {
-    botText();
+    await botText();
     await updateTicket(ticket, {
       chatbot: true
     });
@@ -1506,7 +1506,7 @@ const handleChartbot = async (
 
   /* * /
   if (!isNil(queue) && isNil(ticket.queueOptionId)) {
-    sendMenu(wbot, ticket, queue);
+      await sendMenu(wbot, ticket, queue);
   } else /* */ if (!isNil(queue) && !isNil(ticket.queueOptionId)) {
     const currentOption = await QueueOption.findByPk(ticket.queueOptionId, {
       include: [
@@ -1581,7 +1581,7 @@ const handleChartbot = async (
           chatbot: false,
           queueId: currentOption.forwardQueueId
         });
-        startQueue(wbot, ticket, currentOption.forwardQueue);
+        await startQueue(wbot, ticket, currentOption.forwardQueue);
       }
       return;
     }
@@ -1594,7 +1594,7 @@ const handleChartbot = async (
     }
 
     if (currentOption.options.length > -1) {
-      sendMenu(wbot, ticket, currentOption);
+      await sendMenu(wbot, ticket, currentOption);
     }
   }
 };
@@ -2063,16 +2063,10 @@ const handleMessage = async (
       }
 
       if (whatsapp.greetingMessage) {
-        const debouncedSentMessage = debounce(
-          async () => {
-            await wbot.sendMessage(getJidOf(ticket), {
-              text: formatBody(`${whatsapp.greetingMessage}`, ticket)
-            });
-          },
-          1000,
-          ticket.id
-        );
-        debouncedSentMessage();
+        const sentMessage = await wbot.sendMessage(getJidOf(ticket), {
+          text: formatBody(`${whatsapp.greetingMessage}`, ticket)
+        });
+        await verifyMessage(sentMessage, ticket, ticket.contact);
         return;
       }
     }
