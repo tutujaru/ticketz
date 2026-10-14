@@ -16,9 +16,11 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "br.gov.ro.camponovo.ticketz",
-    "productName": "Ticketz",
-  "artifactName": "CRM - CNRO-Setup-${version}.${ext}",
+    "appId": "br.gov.ro.camponovo.crmcnro",
+    "productName": "CRM - CNRO",
+    "executableName": "CRM-CNRO",
+    "artifactName": "CRM - CNRO-Setup-${version}.${ext}",
+    "icon": "../frontend/public/icon-1024x1024.png",
     "directories": {
       "output": "dist"
     },
