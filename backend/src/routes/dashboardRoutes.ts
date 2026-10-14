@@ -31,4 +31,12 @@ routes.get(
   DashboardController.usersReport
 );
 
+routes.get(
+  "/dashboard/active-tickets",
+  isAuth,
+  isAdmin,
+  isCompliant,
+  DashboardController.activeTickets
+);
+
 export default routes;

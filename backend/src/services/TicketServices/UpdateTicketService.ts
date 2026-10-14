@@ -83,6 +83,23 @@ export function websocketUpdateTicket(ticket: Ticket, moreChannels?: string[]) {
     action: "update",
     ticket
   });
+
+  io.to("super").emit("superadmin-active-ticket", {
+    action: "refresh",
+    ticketId: ticket.id,
+    companyId: ticket.companyId
+  });
+}
+
+export function notifySuperAdminActiveTicket(
+  ticketId: number,
+  companyId: number
+) {
+  getIO().to("super").emit("superadmin-active-ticket", {
+    action: "refresh",
+    ticketId,
+    companyId
+  });
 }
 
 const UpdateTicketService = async ({

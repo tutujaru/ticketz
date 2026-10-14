@@ -8,7 +8,9 @@ import DeleteTicketService from "../services/TicketServices/DeleteTicketService"
 import ListTicketsService from "../services/TicketServices/ListTicketsService";
 import ShowTicketUUIDService from "../services/TicketServices/ShowTicketFromUUIDService";
 import ShowTicketService from "../services/TicketServices/ShowTicketService";
-import UpdateTicketService from "../services/TicketServices/UpdateTicketService";
+import UpdateTicketService, {
+  notifySuperAdminActiveTicket
+} from "../services/TicketServices/UpdateTicketService";
 import ListTicketsServiceKanban from "../services/TicketServices/ListTicketsServiceKanban";
 
 type IndexQuery = {
@@ -180,6 +182,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       action: "update",
       ticket
     });
+  notifySuperAdminActiveTicket(ticket.id, companyId);
 
   return res.status(200).json(ticket);
 };
@@ -243,6 +246,7 @@ export const remove = async (
       action: "delete",
       ticketId: +ticketId
     });
+  notifySuperAdminActiveTicket(Number(ticketId), companyId);
 
   return res.status(200).json({ message: "ticket deleted" });
 };

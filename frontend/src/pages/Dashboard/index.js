@@ -35,6 +35,7 @@ import { getTimezoneOffset } from "../../helpers/getTimezoneOffset.js";
 
 import TicketzRegistry from "../../components/TicketzRegistry";
 import ContainerUpdatesBanner from "../../components/Dashboard/ContainerUpdatesBanner";
+import ActiveTicketsPanel from "../../components/Dashboard/ActiveTicketsPanel";
 import api from "../../services/api.js";
 import config from "../../services/config.js";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
@@ -496,6 +497,10 @@ const Dashboard = () => {
         />
 
         <Grid container spacing={3} justifyContent="flex-start">
+          <Grid item xs={12}>
+            <ActiveTicketsPanel currentUser={currentUser} />
+          </Grid>
+
           {/* USUARIOS ONLINE */}
           <InfoRingCard
             title={i18n.t("dashboard.usersOnline")}
@@ -555,10 +560,18 @@ const Dashboard = () => {
           {/* DASHBOARD ATENDIMENTOS NO PERÍODO */}
           <Grid item xs={12}>
             <Paper className={classes.chartPaper} elevation={0}>
-              <Typography className={classes.cardTitle} style={{ marginBottom: 16 }}>
+              <Typography
+                className={classes.cardTitle}
+                style={{ marginBottom: 16 }}
+              >
                 Atendimentos no Período
               </Typography>
-              <Box flex={1} display="flex" alignItems="center" justifyContent="center">
+              <Box
+                flex={1}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
                 <TicketCountersChart
                   ticketCounters={ticketsData.ticketCounters}
                 />
