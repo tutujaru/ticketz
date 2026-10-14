@@ -10,6 +10,7 @@
   },
   "author": "Ticketz",
   "license": "MIT",
+  "publish": [],
   "devDependencies": {
     "electron": "^36.3.2",
     "electron-builder": "^26.0.12"
