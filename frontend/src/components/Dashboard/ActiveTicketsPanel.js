@@ -3,10 +3,13 @@ import {
   Chip,
   CircularProgress,
   Grid,
+  IconButton,
   Paper,
   Typography
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
+import ArrowForwardIosIcon from "@material-ui/icons/ArrowForwardIos";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
 import api from "../../services/api";
 
@@ -39,6 +42,30 @@ const useStyles = makeStyles(theme => ({
     color: "#166534",
     fontWeight: 700,
     flexShrink: 0
+  },
+  navigation: {
+    alignItems: "center",
+    display: "flex",
+    gap: theme.spacing(0.5),
+    justifyContent: "center",
+    marginTop: theme.spacing(2)
+  },
+  navigationButton: {
+    backgroundColor: "#f3f4f6",
+    color: "#374151",
+    padding: 7,
+    "&:hover": {
+      backgroundColor: "#e5e7eb"
+    },
+    "&.Mui-disabled": {
+      color: "#cbd5e1"
+    }
+  },
+  pageLabel: {
+    color: "#6b7280",
+    fontSize: "0.8rem",
+    minWidth: 110,
+    textAlign: "center"
   },
   empty: {
     color: theme.palette.text.secondary,
@@ -113,6 +140,8 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const PAGE_SIZE = 6;
+
 const formatStartedAt = ticket => {
   const tracking = Array.isArray(ticket.ticketTrakings)
     ? ticket.ticketTrakings[0]
@@ -147,6 +176,7 @@ export default function ActiveTicketsPanel({ currentUser }) {
   const socketManager = useContext(SocketContext);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   const loadTickets = useCallback(async () => {
     try {
@@ -171,6 +201,26 @@ export default function ActiveTicketsPanel({ currentUser }) {
       socket.off("superadmin-active-ticket", refresh);
     };
   }, [currentUser, loadTickets, socketManager]);
+
+  const totalPages = Math.ceil(tickets.length / PAGE_SIZE);
+  const visibleTickets = tickets.slice(
+    page * PAGE_SIZE,
+    page * PAGE_SIZE + PAGE_SIZE
+  );
+
+  useEffect(() => {
+    setPage(currentPage => Math.min(currentPage, Math.max(totalPages - 1, 0)));
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (loading || totalPages <= 1) return undefined;
+
+    const timer = setInterval(() => {
+      setPage(currentPage => (currentPage + 1) % totalPages);
+    }, 10000);
+
+    return () => clearInterval(timer);
+  }, [loading, totalPages]);
 
   if (!currentUser?.super) return null;
 
@@ -202,7 +252,7 @@ export default function ActiveTicketsPanel({ currentUser }) {
         </Typography>
       ) : (
         <Grid container spacing={2}>
-          {tickets.map(ticket => (
+          {visibleTickets.map(ticket => (
             <Grid item xs={12} sm={6} key={ticket.id}>
               <Paper className={classes.ticketCard} elevation={0}>
                 <div className={classes.ticketHeader}>
@@ -255,6 +305,32 @@ export default function ActiveTicketsPanel({ currentUser }) {
             </Grid>
           ))}
         </Grid>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className={classes.navigation}>
+          <IconButton
+            className={classes.navigationButton}
+            size="small"
+            aria-label="Página anterior"
+            disabled={page === 0}
+            onClick={() => setPage(currentPage => currentPage - 1)}
+          >
+            <ArrowBackIosIcon fontSize="small" />
+          </IconButton>
+          <Typography className={classes.pageLabel}>
+            Página {page + 1} de {totalPages}
+          </Typography>
+          <IconButton
+            className={classes.navigationButton}
+            size="small"
+            aria-label="Próxima página"
+            disabled={page === totalPages - 1}
+            onClick={() => setPage(currentPage => currentPage + 1)}
+          >
+            <ArrowForwardIosIcon fontSize="small" />
+          </IconButton>
+        </div>
       )}
     </Paper>
   );
