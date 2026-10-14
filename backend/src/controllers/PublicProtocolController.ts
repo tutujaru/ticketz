@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 import Ticket from "../models/Ticket";
 import Contact from "../models/Contact";
 import Company from "../models/Company";
@@ -12,6 +13,7 @@ import {
 } from "../services/WhatsappCloudApiService";
 import { cacheLayer } from "../libs/cache";
 import { logger } from "../utils/logger";
+import { getWbot } from "../libs/wbot";
 
 const CODE_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -27,7 +29,7 @@ const cooldownKey = (protocol: string) =>
 
 const findTicket = async (protocol: string) =>
   Ticket.findOne({
-    where: { protocol },
+    where: { protocol: { [Op.iLike]: protocol } },
     include: [
       { model: Contact, as: "contact", attributes: ["id", "number"] },
       { model: Company, as: "company", attributes: ["id", "name"] },
@@ -37,12 +39,26 @@ const findTicket = async (protocol: string) =>
   });
 
 const findSendableConnection = async (ticket: Ticket) => {
-  if (ticket.whatsapp?.status === "CONNECTED") return ticket.whatsapp;
-
-  return Whatsapp.findOne({
+  const connections = await Whatsapp.findAll({
     where: { companyId: ticket.companyId, status: "CONNECTED" },
     order: [["id", "ASC"]]
   });
+
+  const preferred = connections.sort((left, right) =>
+    left.id === ticket.whatsappId ? -1 : right.id === ticket.whatsappId ? 1 : 0
+  );
+
+  for (const connection of preferred) {
+    if (isWhatsappCloudApi(connection)) return connection;
+    try {
+      getWbot(connection.id);
+      return connection;
+    } catch {
+      // A stale CONNECTED row can remain after a container restart.
+    }
+  }
+
+  return null;
 };
 
 const statusLabel = (status: string) => {
