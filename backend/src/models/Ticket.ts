@@ -11,7 +11,6 @@ import {
   AutoIncrement,
   Default,
   BeforeCreate,
-  AfterCreate,
   BelongsToMany,
   HasOne
 } from "sequelize-typescript";
@@ -121,21 +120,9 @@ class Ticket extends Model<Ticket> {
   @BeforeCreate
   static setUUID(ticket: Ticket) {
     ticket.uuid = uuidv4();
-  }
 
-  @AfterCreate
-  static async setProtocol(ticket: Ticket) {
-    if (ticket.protocol) return;
-
-    const date = new Date(ticket.createdAt || Date.now())
-      .toISOString()
-      .split("T")[0]
-      .replace(/-/g, "");
-
-    await ticket.update(
-      { protocol: `${date}-${ticket.id}` },
-      { hooks: false, silent: true }
-    );
+    const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
+    ticket.protocol = ticket.protocol || `${date}-${ticket.uuid.slice(0, 8)}`;
   }
 
   @HasMany(() => TicketTraking)
