@@ -6,6 +6,10 @@ import Company from "../models/Company";
 import Queue from "../models/Queue";
 import Whatsapp from "../models/Whatsapp";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
+import {
+  isWhatsappCloudApi,
+  sendCloudProtocolCodeMessage
+} from "../services/WhatsappCloudApiService";
 import { cacheLayer } from "../libs/cache";
 import { logger } from "../utils/logger";
 
@@ -31,6 +35,15 @@ const findTicket = async (protocol: string) =>
       { model: Whatsapp, as: "whatsapp", attributes: ["id", "name", "status"] }
     ]
   });
+
+const findSendableConnection = async (ticket: Ticket) => {
+  if (ticket.whatsapp?.status === "CONNECTED") return ticket.whatsapp;
+
+  return Whatsapp.findOne({
+    where: { companyId: ticket.companyId, status: "CONNECTED" },
+    order: [["id", "ASC"]]
+  });
+};
 
 const statusLabel = (status: string) => {
   switch (status) {
@@ -95,10 +108,27 @@ export const requestCode = async (
   );
 
   try {
-    await SendWhatsAppMessage({
-      ticket,
-      body: `Código de confirmação para consultar o protocolo ${protocol}: ${code}. Este código é válido por 10 minutos.`
-    });
+    const connection = await findSendableConnection(ticket);
+    if (!connection) {
+      throw new Error(
+        "Nenhuma conexão WhatsApp conectada para esta Secretaria."
+      );
+    }
+
+    if (isWhatsappCloudApi(connection)) {
+      await sendCloudProtocolCodeMessage(
+        connection,
+        ticket.contact.number,
+        code
+      );
+    } else {
+      ticket.whatsappId = connection.id;
+      ticket.whatsapp = connection;
+      await SendWhatsAppMessage({
+        ticket,
+        body: `Código de confirmação para consultar o protocolo ${protocol}: ${code}. Este código é válido por 10 minutos.`
+      });
+    }
   } catch (error) {
     await cacheLayer.del(codeKey(protocol));
     await cacheLayer.del(cooldownKey(protocol));
@@ -106,6 +136,10 @@ export const requestCode = async (
       { err: error },
       `Unable to send public protocol code for ${protocol}`
     );
+    return res.status(503).json({
+      message:
+        "Não foi possível enviar o código agora. Verifique se o WhatsApp da Secretaria está conectado e tente novamente."
+    });
   }
 
   return res.status(200).json({

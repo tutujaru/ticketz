@@ -57,6 +57,40 @@ export const sendCloudTextMessage = async (
     text: { preview_url: true, body }
   });
 
+export const sendCloudProtocolCodeMessage = async (
+  whatsapp: Whatsapp,
+  number: string,
+  code: string
+) => {
+  const templateName = process.env.META_PROTOCOL_TEMPLATE_NAME;
+  const templateLanguage =
+    process.env.META_PROTOCOL_TEMPLATE_LANGUAGE || "pt_BR";
+
+  if (!templateName) {
+    return sendCloudTextMessage(
+      whatsapp,
+      number,
+      `Código de confirmação para consultar seu protocolo: ${code}. Este código é válido por 10 minutos.`
+    );
+  }
+
+  return graphRequest(whatsapp, {
+    recipient_type: "individual",
+    to: number.replace(/\D/g, ""),
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: templateLanguage },
+      components: [
+        {
+          type: "body",
+          parameters: [{ type: "text", text: code }]
+        }
+      ]
+    }
+  });
+};
+
 export const sendCloudMediaMessage = async (
   whatsapp: Whatsapp,
   number: string,
