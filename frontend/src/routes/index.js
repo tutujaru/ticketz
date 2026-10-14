@@ -9,6 +9,7 @@ import Signup from "../pages/Signup/";
 import Login from "../pages/Login/";
 import ForgotPassword from "../pages/ForgotPassword/";
 import ResetPassword from "../pages/ResetPassword/";
+import PublicProtocol from "../pages/PublicProtocol/";
 import Connections from "../pages/Connections/";
 import SettingsCustom from "../pages/SettingsCustom/";
 import Financeiro from "../pages/Financeiro/";
@@ -58,6 +59,11 @@ const Routes = () => {
               component={ResetPassword}
             />
             <Route exact path="/signup" component={Signup} />
+            <Route
+              exact
+              path="/consultar-protocolo"
+              component={PublicProtocol}
+            />
             {/* <Route exact path="/create-company" component={Companies} /> */}
             <WhatsAppsProvider>
               <LoggedInLayout>

@@ -47,10 +47,7 @@ export function mustacheValues(
   const user = currentUser?.name || ticket?.user?.name || "{{user}}";
   const email = contact?.email || "{{email}}";
   const now = new Date();
-  const protocol =
-    (ticket &&
-      `${now.toISOString().split("T")[0].replace(/-/g, "")}-${ticket.id}`) ||
-    "{{protocol}}";
+  const protocol = ticket?.protocol || "{{protocol}}";
   const time = now.toLocaleTimeString("en-GB", { hour12: false });
 
   let extraInfo: any;

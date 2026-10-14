@@ -36,11 +36,13 @@ import wavoipRoutes from "./wavoipRoutes";
 import dockerRoutes from "./dockerRoutes";
 import passwordResetRoutes from "./passwordResetRoutes";
 import whatsappCloudWebhookRoutes from "./whatsappCloudWebhookRoutes";
+import publicProtocolRoutes from "./publicProtocolRoutes";
 
 const routes = Router();
 
 routes.use(passwordResetRoutes);
 routes.use(whatsappCloudWebhookRoutes);
+routes.use(publicProtocolRoutes);
 routes.use(userRoutes);
 routes.use("/auth", authRoutes);
 routes.use(settingRoutes);
