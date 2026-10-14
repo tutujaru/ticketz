@@ -4,10 +4,13 @@ import Whatsapp from "../models/Whatsapp";
 import Contact from "../models/Contact";
 import Ticket from "../models/Ticket";
 import Message from "../models/Message";
+import Queue from "../models/Queue";
+import QueueOption from "../models/QueueOption";
 import CreateOrUpdateContactService from "./ContactServices/CreateOrUpdateContactService";
 import FindOrCreateTicketService from "./TicketServices/FindOrCreateTicketService";
 import CreateMessageService from "./MessageServices/CreateMessageService";
 import { getIO } from "../libs/socket";
+import formatBody from "../helpers/Mustache";
 
 const GRAPH_VERSION = process.env.META_GRAPH_API_VERSION || "v26.0";
 const GRAPH_URL = `https://graph.facebook.com/${GRAPH_VERSION}`;
@@ -159,6 +162,136 @@ const getText = (message: any): string => {
   return message[message.type]?.caption || `[${message.type}]`;
 };
 
+const sendCloudBotText = async (
+  whatsapp: Whatsapp,
+  ticket: Ticket,
+  body: string
+) => {
+  if (!body?.trim()) return;
+
+  const formattedBody = formatBody(body, ticket);
+  const response = await sendCloudTextMessage(
+    whatsapp,
+    ticket.contact.number,
+    formattedBody
+  );
+  const messageId = response?.messages?.[0]?.id;
+  if (!messageId) throw new AppError("ERR_WHATSAPP_CLOUD_API");
+
+  await CreateMessageService({
+    messageData: {
+      id: messageId,
+      ticketId: ticket.id,
+      contactId: ticket.contactId,
+      body: formattedBody,
+      fromMe: true,
+      read: true,
+      ack: 1,
+      remoteJid: `${ticket.contact.number}@s.whatsapp.net`,
+      dataJson: JSON.stringify(response)
+    },
+    companyId: ticket.companyId
+  });
+};
+
+const queueMenu = (queues: Queue[]) =>
+  queues.map((queue, index) => `*[ ${index + 1} ]* - ${queue.name}`).join("\n");
+
+const startCloudQueue = async (
+  whatsapp: Whatsapp,
+  ticket: Ticket,
+  queue: Queue
+) => {
+  const options = queue.options || [];
+  await ticket.update({
+    queueId: queue.id,
+    chatbot: options.length > 0,
+    status: "pending"
+  });
+  ticket.queue = queue;
+
+  const menu = options
+    .map(option => `*[ ${option.option} ]* - ${option.title}`)
+    .join("\n");
+  const body = [queue.greetingMessage?.trim(), menu]
+    .filter(Boolean)
+    .join("\n\n");
+  await sendCloudBotText(whatsapp, ticket, body);
+};
+
+const handleCloudChatbot = async (
+  whatsapp: Whatsapp,
+  ticket: Ticket,
+  messageBody: string,
+  justCreated: boolean
+) => {
+  const queues = whatsapp.queues || [];
+  if (!justCreated && !ticket.chatbot) return;
+
+  if (justCreated && ticket.queueId) {
+    const initialQueue = queues.find(item => item.id === ticket.queueId);
+    if (initialQueue) {
+      await startCloudQueue(whatsapp, ticket, initialQueue);
+      return;
+    }
+  }
+
+  if (!ticket.queueId) {
+    const selectedQueue = queues[Number(messageBody) - 1];
+    if (selectedQueue) {
+      await startCloudQueue(whatsapp, ticket, selectedQueue);
+      return;
+    }
+
+    if (queues.length > 1) {
+      await ticket.update({ chatbot: true });
+      await sendCloudBotText(
+        whatsapp,
+        ticket,
+        `${whatsapp.greetingMessage || "Olá! Escolha uma opção:"}\n\n${queueMenu(
+          queues
+        )}`
+      );
+    } else if (queues.length === 1) {
+      await startCloudQueue(whatsapp, ticket, queues[0]);
+    } else if (justCreated && whatsapp.greetingMessage?.trim()) {
+      await sendCloudBotText(whatsapp, ticket, whatsapp.greetingMessage);
+    }
+    return;
+  }
+
+  const queue = queues.find(item => item.id === ticket.queueId);
+  if (!queue || !ticket.chatbot) return;
+
+  const option = (queue.options || []).find(
+    item => item.option === messageBody.trim()
+  );
+  if (!option) {
+    await sendCloudBotText(
+      whatsapp,
+      ticket,
+      `${queue.greetingMessage || "Escolha uma opção válida:"}\n\n${(
+        queue.options || []
+      )
+        .map(item => `*[ ${item.option} ]* - ${item.title}`)
+        .join("\n")}`
+    );
+    return;
+  }
+
+  await ticket.update({ queueOptionId: option.id });
+  if (option.message?.trim()) {
+    await sendCloudBotText(whatsapp, ticket, option.message);
+  }
+  if (option.exitChatbot || option.forwardQueueId) {
+    await ticket.update({
+      chatbot: false,
+      queueOptionId: option.exitChatbot ? null : option.id,
+      queueId: option.forwardQueueId || ticket.queueId
+    });
+  }
+};
+
 export const processCloudWebhook = async (payload: any): Promise<void> => {
   if (payload?.object !== "whatsapp_business_account") return;
   for (const entry of payload.entry || []) {
@@ -167,7 +300,20 @@ export const processCloudWebhook = async (payload: any): Promise<void> => {
       if (change.field !== "messages" || !value?.messages) continue;
       const whatsapp = await Whatsapp.findOne({
         where: { metaPhoneNumberId: value.metadata?.phone_number_id },
-        include: ["queues"]
+        include: [
+          {
+            model: Queue,
+            as: "queues",
+            include: [
+              {
+                model: QueueOption,
+                as: "options",
+                where: { parentId: null },
+                required: false
+              }
+            ]
+          }
+        ]
       });
       if (!whatsapp) continue;
       for (const incoming of value.messages) {
@@ -182,7 +328,7 @@ export const processCloudWebhook = async (payload: any): Promise<void> => {
           companyId: whatsapp.companyId,
           channel: "whatsapp"
         });
-        const { ticket } = await FindOrCreateTicketService(
+        const { ticket, justCreated } = await FindOrCreateTicketService(
           contact,
           whatsapp.id,
           whatsapp.companyId,
@@ -209,6 +355,12 @@ export const processCloudWebhook = async (payload: any): Promise<void> => {
         await ticket.update({
           lastMessage: message.body.substring(0, 255).replace(/\n/g, " ")
         });
+        await handleCloudChatbot(
+          whatsapp,
+          ticket,
+          message.body.trim(),
+          justCreated
+        );
       }
     }
   }
