@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atendimento - CRM - CNRO</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/webchat.css">
+</head>
+<body>
+  <main class="webchat-shell">
+    <header class="webchat-header">
+      <img src="/icon-1024x1024.png" alt="CRM - CNRO" class="webchat-logo">
+      <div><h1>Atendimento</h1><p>Converse com nossa equipe</p></div>
+    </header>
+
+    <section id="startPanel" class="panel">
+      <p class="intro">Escolha o setor e a fila para iniciar seu atendimento.</p>
+      <label>Setor / conexão<select id="connection"><option value="">Carregando conexões...</option></select></label>
+      <label>Fila de atendimento<select id="queue" disabled><option value="">Selecione primeiro o setor</option></select></label>
+      <label>Nome<input id="name" maxlength="120" autocomplete="name" placeholder="Seu nome"></label>
+      <label>Telefone <small>(opcional)</small><input id="phone" inputmode="tel" autocomplete="tel" placeholder="(69) 99999-9999"></label>
+      <label>Mensagem inicial<textarea id="initialMessage" rows="4" placeholder="Como podemos ajudar?"></textarea></label>
+      <p id="startError" class="error"></p>
+      <button id="startButton">Iniciar conversa</button>
+    </section>
+
+    <section id="chatPanel" class="chat-panel hidden">
+      <div class="chat-meta"><span id="protocol"></span><span id="status"></span></div>
+      <div id="messages" class="messages" aria-live="polite"></div>
+      <form id="messageForm" class="composer"><input id="message" autocomplete="off" placeholder="Digite sua mensagem..."><button>Enviar</button></form>
+      <button id="closeButton" class="close-button">Encerrar atendimento</button>
+    </section>
+  </main>
+  <script src="/webchat.js"></script>
+</body>
+</html>

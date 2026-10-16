@@ -37,12 +37,14 @@ import dockerRoutes from "./dockerRoutes";
 import passwordResetRoutes from "./passwordResetRoutes";
 import whatsappCloudWebhookRoutes from "./whatsappCloudWebhookRoutes";
 import publicProtocolRoutes from "./publicProtocolRoutes";
+import publicWebchatRoutes from "./publicWebchatRoutes";
 
 const routes = Router();
 
 routes.use(passwordResetRoutes);
 routes.use(whatsappCloudWebhookRoutes);
 routes.use(publicProtocolRoutes);
+routes.use(publicWebchatRoutes);
 routes.use(userRoutes);
 routes.use("/auth", authRoutes);
 routes.use(settingRoutes);

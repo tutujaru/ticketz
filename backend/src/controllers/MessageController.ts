@@ -29,6 +29,7 @@ import { getJidOf } from "../services/WbotServices/getJidOf";
 import ShowContactService from "../services/ContactServices/ShowContactService";
 import { verifyContact } from "../services/WbotServices/verifyContact";
 import { isWhatsappCloudApi } from "../services/WhatsappCloudApiService";
+import { v4 as uuidv4 } from "uuid";
 
 type IndexQuery = {
   nextId?: string;
@@ -137,6 +138,37 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
 
   const ticket = await ShowTicketService(ticketId, companyId);
   const { channel } = ticket;
+  if (channel === "webchat") {
+    if (!body?.trim()) {
+      throw new AppError("ERR_MESSAGE_NOT_FOUND", 400);
+    }
+
+    const message = await Message.create({
+      id: uuidv4(),
+      ticketId: ticket.id,
+      contactId: ticket.contactId,
+      companyId,
+      queueId: ticket.queueId,
+      body: body.trim(),
+      fromMe: true,
+      read: true,
+      ack: 2,
+      channel: "webchat"
+    });
+
+    await Ticket.update(
+      { lastMessage: body.trim() },
+      { where: { id: ticket.id, companyId } }
+    );
+
+    getIO().to(ticket.id.toString()).emit(`company-${companyId}-appMessage`, {
+      action: "create",
+      message
+    });
+
+    return res.status(201).json(message);
+  }
+
   if (channel === "whatsapp") {
     await SetTicketMessagesAsRead(ticket);
     if (!ticket.isGroup && !isWhatsappCloudApi(ticket.whatsapp)) {
