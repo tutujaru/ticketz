@@ -11,6 +11,7 @@ import Message from "../models/Message";
 import Queue from "../models/Queue";
 import Ticket from "../models/Ticket";
 import Whatsapp from "../models/Whatsapp";
+import WhatsappQueue from "../models/WhatsappQueue";
 import FindOrCreateContactService from "../services/ContactServices/FindOrCreateContactService";
 import FindOrCreateATicketTrakingService from "../services/TicketServices/FindOrCreateATicketTrakingService";
 
@@ -40,25 +41,18 @@ const getSession = async (token: string): Promise<WebchatSession> => {
   return JSON.parse(value) as WebchatSession;
 };
 
-const publicWhatsappWhere = {
-  channel: {
-    [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: "" }]
-  }
-};
-
 export const connections = async (
   _req: Request,
   res: Response
 ): Promise<Response> => {
   const whatsapps = await Whatsapp.findAll({
-    where: publicWhatsappWhere,
-    attributes: ["channel", "name", "status"],
+    attributes: ["id", "name", "status"],
     order: [["name", "ASC"]]
   });
 
   return res.json(
     whatsapps.map(whatsapp => ({
-      channel: whatsapp.channel,
+      id: whatsapp.id,
       name: whatsapp.name,
       status: whatsapp.status
     }))
@@ -69,36 +63,37 @@ export const queues = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { channel } = req.params;
-  const whatsapp = await Whatsapp.findOne({
-    where: { channel },
-    include: [
-      {
-        model: Queue,
-        as: "queues",
-        attributes: ["id", "name", "color"],
-        through: { attributes: [] },
-        order: [["name", "ASC"]]
-      }
-    ]
-  });
+  const whatsappId = Number(req.params.whatsappId);
+  const whatsapp = await Whatsapp.findByPk(whatsappId);
 
   if (!whatsapp) {
     throw new AppError("Canal de Webchat não encontrado", 404);
   }
 
+  const links = await WhatsappQueue.findAll({
+    where: { whatsappId: whatsapp.id },
+    include: [
+      {
+        model: Queue,
+        as: "queue",
+        attributes: ["id", "name", "color"]
+      }
+    ],
+    order: [[{ model: Queue, as: "queue" }, "name", "ASC"]]
+  });
+
   return res.json(
-    ((whatsapp.queues || []) as Queue[]).map(queue => ({
-      id: queue.id,
-      name: queue.name,
-      color: queue.color
+    links.map(link => ({
+      id: link.queue.id,
+      name: link.queue.name,
+      color: link.queue.color
     }))
   );
 };
 
 export const start = async (req: Request, res: Response): Promise<Response> => {
-  const { channel, queueId, name, phone, message } = req.body as {
-    channel?: string;
+  const { whatsappId, queueId, name, phone, message } = req.body as {
+    whatsappId?: number | string;
     queueId?: number | string;
     name?: string;
     phone?: string;
@@ -110,8 +105,14 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
   const cleanPhone = String(phone || "").replace(/\D/g, "");
   const numericQueueId = Number(queueId);
 
-  if (!channel || !cleanName || cleanName.length < 2) {
-    throw new AppError("Informe o canal e um nome válido", 400);
+  const numericWhatsappId = Number(whatsappId);
+
+  if (
+    !Number.isInteger(numericWhatsappId) ||
+    !cleanName ||
+    cleanName.length < 2
+  ) {
+    throw new AppError("Informe a conexão e um nome válido", 400);
   }
   if (!cleanMessage) {
     throw new AppError("Informe a mensagem inicial", 400);
@@ -120,7 +121,7 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
     throw new AppError("Escolha uma fila de atendimento", 400);
   }
 
-  const whatsapp = await Whatsapp.findOne({ where: { channel } });
+  const whatsapp = await Whatsapp.findByPk(numericWhatsappId);
   if (!whatsapp) {
     throw new AppError("Canal de Webchat não encontrado", 404);
   }

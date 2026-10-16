@@ -8,7 +8,7 @@ publicWebchatRoutes.get(
   PublicWebchatController.connections
 );
 publicWebchatRoutes.get(
-  "/public/webchat/connections/:channel/queues",
+  "/public/webchat/connections/:whatsappId/queues",
   PublicWebchatController.queues
 );
 publicWebchatRoutes.post(

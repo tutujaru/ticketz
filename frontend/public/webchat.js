@@ -19,7 +19,7 @@
     try {
       const connections = await request("/public/webchat/connections");
       $("connection").replaceChildren(option("", "Selecione o setor"));
-      connections.forEach(item => $("connection").appendChild(option(item.channel, item.name)));
+      connections.forEach(item => $("connection").appendChild(option(item.id, item.name)));
       if (!connections.length) $("connection").replaceChildren(option("", "Nenhum setor disponível"));
     } catch (error) { $("connection").replaceChildren(option("", "Erro ao carregar setores")); showError("startError", error.message); }
   }
@@ -66,7 +66,7 @@
     showError("startError", "");
     const button = $("startButton"); button.disabled = true; button.textContent = "Iniciando...";
     try {
-      const data = await request("/public/webchat/start", { method: "POST", body: JSON.stringify({ channel: $("connection").value, queueId: $("queue").value, name: $("name").value, phone: $("phone").value, message: $("initialMessage").value }) });
+      const data = await request("/public/webchat/start", { method: "POST", body: JSON.stringify({ whatsappId: $("connection").value, queueId: $("queue").value, name: $("name").value, phone: $("phone").value, message: $("initialMessage").value }) });
       token = data.token; localStorage.setItem("crmCnroWebchatToken", token); $("startPanel").classList.add("hidden"); $("chatPanel").classList.remove("hidden"); $("protocol").textContent = `Protocolo: ${data.protocol}`; await refresh(); timer = setInterval(refresh, 3000);
     } catch (error) { showError("startError", error.message); } finally { button.disabled = false; button.textContent = "Iniciar conversa"; }
   });
