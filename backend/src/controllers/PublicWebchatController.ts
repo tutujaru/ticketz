@@ -13,6 +13,7 @@ import Ticket from "../models/Ticket";
 import Whatsapp from "../models/Whatsapp";
 import WhatsappQueue from "../models/WhatsappQueue";
 import FindOrCreateATicketTrakingService from "../services/TicketServices/FindOrCreateATicketTrakingService";
+import { logger } from "../utils/logger";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
 const SESSION_PREFIX = "public-webchat-session";
@@ -176,6 +177,8 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
     }
   });
 
+  const protocolUuid = uuidv4();
+  const protocolDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const ticket =
     openTicket ||
     (await Ticket.create({
@@ -186,7 +189,9 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
       status: "pending",
       channel: "webchat",
       isGroup: false,
-      userId: null
+      userId: null,
+      uuid: protocolUuid,
+      protocol: `${protocolDate}-${protocolUuid.slice(0, 8)}`
     }));
 
   if (!openTicket) {
@@ -225,11 +230,21 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
     remoteJid: contactNumber
   });
 
-  const io = getIO();
-  io.to(ticket.id.toString()).emit(`company-${whatsapp.companyId}-appMessage`, {
-    action: "create",
-    message: { ticketId: ticket.id, body: cleanMessage, fromMe: false }
-  });
+  try {
+    const io = getIO();
+    io.to(ticket.id.toString()).emit(
+      `company-${whatsapp.companyId}-appMessage`,
+      {
+        action: "create",
+        message: { ticketId: ticket.id, body: cleanMessage, fromMe: false }
+      }
+    );
+  } catch (error) {
+    logger.warn(
+      { err: error, ticketId: ticket.id },
+      "Webchat socket notification skipped"
+    );
+  }
 
   return res.status(201).json({
     token,
