@@ -12,7 +12,6 @@ import Queue from "../models/Queue";
 import Ticket from "../models/Ticket";
 import Whatsapp from "../models/Whatsapp";
 import WhatsappQueue from "../models/WhatsappQueue";
-import FindOrCreateContactService from "../services/ContactServices/FindOrCreateContactService";
 import FindOrCreateATicketTrakingService from "../services/TicketServices/FindOrCreateATicketTrakingService";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
@@ -145,11 +144,28 @@ export const start = async (req: Request, res: Response): Promise<Response> => {
 
   const token = crypto.randomUUID();
   const contactNumber = cleanPhone || `webchat-${token}`;
-  const contact = await FindOrCreateContactService({
-    name: cleanName,
-    number: contactNumber,
-    companyId: whatsapp.companyId
+  // Não usar FindOrCreateContactService aqui: o fluxo legado carrega a
+  // associação Tag.funnelStep, que não existe em algumas instalações atuais.
+  // O Webchat precisa somente localizar/criar o contato básico.
+  let contact = await Contact.findOne({
+    where: {
+      number: contactNumber,
+      companyId: whatsapp.companyId
+    }
   });
+
+  if (!contact) {
+    contact = await Contact.create({
+      name: cleanName,
+      number: contactNumber,
+      companyId: whatsapp.companyId,
+      channel: "webchat",
+      email: "",
+      disableBot: false
+    });
+  } else if (contact.name !== cleanName) {
+    await contact.update({ name: cleanName });
+  }
 
   const openTicket = await Ticket.findOne({
     where: {
