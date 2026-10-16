@@ -51,6 +51,12 @@ app.use(
   })
 );
 app.use(Sentry.Handlers.requestHandler());
+
+// As rotas da API pública devem ser avaliadas antes do handler de arquivos
+// /public/*; caso contrário, /public/webchat/* seria interpretado como um
+// arquivo estático e retornaria 404 antes de chegar ao Express Router.
+app.use(routes);
+
 app.get("/public/*", (req, res) => {
   const filePath = path.join(uploadConfig.directory, req.params[0]);
 
@@ -101,8 +107,6 @@ app.use((req, _res, next) => {
   );
   next();
 });
-
-app.use(routes);
 
 app.use(Sentry.Handlers.errorHandler());
 app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
