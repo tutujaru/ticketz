@@ -382,9 +382,9 @@ const SettingsCustom = () => {
                       Formato antigo detectado
                     </Typography>
                     <Typography className={classes.migrationText}>
-                      Os horários salvos estão em um formato antigo. Recomendamos
-                      atualizar para o novo formato para aproveitar todos os
-                      recursos disponíveis.
+                      Os horários salvos estão em um formato antigo.
+                      Recomendamos atualizar para o novo formato para aproveitar
+                      todos os recursos disponíveis.
                     </Typography>
                     <Button
                       variant="contained"
@@ -464,13 +464,10 @@ const SettingsCustom = () => {
             )}
           />
 
-          <TabPanel
-            className={classes.container}
-            value={tab}
-            name={"options"}
-          >
+          <TabPanel className={classes.container} value={tab} name={"options"}>
             <Options
               settings={settings}
+              company={company}
               scheduleTypeChanged={value =>
                 setSchedulesEnabled(value === "company")
               }

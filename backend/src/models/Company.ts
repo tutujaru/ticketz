@@ -75,6 +75,12 @@ class Company extends Model<Company> {
 
   @Column
   language: string;
+  @Default(false)
+  @Column
+  allowTributaryDividaAtiva: boolean;
+  @Default(false)
+  @Column
+  allowTributaryIptu: boolean;
 
   @CreatedAt
   createdAt: Date;

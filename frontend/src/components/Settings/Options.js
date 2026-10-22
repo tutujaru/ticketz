@@ -95,7 +95,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export default function Options(props) {
-  const { settings, scheduleTypeChanged } = props;
+  const { settings, company, scheduleTypeChanged } = props;
   const classes = useStyles();
   const [userRating, setUserRating] = useState("disabled");
   const [scheduleType, setScheduleType] = useState("disabled");
@@ -139,6 +139,9 @@ export default function Options(props) {
   const [tagsMode, setTagsMode] = useState("ticket");
   const [ticketAcceptedMessage, setTicketAcceptedMessage] = useState("");
   const [transferMessage, setTransferMessage] = useState("");
+  const [tributaryDividaAtivaEnabled, setTributaryDividaAtivaEnabled] =
+    useState("disabled");
+  const [tributaryIptuEnabled, setTributaryIptuEnabled] = useState("disabled");
 
   const { getCurrentUserInfo } = useAuth();
   const [currentUser, setCurrentUser] = useState({});
@@ -320,6 +323,16 @@ export default function Options(props) {
 
       const transferMessage = settings.find(s => s.key === "transferMessage");
       setTransferMessage(transferMessage?.value || "");
+
+      const tributaryDividaAtiva = settings.find(
+        s => s.key === "tributaryDividaAtivaEnabled"
+      );
+      setTributaryDividaAtivaEnabled(tributaryDividaAtiva?.value || "disabled");
+
+      const tributaryIptu = settings.find(
+        s => s.key === "tributaryIptuEnabled"
+      );
+      setTributaryIptuEnabled(tributaryIptu?.value || "disabled");
 
       const extensionDownloadUrl = settings.find(
         s => s.key === "extensionDownloadUrl"
@@ -504,6 +517,61 @@ export default function Options(props) {
             {i18n.t("settings.group.general")}
           </h2>
         </Grid>
+
+        {(company?.allowTributaryDividaAtiva ||
+          company?.allowTributaryIptu) && (
+          <>
+            <Grid item xs={12}>
+              <h2 className={classes.groupTitle}>Consultas tributárias</h2>
+            </Grid>
+            {company?.allowTributaryDividaAtiva && (
+              <Grid xs={12} sm={6} md={4} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id="tributary-divida-enabled-label">
+                    Consulta de Dívida Ativa
+                  </InputLabel>
+                  <Select
+                    labelId="tributary-divida-enabled-label"
+                    value={tributaryDividaAtivaEnabled}
+                    onChange={async e =>
+                      handleSetting(
+                        "tributaryDividaAtivaEnabled",
+                        e.target.value,
+                        setTributaryDividaAtivaEnabled
+                      )
+                    }
+                  >
+                    <MenuItem value="disabled">Desativada</MenuItem>
+                    <MenuItem value="enabled">Ativada</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+            {company?.allowTributaryIptu && (
+              <Grid xs={12} sm={6} md={4} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id="tributary-iptu-enabled-label">
+                    Consulta de IPTU
+                  </InputLabel>
+                  <Select
+                    labelId="tributary-iptu-enabled-label"
+                    value={tributaryIptuEnabled}
+                    onChange={async e =>
+                      handleSetting(
+                        "tributaryIptuEnabled",
+                        e.target.value,
+                        setTributaryIptuEnabled
+                      )
+                    }
+                  >
+                    <MenuItem value="disabled">Desativada</MenuItem>
+                    <MenuItem value="enabled">Ativada</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+          </>
+        )}
 
         <Grid xs={12} sm={6} md={4} item>
           <FormControl className={classes.selectContainer}>

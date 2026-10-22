@@ -281,7 +281,7 @@ const handleCloudChatbot = async (
       if (document.length === 11 || document.length === 14) {
         try {
           response = formatTributaryResult(
-            await lookupTributary(tributaryMode, document)
+            await lookupTributary(tributaryMode, document, ticket.companyId)
           );
         } catch (error: any) {
           response = error?.message || "Não foi possível realizar a consulta.";

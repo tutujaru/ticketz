@@ -34,6 +34,8 @@ type CompanyData = {
   campaignsEnabled?: boolean;
   dueDate?: string;
   recurrence?: string;
+  allowTributaryDividaAtiva?: boolean;
+  allowTributaryIptu?: boolean;
 };
 
 type SchedulesData = {

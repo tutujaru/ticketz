@@ -333,6 +333,40 @@ export function CompanyForm(props) {
               </Grid>
               <Grid xs={12} sm={6} md={2} item>
                 <FormControl margin="dense" variant="outlined" fullWidth>
+                  <InputLabel htmlFor="tributary-divida-selection">
+                    Dívida Ativa
+                  </InputLabel>
+                  <Field
+                    as={Select}
+                    id="tributary-divida-selection"
+                    label="Dívida Ativa"
+                    name="allowTributaryDividaAtiva"
+                    margin="dense"
+                  >
+                    <MenuItem value={true}>Liberada</MenuItem>
+                    <MenuItem value={false}>Bloqueada</MenuItem>
+                  </Field>
+                </FormControl>
+              </Grid>
+              <Grid xs={12} sm={6} md={2} item>
+                <FormControl margin="dense" variant="outlined" fullWidth>
+                  <InputLabel htmlFor="tributary-iptu-selection">
+                    IPTU
+                  </InputLabel>
+                  <Field
+                    as={Select}
+                    id="tributary-iptu-selection"
+                    label="IPTU"
+                    name="allowTributaryIptu"
+                    margin="dense"
+                  >
+                    <MenuItem value={true}>Liberado</MenuItem>
+                    <MenuItem value={false}>Bloqueado</MenuItem>
+                  </Field>
+                </FormControl>
+              </Grid>
+              <Grid xs={12} sm={6} md={2} item>
+                <FormControl margin="dense" variant="outlined" fullWidth>
                   <InputLabel htmlFor="recorrencia-selection">
                     {i18n.t("companiesManager.form.recurrence")}
                   </InputLabel>
@@ -591,6 +625,8 @@ export default function CompaniesManager() {
     planId: "",
     status: true,
     campaignsEnabled: false,
+    allowTributaryDividaAtiva: false,
+    allowTributaryIptu: false,
     dueDate: "",
     recurrence: ""
   });
@@ -665,6 +701,8 @@ export default function CompaniesManager() {
       planId: "",
       status: true,
       campaignsEnabled: false,
+      allowTributaryDividaAtiva: false,
+      allowTributaryIptu: false,
       dueDate: "",
       recurrence: ""
     }));
@@ -691,6 +729,8 @@ export default function CompaniesManager() {
       planId: data.planId || "",
       status: data.status === false ? false : true,
       campaignsEnabled,
+      allowTributaryDividaAtiva: data.allowTributaryDividaAtiva === true,
+      allowTributaryIptu: data.allowTributaryIptu === true,
       dueDate: data.dueDate || "",
       recurrence: data.recurrence || ""
     }));

@@ -15,6 +15,8 @@ interface CompanyData {
   dueDate?: string;
   recurrence?: string;
   language?: string;
+  allowTributaryDividaAtiva?: boolean;
+  allowTributaryIptu?: boolean;
 }
 
 const UpdateCompanyService = async (
@@ -30,7 +32,9 @@ const UpdateCompanyService = async (
     campaignsEnabled,
     dueDate,
     recurrence,
-    language
+    language,
+    allowTributaryDividaAtiva,
+    allowTributaryIptu
   } = companyData;
 
   if (!company) {
@@ -47,8 +51,33 @@ const UpdateCompanyService = async (
     planId,
     dueDate,
     recurrence,
-    language
+    language,
+    ...(allowTributaryDividaAtiva !== undefined && {
+      allowTributaryDividaAtiva
+    }),
+    ...(allowTributaryIptu !== undefined && { allowTributaryIptu })
   });
+
+  if (allowTributaryDividaAtiva === false) {
+    await Setting.findOrCreate({
+      where: { companyId: company.id, key: "tributaryDividaAtivaEnabled" },
+      defaults: {
+        companyId: company.id,
+        key: "tributaryDividaAtivaEnabled",
+        value: "disabled"
+      }
+    }).then(([setting]) => setting.update({ value: "disabled" }));
+  }
+  if (allowTributaryIptu === false) {
+    await Setting.findOrCreate({
+      where: { companyId: company.id, key: "tributaryIptuEnabled" },
+      defaults: {
+        companyId: company.id,
+        key: "tributaryIptuEnabled",
+        value: "disabled"
+      }
+    }).then(([setting]) => setting.update({ value: "disabled" }));
+  }
 
   if (companyData.campaignsEnabled !== undefined) {
     const [setting, created] = await Setting.findOrCreate({

@@ -15,6 +15,8 @@ interface CompanyData {
   dueDate?: string;
   recurrence?: string;
   language?: string;
+  allowTributaryDividaAtiva?: boolean;
+  allowTributaryIptu?: boolean;
 }
 
 const CreateCompanyService = async (
@@ -30,7 +32,9 @@ const CreateCompanyService = async (
     campaignsEnabled,
     dueDate,
     recurrence,
-    language
+    language,
+    allowTributaryDividaAtiva,
+    allowTributaryIptu
   } = companyData;
 
   const companySchema = Yup.object().shape({
@@ -67,7 +71,9 @@ const CreateCompanyService = async (
     planId,
     dueDate,
     recurrence,
-    language
+    language,
+    allowTributaryDividaAtiva,
+    allowTributaryIptu
   });
   const [user, created] = await User.findOrCreate({
     where: { name, email },

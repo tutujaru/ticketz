@@ -1,5 +1,7 @@
 import axios from "axios";
 import { logger } from "../../utils/logger";
+import Company from "../../models/Company";
+import Setting from "../../models/Setting";
 
 type TributaryMode = "divida_ativa" | "iptu";
 type TributaryRecord = Record<string, any>;
@@ -21,6 +23,34 @@ const env = (name: string): string => process.env[name]?.trim() || "";
 
 const enabled = (): boolean =>
   env("TRIBUTARY_ENABLED").toLowerCase() === "true";
+
+const activationKey = (mode: TributaryMode): string =>
+  mode === "iptu" ? "tributaryIptuEnabled" : "tributaryDividaAtivaEnabled";
+
+export const isTributaryAllowed = async (
+  companyId: number,
+  mode: TributaryMode
+): Promise<boolean> => {
+  if (!enabled() || !companyId) return false;
+
+  const company = await Company.findByPk(companyId, {
+    attributes: ["allowTributaryDividaAtiva", "allowTributaryIptu"]
+  });
+  if (!company) return false;
+
+  const licensed =
+    mode === "iptu"
+      ? company.allowTributaryIptu
+      : company.allowTributaryDividaAtiva;
+  if (!licensed) return false;
+
+  const setting = await Setting.findOne({
+    where: { companyId, key: activationKey(mode) }
+  });
+  return ["enabled", "true", "1"].includes(
+    String(setting?.value || "").toLowerCase()
+  );
+};
 
 const apiUrl = (): string =>
   env("TRIBUTARY_API_URL") ||
@@ -178,9 +208,12 @@ const parseMoney = (value: string): number => {
 
 export const lookupTributary = async (
   mode: TributaryMode,
-  rawDocument: string
+  rawDocument: string,
+  companyId: number
 ): Promise<LookupResult> => {
-  if (!enabled()) throw new Error("Consulta tributária desativada.");
+  if (!(await isTributaryAllowed(companyId, mode))) {
+    throw new Error("Esta consulta ainda não está habilitada para a empresa.");
+  }
   const document = normalizeDocument(rawDocument);
   try {
     const records =

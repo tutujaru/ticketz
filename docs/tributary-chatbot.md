@@ -44,7 +44,16 @@ Após o usuário escolher uma dessas opções, o chatbot solicita CPF ou CNPJ, c
 2. Comece com `TRIBUTARY_ENABLED=false` e valide os tokens separadamente.
 3. Altere para `TRIBUTARY_ENABLED=true`.
 4. Recrie o backend para carregar as variáveis.
-5. Teste Baileys/WhatsApp Web e Cloud API separadamente.
+5. No painel do superadmin, abra **Configurações > Empresas**, edite a empresa e marque **Dívida Ativa** e/ou **IPTU** como **Liberada**.
+6. Acesse a empresa liberada e abra **Configurações > Opções**. Na seção **Consultas tributárias**, ative ou desative cada consulta.
+7. Teste Baileys/WhatsApp Web e Cloud API separadamente.
+
+Existem duas permissões independentes:
+
+- **Liberada pelo superadmin:** licença do recurso para a empresa.
+- **Ativada pela empresa:** habilita o chatbot daquela consulta.
+
+Se o superadmin revogar uma licença, a consulta é imediatamente desativada, mesmo que a opção ainda exista na fila. A consulta só é executada quando a variável global do backend, a licença da empresa e a ativação da empresa estiverem habilitadas.
 
 O serviço usa cache em memória de cinco minutos para reduzir consultas repetidas à API externa. O cache não grava CPF, CNPJ ou dados tributários em disco.
 
