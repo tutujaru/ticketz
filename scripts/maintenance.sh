@@ -42,6 +42,8 @@ with open(path, "w", encoding="utf-8") as handle:
     handle.write("\n")
 PY
 
+chmod 644 "$TEMP_FILE"
+
 mv "$TEMP_FILE" "$FILE"
 trap - EXIT
 
