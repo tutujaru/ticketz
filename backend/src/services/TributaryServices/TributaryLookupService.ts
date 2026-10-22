@@ -186,7 +186,12 @@ const lookupDividaAtiva = async (
   return filterByDocument(records, document);
 };
 
-const lookupIptu = async (document: string): Promise<TributaryRecord[]> => {
+const lookupIptu = async (
+  document: string
+): Promise<{
+  records: TributaryRecord[];
+  contributor: TributaryRecord | null;
+}> => {
   const mapping = await getCached("iptu-mapping", async () =>
     asList(
       await requestApi(
@@ -198,16 +203,19 @@ const lookupIptu = async (document: string): Promise<TributaryRecord[]> => {
   const contributor = mapping.find(
     item => cleanDigits(valueOf(item, "INSMF_CONTRIBUINTE")) === document
   );
-  if (!contributor) return [];
+  if (!contributor) return { records: [], contributor: null };
   const code = valueOf(contributor, "COD_CONTRIBUINTE");
-  if (!code) return [];
-  return asList(
-    await requestApi(
-      env("TRIBUTARY_IPTU_API_ID"),
-      env("TRIBUTARY_IPTU_API_TOKEN"),
-      { COD_CNT: code }
+  if (!code) return { records: [], contributor };
+  return {
+    contributor,
+    records: asList(
+      await requestApi(
+        env("TRIBUTARY_IPTU_API_ID"),
+        env("TRIBUTARY_IPTU_API_TOKEN"),
+        { COD_CNT: code }
+      )
     )
-  );
+  };
 };
 
 const parseMoney = (value: string): number => {
@@ -265,12 +273,24 @@ export const lookupTributary = async (
   }
   const document = normalizeDocument(rawDocument);
   try {
-    const records =
-      mode === "iptu"
-        ? await lookupIptu(document)
-        : await lookupDividaAtiva(document);
+    let records: TributaryRecord[];
+    let contributor: TributaryRecord | null = null;
+    if (mode === "iptu") {
+      const iptuResult = await lookupIptu(document);
+      records = iptuResult.records;
+      contributor = iptuResult.contributor;
+    } else {
+      records = await lookupDividaAtiva(document);
+    }
     const name =
-      valueOf(records[0] || {}, "NOME_CONTRIBUINTE") || "Contribuinte";
+      valueOf(
+        contributor || records[0] || {},
+        "NOME_CONTRIBUINTE",
+        "NOME_CONTRIBUINTE_CADASTRO",
+        "NOME",
+        "NOME_CLIENTE",
+        "RAZAO_SOCIAL"
+      ) || "Contribuinte";
     return {
       mode,
       document,
