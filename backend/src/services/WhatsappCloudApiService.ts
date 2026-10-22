@@ -6,6 +6,12 @@ import Ticket from "../models/Ticket";
 import Message from "../models/Message";
 import Queue from "../models/Queue";
 import QueueOption from "../models/QueueOption";
+import {
+  detectTributaryMode,
+  formatTributaryResult,
+  lookupTributary,
+  tributaryPrompt
+} from "./TributaryServices/TributaryLookupService";
 import CreateOrUpdateContactService from "./ContactServices/CreateOrUpdateContactService";
 import FindOrCreateTicketService from "./TicketServices/FindOrCreateTicketService";
 import CreateMessageService from "./MessageServices/CreateMessageService";
@@ -262,6 +268,29 @@ const handleCloudChatbot = async (
 
   const queue = queues.find(item => item.id === ticket.queueId);
   if (!queue || !ticket.chatbot) return;
+
+  if (ticket.queueOptionId) {
+    const currentOption = await QueueOption.findByPk(ticket.queueOptionId);
+    const tributaryMode = detectTributaryMode(
+      currentOption?.title,
+      currentOption?.message
+    );
+    if (tributaryMode) {
+      const document = String(messageBody || "").replace(/\D/g, "");
+      let response = tributaryPrompt(tributaryMode);
+      if (document.length === 11 || document.length === 14) {
+        try {
+          response = formatTributaryResult(
+            await lookupTributary(tributaryMode, document)
+          );
+        } catch (error: any) {
+          response = error?.message || "Não foi possível realizar a consulta.";
+        }
+      }
+      await sendCloudBotText(whatsapp, ticket, response);
+      return;
+    }
+  }
 
   const option = (queue.options || []).find(
     item => item.option === messageBody.trim()

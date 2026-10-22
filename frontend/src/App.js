@@ -12,8 +12,8 @@ import { SocketContext, socketManager } from "./context/Socket/SocketContext";
 import useSettings from "./hooks/useSettings";
 import Favicon from "react-favicon";
 import { getBackendURL } from "./services/config";
-
 import Routes from "./routes";
+import MaintenanceBanner from "./components/MaintenanceBanner";
 
 const queryClient = new QueryClient();
 const defaultLogoLight = "/vector/logo.svg";
@@ -278,6 +278,7 @@ const App = () => {
 
   return (
     <>
+      <MaintenanceBanner />
       <Favicon
         url={appLogoFavicon ? theme.appLogoFavicon : defaultLogoFavicon}
       />

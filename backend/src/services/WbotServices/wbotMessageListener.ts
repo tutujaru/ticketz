@@ -74,6 +74,13 @@ import saveMediaToFile from "../../helpers/saveMediaFile";
 import { _t } from "../TranslationServices/i18nService";
 import WhatsappLidMap from "../../models/WhatsappLidMap";
 import normalizePhone from "../../helpers/NormalizePhone";
+import {
+  detectTributaryMode,
+  formatTributaryResult,
+  lookupTributary,
+  normalizeDocument,
+  tributaryPrompt
+} from "../TributaryServices/TributaryLookupService";
 
 export interface ImessageUpsert {
   messages: proto.IWebMessageInfo[];
@@ -1539,6 +1546,30 @@ const handleChartbot = async (
         [Sequelize.cast(Sequelize.col("options.option"), "INTEGER"), "ASC"]
       ]
     });
+
+    const tributaryMode = detectTributaryMode(
+      currentOption?.title,
+      currentOption?.message
+    );
+    if (tributaryMode) {
+      const document = String(messageBody || "").replace(/\D/g, "");
+      let response = tributaryPrompt(tributaryMode);
+      if (document.length === 11 || document.length === 14) {
+        try {
+          normalizeDocument(document);
+          response = formatTributaryResult(
+            await lookupTributary(tributaryMode, document)
+          );
+        } catch (error: any) {
+          response = error?.message || "Não foi possível realizar a consulta.";
+        }
+      }
+      const sentMsg = await wbot.sendMessage(getJidOf(ticket), {
+        text: formatBody(response, ticket)
+      });
+      await verifyMessage(sentMsg, ticket, ticket.contact);
+      return;
+    }
 
     let filePath = null;
     let optionsMsg = null;

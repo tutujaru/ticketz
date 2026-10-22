@@ -72,14 +72,15 @@ services:
       - ticketz
       - nginx-proxy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ./Dockerfile
-    env_file:
-      - .env-frontend-acme
-    volumes:
-      - backend_public:/var/www/backend-public/      
+	  frontend:
+	    build:
+	      context: ./frontend
+	      dockerfile: ./Dockerfile
+	    env_file:
+	      - .env-frontend-acme
+	    volumes:
+	      - backend_public:/var/www/backend-public/
+	      - ./maintenance.json:/var/www/public/maintenance.json:ro
     restart: always
     depends_on:
       - acme-companion
