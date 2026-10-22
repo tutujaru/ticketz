@@ -313,6 +313,12 @@ const formatMoney = (value: number) =>
     value
   );
 
+const formatDateBR = (value: unknown): string => {
+  const text = String(value || "").trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/.exec(text);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : text;
+};
+
 export const formatTributaryResult = (
   result: LookupResult,
   hasHumanQueue = false
@@ -329,7 +335,9 @@ export const formatTributaryResult = (
     .slice(0, 8)
     .map(item => {
       const year = valueOf(item, "ANO", "ANO_DIVIDA", "ANO_RECEITA") || "-";
-      const due = valueOf(item, "DATAVENCI", "DATA_VENCIMENTO") || "-";
+      const due = formatDateBR(
+        valueOf(item, "DATAVENCI", "DATA_VENCIMENTO") || "-"
+      );
       const total = formatMoney(
         parseMoney(valueOf(item, "VLTOTAL", "VLPRINCIPAL"))
       );
