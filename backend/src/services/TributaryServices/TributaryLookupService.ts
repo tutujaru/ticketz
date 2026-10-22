@@ -211,8 +211,41 @@ export const lookupTributary = async (
   rawDocument: string,
   companyId: number
 ): Promise<LookupResult> => {
-  if (!(await isTributaryAllowed(companyId, mode))) {
-    throw new Error("Esta consulta ainda não está habilitada para a empresa.");
+  if (!enabled()) {
+    throw new Error(
+      "A integração tributária global está desativada no backend. Configure TRIBUTARY_ENABLED=true."
+    );
+  }
+  if (!companyId) {
+    throw new Error("Não foi possível identificar a empresa do atendimento.");
+  }
+  const company = await Company.findByPk(companyId, {
+    attributes: ["allowTributaryDividaAtiva", "allowTributaryIptu"]
+  });
+  const licensed =
+    mode === "iptu"
+      ? company?.allowTributaryIptu
+      : company?.allowTributaryDividaAtiva;
+  const setting = await Setting.findOne({
+    where: { companyId, key: activationKey(mode) }
+  });
+  const activated = ["enabled", "true", "1"].includes(
+    String(setting?.value || "").toLowerCase()
+  );
+  if (!licensed) {
+    logger.warn({ companyId, mode }, "tributary feature is not licensed");
+    throw new Error(
+      "Esta consulta ainda não foi liberada pelo superadmin para esta empresa."
+    );
+  }
+  if (!activated) {
+    logger.warn(
+      { companyId, mode, settingValue: setting?.value || "missing" },
+      "tributary feature is not activated for company"
+    );
+    throw new Error(
+      "Esta consulta está liberada, mas ainda está desativada nas configurações da empresa."
+    );
   }
   const document = normalizeDocument(rawDocument);
   try {
