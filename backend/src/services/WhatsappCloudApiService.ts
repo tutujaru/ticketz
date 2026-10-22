@@ -9,6 +9,7 @@ import QueueOption from "../models/QueueOption";
 import {
   detectTributaryMode,
   formatTributaryResult,
+  getTributaryHumanQueue,
   lookupTributary,
   tributaryPrompt
 } from "./TributaryServices/TributaryLookupService";
@@ -276,12 +277,34 @@ const handleCloudChatbot = async (
       currentOption?.message
     );
     if (tributaryMode) {
+      if (String(messageBody || "").trim() === "3") {
+        const humanQueue = await getTributaryHumanQueue(
+          ticket.companyId,
+          tributaryMode
+        );
+        if (humanQueue) {
+          await ticket.update({
+            chatbot: false,
+            queueOptionId: null,
+            queueId: humanQueue.id,
+            status: "pending"
+          });
+          ticket.queue = humanQueue;
+          await sendCloudBotText(
+            whatsapp,
+            ticket,
+            humanQueue.greetingMessage || "Você será atendido em breve."
+          );
+          return;
+        }
+      }
       const document = String(messageBody || "").replace(/\D/g, "");
       let response = tributaryPrompt(tributaryMode);
       if (document.length === 11 || document.length === 14) {
         try {
           response = formatTributaryResult(
-            await lookupTributary(tributaryMode, document, ticket.companyId)
+            await lookupTributary(tributaryMode, document, ticket.companyId),
+            !!(await getTributaryHumanQueue(ticket.companyId, tributaryMode))
           );
         } catch (error: any) {
           response = error?.message || "Não foi possível realizar a consulta.";

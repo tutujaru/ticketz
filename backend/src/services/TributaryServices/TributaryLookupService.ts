@@ -2,6 +2,7 @@ import axios from "axios";
 import { logger } from "../../utils/logger";
 import Company from "../../models/Company";
 import Setting from "../../models/Setting";
+import Queue from "../../models/Queue";
 
 type TributaryMode = "divida_ativa" | "iptu";
 type TributaryRecord = Record<string, any>;
@@ -26,6 +27,21 @@ const enabled = (): boolean =>
 
 const activationKey = (mode: TributaryMode): string =>
   mode === "iptu" ? "tributaryIptuEnabled" : "tributaryDividaAtivaEnabled";
+
+const humanQueueKey = (mode: TributaryMode): string =>
+  mode === "iptu" ? "tributaryIptuQueueId" : "tributaryDividaAtivaQueueId";
+
+export const getTributaryHumanQueue = async (
+  companyId: number,
+  mode: TributaryMode
+): Promise<Queue | null> => {
+  const setting = await Setting.findOne({
+    where: { companyId, key: humanQueueKey(mode) }
+  });
+  const queueId = Number(setting?.value);
+  if (!Number.isInteger(queueId) || queueId <= 0) return null;
+  return Queue.findOne({ where: { id: queueId, companyId } });
+};
 
 export const isTributaryAllowed = async (
   companyId: number,
@@ -297,10 +313,17 @@ const formatMoney = (value: number) =>
     value
   );
 
-export const formatTributaryResult = (result: LookupResult): string => {
+export const formatTributaryResult = (
+  result: LookupResult,
+  hasHumanQueue = false
+): string => {
   const label = result.mode === "iptu" ? "IPTU" : "Dívida Ativa";
   if (!result.total) {
-    return `Não localizamos registros de ${label} para este CPF/CNPJ.\n\nSe precisar de ajuda, responda *3* para falar com um atendente.`;
+    return `Não localizamos registros de ${label} para este CPF/CNPJ.\n\n${
+      hasHumanQueue
+        ? "Para atendimento detalhado, responda *3*."
+        : "Se precisar de ajuda, responda *3* para falar com um atendente."
+    }`;
   }
   const details = result.records
     .slice(0, 8)
@@ -316,7 +339,11 @@ export const formatTributaryResult = (result: LookupResult): string => {
     .join("\n");
   const remaining =
     result.total > 8 ? `\n… e mais ${result.total - 8} registro(s).` : "";
-  return `*Consulta de ${label}*\n\nContribuinte: *${result.name}*\nRegistros encontrados: *${result.total}*\nValor total informado: *${formatMoney(result.totalValue)}*\n\n${details}${remaining}\n\nPara atendimento detalhado, responda *3*.`;
+  return `*Consulta de ${label}*\n\nContribuinte: *${result.name}*\nRegistros encontrados: *${result.total}*\nValor total informado: *${formatMoney(result.totalValue)}*\n\n${details}${remaining}\n\n${
+    hasHumanQueue
+      ? "Para atendimento detalhado, responda *3*."
+      : "Para atendimento detalhado, responda *3* para falar com um atendente."
+  }`;
 };
 
 export const tributaryPrompt = (mode: TributaryMode): string =>

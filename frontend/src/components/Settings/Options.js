@@ -142,6 +142,9 @@ export default function Options(props) {
   const [tributaryDividaAtivaEnabled, setTributaryDividaAtivaEnabled] =
     useState("disabled");
   const [tributaryIptuEnabled, setTributaryIptuEnabled] = useState("disabled");
+  const [tributaryDividaAtivaQueueId, setTributaryDividaAtivaQueueId] =
+    useState("");
+  const [tributaryIptuQueueId, setTributaryIptuQueueId] = useState("");
 
   const { getCurrentUserInfo } = useAuth();
   const [currentUser, setCurrentUser] = useState({});
@@ -334,6 +337,16 @@ export default function Options(props) {
       );
       setTributaryIptuEnabled(tributaryIptu?.value || "disabled");
 
+      const tributaryDividaAtivaQueue = settings.find(
+        s => s.key === "tributaryDividaAtivaQueueId"
+      );
+      setTributaryDividaAtivaQueueId(tributaryDividaAtivaQueue?.value || "");
+
+      const tributaryIptuQueue = settings.find(
+        s => s.key === "tributaryIptuQueueId"
+      );
+      setTributaryIptuQueueId(tributaryIptuQueue?.value || "");
+
       const extensionDownloadUrl = settings.find(
         s => s.key === "extensionDownloadUrl"
       );
@@ -525,50 +538,104 @@ export default function Options(props) {
               <h2 className={classes.groupTitle}>Consultas tributárias</h2>
             </Grid>
             {company?.allowTributaryDividaAtiva && (
-              <Grid xs={12} sm={6} md={4} item>
-                <FormControl className={classes.selectContainer}>
-                  <InputLabel id="tributary-divida-enabled-label">
-                    Consulta de Dívida Ativa
-                  </InputLabel>
-                  <Select
-                    labelId="tributary-divida-enabled-label"
-                    value={tributaryDividaAtivaEnabled}
-                    onChange={async e =>
-                      handleSetting(
-                        "tributaryDividaAtivaEnabled",
-                        e.target.value,
-                        setTributaryDividaAtivaEnabled
-                      )
-                    }
-                  >
-                    <MenuItem value="disabled">Desativada</MenuItem>
-                    <MenuItem value="enabled">Ativada</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+              <>
+                <Grid xs={12} sm={6} md={4} item>
+                  <FormControl className={classes.selectContainer}>
+                    <InputLabel id="tributary-divida-enabled-label">
+                      Consulta de Dívida Ativa
+                    </InputLabel>
+                    <Select
+                      labelId="tributary-divida-enabled-label"
+                      value={tributaryDividaAtivaEnabled}
+                      onChange={async e =>
+                        handleSetting(
+                          "tributaryDividaAtivaEnabled",
+                          e.target.value,
+                          setTributaryDividaAtivaEnabled
+                        )
+                      }
+                    >
+                      <MenuItem value="disabled">Desativada</MenuItem>
+                      <MenuItem value="enabled">Ativada</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid xs={12} sm={6} md={4} item>
+                  <FormControl className={classes.selectContainer}>
+                    <InputLabel id="tributary-divida-queue-label">
+                      Fila do atendimento detalhado — Dívida Ativa
+                    </InputLabel>
+                    <Select
+                      labelId="tributary-divida-queue-label"
+                      value={tributaryDividaAtivaQueueId}
+                      onChange={async e =>
+                        handleSetting(
+                          "tributaryDividaAtivaQueueId",
+                          e.target.value,
+                          setTributaryDividaAtivaQueueId
+                        )
+                      }
+                    >
+                      <MenuItem value="">Não definida</MenuItem>
+                      {queues.map(queue => (
+                        <MenuItem key={queue.id} value={`${queue.id}`}>
+                          {queue.name} (ID {queue.id})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </>
             )}
             {company?.allowTributaryIptu && (
-              <Grid xs={12} sm={6} md={4} item>
-                <FormControl className={classes.selectContainer}>
-                  <InputLabel id="tributary-iptu-enabled-label">
-                    Consulta de IPTU
-                  </InputLabel>
-                  <Select
-                    labelId="tributary-iptu-enabled-label"
-                    value={tributaryIptuEnabled}
-                    onChange={async e =>
-                      handleSetting(
-                        "tributaryIptuEnabled",
-                        e.target.value,
-                        setTributaryIptuEnabled
-                      )
-                    }
-                  >
-                    <MenuItem value="disabled">Desativada</MenuItem>
-                    <MenuItem value="enabled">Ativada</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+              <>
+                <Grid xs={12} sm={6} md={4} item>
+                  <FormControl className={classes.selectContainer}>
+                    <InputLabel id="tributary-iptu-enabled-label">
+                      Consulta de IPTU
+                    </InputLabel>
+                    <Select
+                      labelId="tributary-iptu-enabled-label"
+                      value={tributaryIptuEnabled}
+                      onChange={async e =>
+                        handleSetting(
+                          "tributaryIptuEnabled",
+                          e.target.value,
+                          setTributaryIptuEnabled
+                        )
+                      }
+                    >
+                      <MenuItem value="disabled">Desativada</MenuItem>
+                      <MenuItem value="enabled">Ativada</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid xs={12} sm={6} md={4} item>
+                  <FormControl className={classes.selectContainer}>
+                    <InputLabel id="tributary-iptu-queue-label">
+                      Fila do atendimento detalhado — IPTU
+                    </InputLabel>
+                    <Select
+                      labelId="tributary-iptu-queue-label"
+                      value={tributaryIptuQueueId}
+                      onChange={async e =>
+                        handleSetting(
+                          "tributaryIptuQueueId",
+                          e.target.value,
+                          setTributaryIptuQueueId
+                        )
+                      }
+                    >
+                      <MenuItem value="">Não definida</MenuItem>
+                      {queues.map(queue => (
+                        <MenuItem key={queue.id} value={`${queue.id}`}>
+                          {queue.name} (ID {queue.id})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </>
             )}
           </>
         )}

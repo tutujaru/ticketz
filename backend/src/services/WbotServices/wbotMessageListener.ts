@@ -77,6 +77,7 @@ import normalizePhone from "../../helpers/NormalizePhone";
 import {
   detectTributaryMode,
   formatTributaryResult,
+  getTributaryHumanQueue,
   lookupTributary,
   normalizeDocument,
   tributaryPrompt
@@ -1552,13 +1553,40 @@ const handleChartbot = async (
       currentOption?.message
     );
     if (tributaryMode) {
+      if (String(messageBody || "").trim() === "3") {
+        const humanQueue = await getTributaryHumanQueue(
+          ticket.companyId,
+          tributaryMode
+        );
+        if (humanQueue) {
+          await UpdateTicketService({
+            ticketData: {
+              chatbot: false,
+              queueOptionId: null,
+              queueId: humanQueue.id
+            },
+            ticketId: ticket.id,
+            companyId: ticket.companyId,
+            dontRunChatbot: true
+          });
+          await ticket.reload();
+          if (humanQueue.greetingMessage?.trim()) {
+            const sentMessage = await wbot.sendMessage(getJidOf(ticket), {
+              text: formatBody(humanQueue.greetingMessage.trim(), ticket)
+            });
+            await verifyMessage(sentMessage, ticket, ticket.contact);
+          }
+          return;
+        }
+      }
       const document = String(messageBody || "").replace(/\D/g, "");
       let response = tributaryPrompt(tributaryMode);
       if (document.length === 11 || document.length === 14) {
         try {
           normalizeDocument(document);
           response = formatTributaryResult(
-            await lookupTributary(tributaryMode, document, ticket.companyId)
+            await lookupTributary(tributaryMode, document, ticket.companyId),
+            !!(await getTributaryHumanQueue(ticket.companyId, tributaryMode))
           );
         } catch (error: any) {
           response = error?.message || "Não foi possível realizar a consulta.";
