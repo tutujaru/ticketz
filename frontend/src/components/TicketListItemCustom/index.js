@@ -618,4 +618,4 @@ const TicketListItemCustom = ({ ticket, setTabOpen, groupActionButtons }) => {
   );
 };
 
-export default TicketListItemCustom;
+export default React.memo(TicketListItemCustom);

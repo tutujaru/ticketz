@@ -9,7 +9,6 @@ import {
 } from "sequelize";
 import { startOfDay, endOfDay, parseISO } from "date-fns";
 
-import { intersection } from "lodash";
 import AppError from "../../errors/AppError";
 import Ticket from "../../models/Ticket";
 import Contact from "../../models/Contact";
@@ -246,28 +245,49 @@ const ListTicketsService = async ({
   }
 
   if (Array.isArray(tags) && tags.length > 0) {
-    const ticketsTagFilter: number[][] = [];
-    const contactsTagFilter: number[][] = [];
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const tag of tags) {
-      const ticketTags = await TicketTag.findAll({
-        where: { tagId: tag }
-      });
-      if (ticketTags) {
-        ticketsTagFilter.push(ticketTags.map(t => t.ticketId));
+    const [ticketTags, contactTags] = await Promise.all([
+      TicketTag.findAll({
+        where: { tagId: { [Op.in]: tags } },
+        attributes: ["tagId", "ticketId"]
+      }),
+      ContactTag.findAll({
+        where: { tagId: { [Op.in]: tags } },
+        attributes: ["tagId", "contactId"]
+      })
+    ]);
+
+    const ticketIdsByTag = new Map<number, Set<number>>();
+    const contactIdsByTag = new Map<number, Set<number>>();
+
+    ticketTags.forEach(ticketTag => {
+      if (!ticketIdsByTag.has(ticketTag.tagId)) {
+        ticketIdsByTag.set(ticketTag.tagId, new Set<number>());
       }
+      ticketIdsByTag.get(ticketTag.tagId).add(ticketTag.ticketId);
+    });
 
-      const contactTags = await ContactTag.findAll({
-        where: { tagId: tag }
-      });
-
-      if (contactTags) {
-        contactsTagFilter.push(contactTags.map(c => c.contactId));
+    contactTags.forEach(contactTag => {
+      if (!contactIdsByTag.has(contactTag.tagId)) {
+        contactIdsByTag.set(contactTag.tagId, new Set<number>());
       }
-    }
+      contactIdsByTag.get(contactTag.tagId).add(contactTag.contactId);
+    });
 
-    const ticketsIntersection: number[] = intersection(...ticketsTagFilter);
-    const contactsIntersection: number[] = intersection(...contactsTagFilter);
+    const intersectByTag = <T>(
+      tagIds: number[],
+      valuesByTag: Map<number, Set<T>>
+    ): T[] => {
+      if (tagIds.some(tagId => !valuesByTag.has(tagId))) return [];
+
+      return tagIds
+        .map(tagId => [...valuesByTag.get(tagId)])
+        .reduce((result, values) =>
+          result.filter(value => values.includes(value))
+        );
+    };
+
+    const ticketsIntersection = intersectByTag(tags, ticketIdsByTag);
+    const contactsIntersection = intersectByTag(tags, contactIdsByTag);
 
     andedOrs.push({
       [Op.or]: [
@@ -296,23 +316,15 @@ const ListTicketsService = async ({
   }
 
   if (Array.isArray(users) && users.length > 0) {
-    const ticketsUserFilter: number[][] = [];
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const u of users) {
-      const ticketUsers = await Ticket.findAll({
-        where: { userId: u }
-      });
-      if (ticketUsers) {
-        ticketsUserFilter.push(ticketUsers.map(t => t.id));
-      }
-    }
-
-    const ticketsIntersection: number[] = intersection(...ticketsUserFilter);
+    const ticketUsers = await Ticket.findAll({
+      where: { userId: { [Op.in]: users } },
+      attributes: ["id"]
+    });
 
     whereCondition = {
       ...whereCondition,
       id: {
-        [Op.in]: ticketsIntersection
+        [Op.in]: ticketUsers.map(ticket => ticket.id)
       }
     };
   }
