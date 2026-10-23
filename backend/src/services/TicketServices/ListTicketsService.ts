@@ -27,6 +27,7 @@ interface Request {
   isSearch?: boolean;
   searchParam?: string;
   nextUpdatedAt?: string;
+  nextTicketId?: string;
   status?: string;
   groups?: string;
   date?: string;
@@ -54,6 +55,7 @@ const ListTicketsService = async ({
   isSearch = false,
   searchParam = "",
   nextUpdatedAt,
+  nextTicketId,
   queueIds,
   contactId,
   tags,
@@ -333,14 +335,28 @@ const ListTicketsService = async ({
 
   if (!all && nextUpdatedAt) {
     const parsedNextUpdatedAt = new Date(nextUpdatedAt);
+    const parsedNextTicketId = nextTicketId ? Number(nextTicketId) : null;
 
-    if (Number.isNaN(parsedNextUpdatedAt.getTime())) {
+    if (
+      Number.isNaN(parsedNextUpdatedAt.getTime()) ||
+      (nextTicketId && !Number.isInteger(parsedNextTicketId))
+    ) {
       throw new AppError("ERR_INVALID_NEXT_UPDATED_AT", 400);
     }
 
-    andedOrs.push({
-      updatedAt: { [Op.lt]: parsedNextUpdatedAt }
-    });
+    andedOrs.push(
+      parsedNextTicketId === null
+        ? { updatedAt: { [Op.lt]: parsedNextUpdatedAt } }
+        : {
+            [Op.or]: [
+              { updatedAt: { [Op.lt]: parsedNextUpdatedAt } },
+              {
+                updatedAt: parsedNextUpdatedAt,
+                id: { [Op.lt]: parsedNextTicketId }
+              }
+            ]
+          }
+    );
   }
 
   if (minUpdatedAt) {

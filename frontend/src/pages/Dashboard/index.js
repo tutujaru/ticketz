@@ -355,25 +355,21 @@ const Dashboard = () => {
       return;
     }
 
-    api
-      .get("/dashboard/tickets", { params })
-      .then(result => {
-        if (result?.data) {
-          setTicketsData(result.data);
-        }
-      })
-      .catch(() => {});
-
     setLoadingUsers(true);
-    api
-      .get("/dashboard/users", { params })
-      .then(result => {
-        if (result?.data) {
-          setUsersData(result.data);
-          setLoadingUsers(false);
+    Promise.all([
+      api.get("/dashboard/tickets", { params }),
+      api.get("/dashboard/users", { params })
+    ])
+      .then(([ticketsResult, usersResult]) => {
+        if (ticketsResult?.data) {
+          setTicketsData(ticketsResult.data);
+        }
+        if (usersResult?.data) {
+          setUsersData(usersResult.data);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingUsers(false));
   }
 
   useEffect(() => {
