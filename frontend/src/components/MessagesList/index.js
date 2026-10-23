@@ -76,9 +76,7 @@ const useStyles = makeStyles(theme => ({
       fontWeight: "bold",
       cursor: "pointer"
     },
-    marginBottom: 5,
-    contentVisibility: "auto",
-    containIntrinsicSize: "80px"
+    marginBottom: 5
   },
 
   stickedMessages: {

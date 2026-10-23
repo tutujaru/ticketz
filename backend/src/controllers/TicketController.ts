@@ -91,7 +91,6 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     tags: tagsIds,
     users: usersIds,
     nextUpdatedAt,
-    nextTicketId,
     status,
     groups,
     date,
@@ -119,8 +118,6 @@ export const kanban = async (
 ): Promise<Response> => {
   const {
     pageNumber,
-    nextUpdatedAt,
-    nextTicketId,
     status,
     date,
     updatedAt,
@@ -156,8 +153,6 @@ export const kanban = async (
     tags: tagsIds,
     users: usersIds,
     pageNumber,
-    nextUpdatedAt,
-    nextTicketId,
     status,
     date,
     updatedAt,

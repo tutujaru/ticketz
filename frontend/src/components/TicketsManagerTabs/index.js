@@ -8,11 +8,8 @@ import InputBase from "@material-ui/core/InputBase";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Badge from "@material-ui/core/Badge";
-import Collapse from "@material-ui/core/Collapse";
-import IconButton from "@material-ui/core/IconButton";
 import MoveToInboxIcon from "@material-ui/icons/MoveToInbox";
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import FilterListIcon from "@material-ui/icons/FilterList";
 
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
@@ -108,17 +105,6 @@ const useStyles = makeStyles(theme => ({
   icon24: {
     width: 24,
     height: 24
-  },
-
-  filterPanel: {
-    display: "flex",
-    alignItems: "center",
-    minWidth: 220
-  },
-
-  filterButton: {
-    marginLeft: theme.spacing(1),
-    color: theme.palette.primary.main
   }
 }));
 
@@ -145,7 +131,6 @@ const TicketsManagerTabs = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { getSetting } = useSettings();
   const [showTabGroups, setShowTabGroups] = useState(false);
@@ -319,24 +304,12 @@ const TicketsManagerTabs = () => {
             )}
           </>
         )}
-        <IconButton
-          className={classes.filterButton}
-          onClick={() => setFiltersOpen(value => !value)}
-          aria-label="Abrir filtros"
-          title="Filtros"
-        >
-          <FilterListIcon />
-        </IconButton>
-        <Collapse in={filtersOpen || tab === "search"} orientation="horizontal">
-          <Box className={classes.filterPanel}>
-            <TicketsQueueSelect
-              style={{ marginLeft: 6 }}
-              selectedQueueIds={selectedQueueIds}
-              userQueues={user?.queues}
-              onChange={values => setSelectedQueueIds(values)}
-            />
-          </Box>
-        </Collapse>
+        <TicketsQueueSelect
+          style={{ marginLeft: 6 }}
+          selectedQueueIds={selectedQueueIds}
+          userQueues={user?.queues}
+          onChange={values => setSelectedQueueIds(values)}
+        />
       </Paper>
       <TabPanel value={tab} name="open" className={classes.ticketsWrapper}>
         <Tabs
@@ -413,20 +386,18 @@ const TicketsManagerTabs = () => {
         />
       </TabPanel>
       <TabPanel value={tab} name="search" className={classes.ticketsWrapper}>
-        <Collapse in={filtersOpen || tab === "search"}>
-          <Box style={{ paddingRight: 10, paddingLeft: 10 }}>
-            <ContactSelect
-              onSelected={contactId => {
-                setSelectedContact(contactId);
-              }}
-              allowCreate={false}
-            />
-          </Box>
-          <TagsFilter onFiltered={handleSelectedTags} />
-          {profile === "admin" && (
-            <UsersFilter onFiltered={handleSelectedUsers} />
-          )}
-        </Collapse>
+        <Box style={{ paddingRight: 10, paddingLeft: 10 }}>
+          <ContactSelect
+            onSelected={contactId => {
+              setSelectedContact(contactId);
+            }}
+            allowCreate={false}
+          />
+        </Box>
+        <TagsFilter onFiltered={handleSelectedTags} />
+        {profile === "admin" && (
+          <UsersFilter onFiltered={handleSelectedUsers} />
+        )}
         <TicketsList
           isSearch={true}
           searchParam={searchParam}

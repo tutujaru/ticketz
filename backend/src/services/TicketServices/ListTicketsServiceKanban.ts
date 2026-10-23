@@ -11,13 +11,10 @@ import Tag from "../../models/Tag";
 import TicketTag from "../../models/TicketTag";
 import Whatsapp from "../../models/Whatsapp";
 import Company from "../../models/Company";
-import AppError from "../../errors/AppError";
 
 interface Request {
   searchParam?: string;
   pageNumber?: string;
-  nextUpdatedAt?: string;
-  nextTicketId?: string;
   status?: string;
   date?: string;
   updatedAt?: string;
@@ -33,15 +30,13 @@ interface Request {
 
 interface Response {
   tickets: Ticket[];
-  count: number | null;
+  count: number;
   hasMore: boolean;
 }
 
 const ListTicketsServiceKanban = async ({
   searchParam = "",
   pageNumber = "1",
-  nextUpdatedAt,
-  nextTicketId,
   queueIds,
   tags,
   users,
@@ -228,72 +223,20 @@ const ListTicketsServiceKanban = async ({
     companyId: { [Op.in]: globalCompanyIds }
   };
 
-  const cursorMode = Boolean(nextUpdatedAt && nextTicketId);
-  if (cursorMode) {
-    const parsedNextUpdatedAt = new Date(nextUpdatedAt);
-    const parsedNextTicketId = Number(nextTicketId);
-
-    if (
-      Number.isNaN(parsedNextUpdatedAt.getTime()) ||
-      !Number.isInteger(parsedNextTicketId)
-    ) {
-      throw new AppError("ERR_INVALID_NEXT_UPDATED_AT", 400);
-    }
-
-    whereCondition = {
-      [Op.and]: [
-        whereCondition,
-        {
-          [Op.or]: [
-            { updatedAt: { [Op.lt]: parsedNextUpdatedAt } },
-            {
-              updatedAt: parsedNextUpdatedAt,
-              id: { [Op.lt]: parsedNextTicketId }
-            }
-          ]
-        }
-      ]
-    };
-  }
-
-  let count: number | null = null;
-  let tickets: Ticket[];
-
-  if (cursorMode) {
-    tickets = await Ticket.findAll({
-      where: whereCondition,
-      include: includeCondition,
-      limit: limit + 1,
-      order: [
-        ["updatedAt", "DESC"],
-        ["id", "DESC"]
-      ],
-      subQuery: false
-    });
-  } else {
-    const result = await Ticket.findAndCountAll({
-      where: whereCondition,
-      include: includeCondition,
-      distinct: true,
-      limit,
-      offset,
-      order: [
-        ["updatedAt", "DESC"],
-        ["id", "DESC"]
-      ],
-      subQuery: false
-    });
-    count = result.count;
-    tickets = result.rows;
-  }
-  const visibleTickets = cursorMode ? tickets.slice(0, limit) : tickets;
-  const hasMore = cursorMode
-    ? tickets.length > limit
-    : count > offset + tickets.length;
+  const { count, rows: tickets } = await Ticket.findAndCountAll({
+    where: whereCondition,
+    include: includeCondition,
+    distinct: true,
+    limit,
+    offset,
+    order: [["updatedAt", "DESC"]],
+    subQuery: false
+  });
+  const hasMore = count > offset + tickets.length;
 
   return {
-    tickets: visibleTickets,
-    count: cursorMode ? null : count,
+    tickets,
+    count,
     hasMore
   };
 };

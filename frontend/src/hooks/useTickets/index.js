@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import { useQuery } from "react-query";
+import { useState, useEffect, useCallback, useRef } from "react";
 import toastError from "../../errors/toastError";
 
 import api from "../../services/api";
@@ -22,61 +21,58 @@ const useTickets = ({
   notClosed,
   all
 }) => {
-  const queryKey = [
-    "tickets",
-    isSearch,
-    searchParam,
-    nextUpdatedAt,
-    nextTicketId,
-    contactId,
-    tags,
-    users,
-    status,
-    groups,
-    date,
-    updatedAt,
-    showAll,
-    queueIds,
-    withUnreadMessages,
-    notClosed,
-    all
-  ];
+  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const requestSequence = useRef(0);
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      const { data } = await api.get("/tickets", {
-        params: {
-          isSearch,
-          searchParam,
-          nextUpdatedAt,
-          nextTicketId,
-          contactId,
-          tags,
-          users,
-          status,
-          groups,
-          date,
-          updatedAt,
-          showAll,
-          queueIds,
-          withUnreadMessages,
-          notClosed,
-          all
+  useEffect(() => {
+    setLoading(true);
+    const currentRequest = ++requestSequence.current;
+    const delayDebounceFn = setTimeout(() => {
+      const fetchTickets = async () => {
+        try {
+          const { data } = await api.get("/tickets", {
+            params: {
+              isSearch,
+              searchParam,
+              nextUpdatedAt,
+              nextTicketId,
+              contactId,
+              tags,
+              users,
+              status,
+              groups,
+              date,
+              updatedAt,
+              showAll,
+              queueIds,
+              withUnreadMessages,
+              notClosed,
+              all
+            }
+          });
+          if (currentRequest === requestSequence.current) {
+            setTickets(data.tickets);
+            setLoading(false);
+          }
+        } catch (err) {
+          if (currentRequest === requestSequence.current) {
+            setLoading(false);
+          }
+          toastError(err);
         }
-      });
-      return data.tickets || [];
-    } catch (err) {
-      toastError(err);
-      throw err;
-    }
+      };
+      fetchTickets();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
   }, [
-    isSearch,
     searchParam,
-    nextUpdatedAt,
-    nextTicketId,
     contactId,
     tags,
     users,
+    nextUpdatedAt,
+    nextTicketId,
     status,
     groups,
     date,
@@ -84,21 +80,15 @@ const useTickets = ({
     showAll,
     queueIds,
     withUnreadMessages,
+    isSearch,
     notClosed,
-    all
+    all,
+    refreshTrigger
   ]);
 
-  const {
-    data: tickets = [],
-    isLoading,
-    isFetching,
-    refetch
-  } = useQuery(queryKey, fetchTickets, {
-    keepPreviousData: true,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    retry: 1
-  });
+  const refetch = useCallback(() => {
+    setRefreshTrigger(prevState => prevState + 1);
+  }, []);
 
   const fetchSince = useCallback(
     async minUpdatedAt => {
@@ -143,7 +133,7 @@ const useTickets = ({
 
   return {
     tickets,
-    loading: isLoading || isFetching,
+    loading,
     refetch,
     fetchSince
   };

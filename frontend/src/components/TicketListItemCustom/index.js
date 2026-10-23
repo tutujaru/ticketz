@@ -554,9 +554,9 @@ const TicketListItemCustom = ({ ticket, setTabOpen, groupActionButtons }) => {
                       <div>Localização</div>
                     ) : (
                       <WhatsMarked oneline>
-                        {ticket.lastMessage?.startsWith('{"ticketzvCard"')
+                        {ticket.lastMessage.startsWith('{"ticketzvCard"')
                           ? "🪪"
-                          : ticket.lastMessage?.split("\n")[0] || "Sem mensagens"}
+                          : ticket.lastMessage.split("\n")[0]}
                       </WhatsMarked>
                     )}
                   </>
