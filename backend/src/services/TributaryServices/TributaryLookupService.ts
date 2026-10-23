@@ -428,6 +428,29 @@ const formatDateBR = (value: unknown): string => {
   return match ? `${match[3]}/${match[2]}/${match[1]}` : text;
 };
 
+const formatDividaAtivaRecord = (item: TributaryRecord): string => {
+  const value = (key: string): string => valueOf(item, key) || "-";
+  const money = (key: string): string =>
+    formatMoney(parseMoney(valueOf(item, key)));
+  const cancellationDate = formatDateBR(valueOf(item, "DATA_CANCELAMENTO"));
+
+  return [
+    `COD_DIVIDA: ${value("COD_DIVIDA")}`,
+    `COD_CADASTRO: ${value("COD_CADASTRO")}`,
+    `MATRICULA_CADASTRO: ${value("MATRICULA_CADASTRO")}`,
+    `COD_CONTRIBUINTE: ${value("COD_CONTRIBUINTE")}`,
+    `ANO_DIVIDA: ${value("ANO_DIVIDA")}`,
+    `DESC_SITUACAO: ${value("DESC_SITUACAO")}`,
+    `DATA_CANCELAMENTO: ${cancellationDate || "-"}`,
+    `NRO_PARCELA: ${value("NRO_PARCELA")}`,
+    `VLPRINCIPAL: ${money("VLPRINCIPAL")}`,
+    `VLCORRECAO: ${money("VLCORRECAO")}`,
+    `VLMULTA: ${money("VLMULTA")}`,
+    `VLJUROS: ${money("VLJUROS")}`,
+    `VLTOTAL: ${money("VLTOTAL")}`
+  ].join("\n");
+};
+
 export const formatTributaryResult = (
   result: LookupResult,
   hasHumanQueue = false
@@ -442,7 +465,10 @@ export const formatTributaryResult = (
   }
   const details = result.records
     .slice(0, 8)
-    .map(item => {
+    .map((item, index) => {
+      if (result.mode === "divida_ativa") {
+        return `*Registro ${index + 1}*\n${formatDividaAtivaRecord(item)}`;
+      }
       const year = valueOf(item, "ANO", "ANO_DIVIDA", "ANO_RECEITA") || "-";
       const due = formatDateBR(
         valueOf(item, "DATAVENCI", "DATA_VENCIMENTO") || "-"
