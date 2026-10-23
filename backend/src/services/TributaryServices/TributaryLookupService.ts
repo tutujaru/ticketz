@@ -77,6 +77,13 @@ const cleanDigits = (value: string): string =>
     .replace(/\D/g, "")
     .slice(0, MAX_DOCUMENT_DIGITS);
 
+const normalizeDocumentForComparison = (value: string): string => {
+  const digits = cleanDigits(value);
+  if (digits.length === 10) return digits.padStart(11, "0");
+  if (digits.length === 13) return digits.padStart(14, "0");
+  return digits;
+};
+
 const isValidCpf = (cpf: string): boolean => {
   if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
   let sum = 0;
@@ -158,7 +165,9 @@ const filterByDocument = (records: TributaryRecord[], document: string) =>
       "CPF_CNPJ",
       "INSC_MUNICIPAL",
       "CNPJ_CPF"
-    ].some(key => cleanDigits(valueOf(record, key)) === document)
+    ].some(
+      key => normalizeDocumentForComparison(valueOf(record, key)) === document
+    )
   );
 
 const getCached = async (
@@ -201,7 +210,9 @@ const lookupIptu = async (
     )
   );
   const contributor = mapping.find(
-    item => cleanDigits(valueOf(item, "INSMF_CONTRIBUINTE")) === document
+    item =>
+      normalizeDocumentForComparison(valueOf(item, "INSMF_CONTRIBUINTE")) ===
+      document
   );
   if (!contributor) return { records: [], contributor: null };
   const code = valueOf(contributor, "COD_CONTRIBUINTE");
@@ -218,7 +229,8 @@ const lookupIptu = async (
   // Dívida Ativa contém os IPTUs em aberto, inclusive os vencidos.
   const activeDebtRecords = (await lookupDividaAtiva(document)).filter(item => {
     const sameContributor =
-      cleanDigits(valueOf(item, "INSMF_CONTRIBUINTE")) === document ||
+      normalizeDocumentForComparison(valueOf(item, "INSMF_CONTRIBUINTE")) ===
+        document ||
       valueOf(item, "COD_CONTRIBUINTE").replace(/^0+/, "") ===
         code.replace(/^0+/, "");
     const revenue = `${valueOf(
