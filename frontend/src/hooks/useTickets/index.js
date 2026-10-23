@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toastError from "../../errors/toastError";
 
 import api from "../../services/api";
@@ -24,11 +24,9 @@ const useTickets = ({
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const requestSequence = useRef(0);
 
   useEffect(() => {
     setLoading(true);
-    const currentRequest = ++requestSequence.current;
     const delayDebounceFn = setTimeout(() => {
       const fetchTickets = async () => {
         try {
@@ -52,14 +50,10 @@ const useTickets = ({
               all
             }
           });
-          if (currentRequest === requestSequence.current) {
-            setTickets(data.tickets);
-            setLoading(false);
-          }
+          setTickets(data.tickets);
+          setLoading(false);
         } catch (err) {
-          if (currentRequest === requestSequence.current) {
-            setLoading(false);
-          }
+          setLoading(false);
           toastError(err);
         }
       };

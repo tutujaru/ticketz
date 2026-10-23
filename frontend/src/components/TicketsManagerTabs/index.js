@@ -162,14 +162,14 @@ const TicketsManagerTabs = () => {
     }
   }, [tab]);
 
-  const searchTimeoutRef = useRef(null);
+  let searchTimeout;
 
   const handleSearch = e => {
     const searchedTerm = e.target.value.toLowerCase();
 
-    clearTimeout(searchTimeoutRef.current);
+    clearTimeout(searchTimeout);
 
-    searchTimeoutRef.current = setTimeout(() => {
+    searchTimeout = setTimeout(() => {
       setSearchParam(searchedTerm);
     }, 500);
   };
@@ -180,6 +180,12 @@ const TicketsManagerTabs = () => {
 
   const handleChangeTabOpen = (e, newValue) => {
     setTabOpen(newValue);
+  };
+
+  const applyPanelStyle = status => {
+    if (tabOpen !== status) {
+      return { width: 0, height: 0 };
+    }
   };
 
   const handleCloseOrOpenTicket = ticket => {
@@ -347,26 +353,24 @@ const TicketsManagerTabs = () => {
           />
         </Tabs>
         <Paper className={classes.ticketsWrapper}>
-          {tabOpen === "open" && (
-            <TicketsList
-              status="open"
-              showAll={showAllTickets}
-              selectedQueueIds={selectedQueueIds}
-              updateCount={val => setOpenCount(val)}
-              setTabOpen={setTabOpen}
-              showTabGroups={showTabGroups}
-            />
-          )}
-          {tabOpen === "pending" && (
-            <TicketsList
-              status="pending"
-              showAll={showAllTickets}
-              selectedQueueIds={selectedQueueIds}
-              updateCount={val => setPendingCount(val)}
-              setTabOpen={setTabOpen}
-              showTabGroups={showTabGroups}
-            />
-          )}
+          <TicketsList
+            status="open"
+            showAll={showAllTickets}
+            selectedQueueIds={selectedQueueIds}
+            updateCount={val => setOpenCount(val)}
+            style={applyPanelStyle("open")}
+            setTabOpen={setTabOpen}
+            showTabGroups={showTabGroups}
+          />
+          <TicketsList
+            status="pending"
+            showAll={showAllTickets}
+            selectedQueueIds={selectedQueueIds}
+            updateCount={val => setPendingCount(val)}
+            style={applyPanelStyle("pending")}
+            setTabOpen={setTabOpen}
+            showTabGroups={showTabGroups}
+          />
         </Paper>
       </TabPanel>
       <TabPanel value={tab} name="closed" className={classes.ticketsWrapper}>

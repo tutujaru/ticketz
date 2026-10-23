@@ -35,11 +35,11 @@ const ListMessagesService = async ({
     ticketId,
     isSuper ? undefined : companyId
   );
+  const ticketCompanyId = ticket.companyId;
+
   if (!ticket) {
     throw new AppError("ERR_NO_TICKET_FOUND", 404);
   }
-
-  const ticketCompanyId = ticket.companyId;
 
   const limit = 100;
 
@@ -130,10 +130,7 @@ const ListMessagesService = async ({
         as: "queue"
       }
     ],
-    order: [
-      ["createdAt", "DESC"],
-      ["id", "DESC"]
-    ]
+    order: [["createdAt", "DESC"]]
   });
 
   const hasMore = messages.length > limit;

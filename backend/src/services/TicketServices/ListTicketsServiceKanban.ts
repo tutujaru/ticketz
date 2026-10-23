@@ -9,6 +9,7 @@ import User from "../../models/User";
 import ShowUserService from "../UserServices/ShowUserService";
 import Tag from "../../models/Tag";
 import TicketTag from "../../models/TicketTag";
+import { intersection } from "lodash";
 import Whatsapp from "../../models/Whatsapp";
 import Company from "../../models/Company";
 
@@ -174,24 +175,17 @@ const ListTicketsServiceKanban = async ({
   }
 
   if (Array.isArray(tags) && tags.length > 0) {
-    const ticketTags = await TicketTag.findAll({
-      where: { tagId: { [Op.in]: tags } },
-      attributes: ["tagId", "ticketId"]
-    });
-    const ticketIdsByTag = new Map<number, Set<number>>();
-
-    ticketTags.forEach(ticketTag => {
-      if (!ticketIdsByTag.has(ticketTag.tagId)) {
-        ticketIdsByTag.set(ticketTag.tagId, new Set<number>());
+    const ticketsTagFilter: any[] | null = [];
+    for (let tag of tags) {
+      const ticketTags = await TicketTag.findAll({
+        where: { tagId: tag }
+      });
+      if (ticketTags) {
+        ticketsTagFilter.push(ticketTags.map(t => t.ticketId));
       }
-      ticketIdsByTag.get(ticketTag.tagId).add(ticketTag.ticketId);
-    });
+    }
 
-    const ticketsIntersection = tags
-      .map(tagId => [...(ticketIdsByTag.get(tagId) || [])])
-      .reduce((result, values) =>
-        result.filter(value => values.includes(value))
-      );
+    const ticketsIntersection: number[] = intersection(...ticketsTagFilter);
 
     whereCondition = {
       ...whereCondition,
@@ -202,15 +196,22 @@ const ListTicketsServiceKanban = async ({
   }
 
   if (Array.isArray(users) && users.length > 0) {
-    const ticketUsers = await Ticket.findAll({
-      where: { userId: { [Op.in]: users } },
-      attributes: ["id"]
-    });
+    const ticketsUserFilter: any[] | null = [];
+    for (let user of users) {
+      const ticketUsers = await Ticket.findAll({
+        where: { userId: user }
+      });
+      if (ticketUsers) {
+        ticketsUserFilter.push(ticketUsers.map(t => t.id));
+      }
+    }
+
+    const ticketsIntersection: number[] = intersection(...ticketsUserFilter);
 
     whereCondition = {
       ...whereCondition,
       id: {
-        [Op.in]: ticketUsers.map(ticket => ticket.id)
+        [Op.in]: ticketsIntersection
       }
     };
   }
