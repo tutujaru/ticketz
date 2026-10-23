@@ -206,16 +206,59 @@ const lookupIptu = async (
   if (!contributor) return { records: [], contributor: null };
   const code = valueOf(contributor, "COD_CONTRIBUINTE");
   if (!code) return { records: [], contributor };
-  return {
-    contributor,
-    records: asList(
-      await requestApi(
-        env("TRIBUTARY_IPTU_API_ID"),
-        env("TRIBUTARY_IPTU_API_TOKEN"),
-        { COD_CNT: code }
-      )
+  const futureRecords = asList(
+    await requestApi(
+      env("TRIBUTARY_IPTU_API_ID"),
+      env("TRIBUTARY_IPTU_API_TOKEN"),
+      { COD_CNT: code }
     )
-  };
+  );
+
+  // A API de parcelas futuras não retorna vencidos. A API geral da
+  // Dívida Ativa contém os IPTUs em aberto, inclusive os vencidos.
+  const activeDebtRecords = (await lookupDividaAtiva(document)).filter(item => {
+    const sameContributor =
+      cleanDigits(valueOf(item, "INSMF_CONTRIBUINTE")) === document ||
+      valueOf(item, "COD_CONTRIBUINTE").replace(/^0+/, "") ===
+        code.replace(/^0+/, "");
+    const revenue = `${valueOf(
+      item,
+      "DESC_RECEITA",
+      "DESC_RECEITA_PRINCIPAL",
+      "RECEITA"
+    )}`.toUpperCase();
+    const isIptu =
+      revenue.includes("IPTU") ||
+      revenue.includes("IMPOSTO PREDIAL") ||
+      revenue.includes("TERRITORIAL URBANO");
+    return sameContributor && isIptu;
+  });
+
+  const records = [...futureRecords, ...activeDebtRecords].filter(
+    (item, index, list) => {
+      const key = [
+        valueOf(item, "COD_DIV_PAR", "COD_DIVIDA", "COD_DIV"),
+        valueOf(item, "PARCELA_PAR", "NRO_PARCELA", "PARCELA"),
+        valueOf(item, "TP_PAR", "COD_RECEITA", "COD_REC_FRC"),
+        valueOf(item, "ANO", "ANO_DIVIDA", "ANO_RECEITA"),
+        valueOf(item, "DATAVENCI", "DATA_VENCIMENTO")
+      ].join("|");
+      return (
+        list.findIndex(candidate => {
+          const candidateKey = [
+            valueOf(candidate, "COD_DIV_PAR", "COD_DIVIDA", "COD_DIV"),
+            valueOf(candidate, "PARCELA_PAR", "NRO_PARCELA", "PARCELA"),
+            valueOf(candidate, "TP_PAR", "COD_RECEITA", "COD_REC_FRC"),
+            valueOf(candidate, "ANO", "ANO_DIVIDA", "ANO_RECEITA"),
+            valueOf(candidate, "DATAVENCI", "DATA_VENCIMENTO")
+          ].join("|");
+          return candidateKey === key;
+        }) === index
+      );
+    }
+  );
+
+  return { contributor, records };
 };
 
 const parseMoney = (value: string): number => {
