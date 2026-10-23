@@ -341,7 +341,7 @@ const UpdateTicketService = async ({
     // only admin can accept pending tickets that have no queue
     if (!oldQueueId && userId && oldStatus === "pending" && status === "open") {
       const acceptUser = await User.findByPk(userId);
-      if (acceptUser.profile !== "admin") {
+      if (!isSuper && acceptUser.profile !== "admin") {
         throw new AppError("ERR_NO_PERMISSION", 403);
       }
     }
@@ -352,7 +352,8 @@ const UpdateTicketService = async ({
       oldStatus === "closed" &&
       status !== "closed" &&
       user &&
-      user.profile !== "admin"
+      user.profile !== "admin" &&
+      !isSuper
     ) {
       throw new AppError("ERR_NO_PERMISSION", 403);
     }

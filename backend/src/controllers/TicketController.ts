@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Mutex } from "async-mutex";
 import { getIO } from "../libs/socket";
 import Ticket from "../models/Ticket";
+import User from "../models/User";
 
 import CreateTicketService from "../services/TicketServices/CreateTicketService";
 import DeleteTicketService from "../services/TicketServices/DeleteTicketService";
@@ -217,6 +218,10 @@ export const update = async (
   res: Response
 ): Promise<Response> => {
   const { ticketId } = req.params;
+  const requestUser = await User.findByPk(req.user.id, {
+    attributes: ["id", "super"]
+  });
+  const isSuper = !!req.user.isSuper || !!requestUser?.super;
 
   const { ticket } = await updateMutex.runExclusive(async () => {
     const result = await UpdateTicketService({
@@ -224,7 +229,7 @@ export const update = async (
       ticketId: Number.parseInt(ticketId, 10),
       reqUserId: Number(req.user.id),
       companyId: req.user.isSuper ? undefined : req.user.companyId,
-      isSuper: !!req.user.isSuper
+      isSuper
     });
     return result;
   });
