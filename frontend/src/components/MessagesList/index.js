@@ -49,7 +49,8 @@ import MessageOptionsMenu from "../MessageOptionsMenu";
 import whatsBackground from "../../assets/wa-background.png";
 import whatsBackgroundDark from "../../assets/wa-background-dark.png";
 import MediaGalleryLightbox, {
-  buildMediaGalleryData
+  buildMediaGalleryData,
+  buildInlineMediaUrl
 } from "../MediaGalleryLightbox";
 
 import api from "../../services/api";
@@ -1044,7 +1045,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           className={clsx(classes.messageMedia, {
             [classes.messageMediaDeleted]: message.isDeleted
           })}
-          src={message.mediaUrl}
+          src={buildInlineMediaUrl(message.mediaUrl)}
           alt="sticker"
         />
       );
@@ -1061,7 +1062,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                 [classes.messageMediaDeleted]: message.isDeleted
               }
             )}
-            src={message.mediaUrl}
+            src={buildInlineMediaUrl(message.mediaUrl)}
             alt="midia da mensagem"
             onClick={() => openLightboxForMessage(message.id)}
           />
@@ -1088,7 +1089,10 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       return (
         <>
           <audio className={classes.audioBottom} controls>
-            <source src={message.mediaUrl} type="audio/ogg"></source>
+            <source
+              src={buildInlineMediaUrl(message.mediaUrl)}
+              type="audio/ogg"
+            ></source>
           </audio>
           {message.body && !["🔊", "Áudio"].includes(message.body) && (
             <div className={classes.mediaDescription}>{message.body}</div>
@@ -1114,7 +1118,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                 }
               }}
               className={classes.videoPreviewMedia}
-              src={message.mediaUrl}
+              src={buildInlineMediaUrl(message.mediaUrl)}
               preload="metadata"
               playsInline
               onPlay={() => {
@@ -1188,7 +1192,10 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
       return (
         <>
           {isPdf && message.mediaUrl && (
-            <PdfPreview url={message.mediaUrl} fileName={fileName} />
+            <PdfPreview
+              url={buildInlineMediaUrl(message.mediaUrl)}
+              fileName={fileName}
+            />
           )}
           <div className={classes.downloadMedia}>
             <Button
@@ -1863,7 +1870,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               {message.thumbnailUrl && !message.mediaUrl && (
                 <img
                   className={classes.previewThumbnail}
-                  src={message.thumbnailUrl}
+                  src={buildInlineMediaUrl(message.thumbnailUrl)}
                 />
               )}
 
@@ -1969,7 +1976,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
               {message.thumbnailUrl && !message.mediaUrl && (
                 <img
                   className={classes.previewThumbnail}
-                  src={message.thumbnailUrl}
+                  src={buildInlineMediaUrl(message.thumbnailUrl)}
                 />
               )}
 
