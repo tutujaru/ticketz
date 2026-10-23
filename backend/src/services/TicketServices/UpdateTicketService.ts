@@ -185,9 +185,6 @@ const UpdateTicketService = async ({
     let targetWhatsappId = ticket.whatsappId;
     const requestedCompanyId = parsedTargetCompanyId;
     const changingCompany = requestedCompanyId !== sourceCompanyId;
-    if (changingCompany && !isSuper) {
-      throw new AppError("ERR_FORBIDDEN", 403);
-    }
     const changingWhatsapp =
       whatsappId !== undefined &&
       whatsappId !== null &&
