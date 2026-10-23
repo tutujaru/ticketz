@@ -125,13 +125,19 @@ const TicketsManagerTabs = () => {
   const [pendingCount, setPendingCount] = useState(0);
 
   const userQueueIds = user.queues.map(q => q.id);
-  const [selectedQueueIds, setSelectedQueueIds] = useState(userQueueIds || []);
+  const [selectedQueueIds, setSelectedQueueIds] = useState(
+    user?.super ? [] : userQueueIds || []
+  );
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
   const { getSetting } = useSettings();
   const [showTabGroups, setShowTabGroups] = useState(false);
+
+  useEffect(() => {
+    if (user?.super) setShowAllTickets(true);
+  }, [user?.super]);
 
   useEffect(() => {
     Promise.all([getSetting("CheckMsgIsGroup"), getSetting("groupsTab")]).then(
@@ -358,6 +364,7 @@ const TicketsManagerTabs = () => {
           />
           <TicketsList
             status="pending"
+            showAll={showAllTickets}
             selectedQueueIds={selectedQueueIds}
             updateCount={val => setPendingCount(val)}
             style={applyPanelStyle("pending")}

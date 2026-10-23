@@ -273,12 +273,16 @@ const TicketsListCustom = props => {
           )) &&
         (!users?.length || users.some(u => u === ticket.userId)) &&
         (!ticket.userId || ticket.userId === user?.id || showAll) &&
-        (!ticket.queueId || selectedQueueIds.indexOf(ticket.queueId) > -1)
+        (user?.super ||
+          !ticket.queueId ||
+          selectedQueueIds.indexOf(ticket.queueId) > -1)
       );
     };
 
     const notBelongsToUserQueues = ticket =>
-      ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
+      !user?.super &&
+      ticket.queueId &&
+      selectedQueueIds.indexOf(ticket.queueId) === -1;
 
     const onConnectTicketList = () => {
       if (status) {

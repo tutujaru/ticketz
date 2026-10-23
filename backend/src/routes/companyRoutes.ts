@@ -10,6 +10,7 @@ companyRoutes.get("/companies/list", isAuth, isSuper, CompanyController.list);
 companyRoutes.get(
   "/companies/transfer-targets",
   isAuth,
+  isSuper,
   CompanyController.transferTargets
 );
 companyRoutes.get("/companies", isAuth, isSuper, CompanyController.index);

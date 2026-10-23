@@ -11,6 +11,7 @@ import Tag from "../../models/Tag";
 import TicketTag from "../../models/TicketTag";
 import { intersection } from "lodash";
 import Whatsapp from "../../models/Whatsapp";
+import Company from "../../models/Company";
 
 interface Request {
   searchParam?: string;
@@ -25,6 +26,7 @@ interface Request {
   tags: number[];
   users: number[];
   companyId: number;
+  isSuper?: boolean;
 }
 
 interface Response {
@@ -45,8 +47,15 @@ const ListTicketsServiceKanban = async ({
   showAll,
   userId,
   withUnreadMessages,
-  companyId
+  companyId,
+  isSuper = false
 }: Request): Promise<Response> => {
+  const globalScope = isSuper && showAll === "true";
+  const globalCompanyIds = globalScope
+    ? (
+        await Company.findAll({ where: { status: true }, attributes: ["id"] })
+      ).map(company => company.id)
+    : [companyId];
   let whereCondition: Filterable["where"] = {
     [Op.or]: [{ userId }, { status: "pending" }],
     queueId: { [Op.or]: [queueIds, null] }
@@ -82,7 +91,9 @@ const ListTicketsServiceKanban = async ({
   ];
 
   if (showAll === "true") {
-    whereCondition = { queueId: { [Op.or]: [queueIds, null] } };
+    whereCondition = globalScope
+      ? {}
+      : { queueId: { [Op.or]: [queueIds, null] } };
   }
 
   whereCondition = {
@@ -210,7 +221,7 @@ const ListTicketsServiceKanban = async ({
 
   whereCondition = {
     ...whereCondition,
-    companyId
+    companyId: { [Op.in]: globalCompanyIds }
   };
 
   const { count, rows: tickets } = await Ticket.findAndCountAll({

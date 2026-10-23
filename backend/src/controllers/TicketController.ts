@@ -101,7 +101,8 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     withUnreadMessages,
     notClosed: !!notClosed,
     all: !!all,
-    companyId
+    companyId,
+    isSuper: !!req.user.isSuper
   });
 
   return res.status(200).json({
@@ -158,7 +159,8 @@ export const kanban = async (
     userId,
     queueIds,
     withUnreadMessages,
-    companyId
+    companyId,
+    isSuper: !!req.user.isSuper
   });
 
   return res.status(200).json({ tickets, count, hasMore });
@@ -191,7 +193,10 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
   const { ticketId } = req.params;
   const { companyId } = req.user;
 
-  const contact = await ShowTicketService(ticketId, companyId);
+  const contact = await ShowTicketService(
+    ticketId,
+    req.user.isSuper ? undefined : companyId
+  );
 
   return res.status(200).json(contact);
 };
@@ -217,7 +222,9 @@ export const update = async (
     const result = await UpdateTicketService({
       ticketData: req.body,
       ticketId: Number.parseInt(ticketId, 10),
-      reqUserId: Number(req.user.id)
+      reqUserId: Number(req.user.id),
+      companyId: req.user.isSuper ? undefined : req.user.companyId,
+      isSuper: !!req.user.isSuper
     });
     return result;
   });

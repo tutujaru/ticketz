@@ -22,6 +22,7 @@ import TicketTag from "../../models/TicketTag";
 import Whatsapp from "../../models/Whatsapp";
 import { GetCompanySetting } from "../../helpers/CheckSettings";
 import ContactTag from "../../models/ContactTag";
+import Company from "../../models/Company";
 
 interface Request {
   isSearch?: boolean;
@@ -42,6 +43,7 @@ interface Request {
   tags: number[];
   users: number[];
   companyId: number;
+  isSuper?: boolean;
 }
 
 interface Response {
@@ -67,7 +69,8 @@ const ListTicketsService = async ({
   withUnreadMessages,
   notClosed,
   all,
-  companyId
+  companyId,
+  isSuper = false
 }: Request): Promise<Response> => {
   let ticketId: number;
 
@@ -91,7 +94,15 @@ const ListTicketsService = async ({
     searchParam = searchParam.trim().slice(1, -1);
   }
 
+  const globalScope = isSuper && showAll === "true";
+  const globalCompanyIds = globalScope
+    ? (
+        await Company.findAll({ where: { status: true }, attributes: ["id"] })
+      ).map(company => company.id)
+    : [companyId];
+
   const groupsTab =
+    !globalScope &&
     !isSearch &&
     (await GetCompanySetting(companyId, "groupsTab", "disabled")) === "enabled";
 
@@ -144,14 +155,16 @@ const ListTicketsService = async ({
     }
   ];
 
-  if (showAll === "true" && user.profile === "admin") {
+  if (showAll === "true" && (user.profile === "admin" || globalScope)) {
     andedOrs.length = 0;
     whereCondition = {
-      [Op.and]: andedOrs,
-      queueId: { [Op.or]: [queueIds, null] }
+      [Op.and]: andedOrs
     };
-    if (groupsTab) {
-      whereCondition.isGroup = groups === "true";
+    if (groupsTab && !globalScope) {
+      whereCondition = {
+        ...whereCondition,
+        isGroup: groups === "true"
+      };
     }
   }
 
@@ -339,7 +352,7 @@ const ListTicketsService = async ({
 
   whereCondition = {
     ...whereCondition,
-    companyId
+    companyId: { [Op.in]: globalCompanyIds }
   };
 
   const tickets = await Ticket.findAll({

@@ -40,6 +40,7 @@ interface Request {
   ticketId: number;
   reqUserId?: number;
   companyId?: number | undefined;
+  isSuper?: boolean;
   dontRunChatbot?: boolean;
 }
 
@@ -107,16 +108,17 @@ const UpdateTicketService = async ({
   ticketId,
   reqUserId,
   companyId,
+  isSuper = false,
   dontRunChatbot
 }: Request): Promise<Response> => {
   try {
-    if (!companyId && !reqUserId) {
+    if (!companyId && !reqUserId && !isSuper) {
       throw new Error("Need reqUserId or companyId");
     }
 
     const user = reqUserId ? await User.findByPk(reqUserId) : null;
 
-    if (reqUserId) {
+    if (reqUserId && !isSuper) {
       if (!user) {
         throw new AppError("User not found", 404);
       }
@@ -128,16 +130,7 @@ const UpdateTicketService = async ({
     const hasTargetCompany =
       ticketData.targetCompanyId !== undefined &&
       ticketData.targetCompanyId !== null;
-    const parsedTargetCompanyId = hasTargetCompany
-      ? Number(ticketData.targetCompanyId)
-      : companyId;
-
-    if (
-      !Number.isInteger(parsedTargetCompanyId) ||
-      parsedTargetCompanyId <= 0
-    ) {
-      throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
-    }
+    let parsedTargetCompanyId: number;
 
     const normalizeOptionalId = (
       value: number | string | null | undefined,
@@ -156,28 +149,45 @@ const UpdateTicketService = async ({
     userId = normalizeOptionalId(userId, "ERR_USER_NOT_FOUND");
     whatsappId = normalizeOptionalId(whatsappId, "ERR_WAPP_NOT_FOUND") as
       number | undefined;
-    const sourceCompanyId = companyId;
     const fromChatbot = ticketData.chatbot || false;
     let chatbot: boolean | null = fromChatbot;
     let queueOptionId: number | null = ticketData.queueOptionId || null;
 
     const io = getIO();
 
+    const ticket = await ShowTicketService(
+      ticketId,
+      isSuper ? undefined : companyId
+    );
+    const sourceCompanyId = ticket.companyId;
+    companyId = sourceCompanyId;
+    parsedTargetCompanyId = hasTargetCompany
+      ? Number(ticketData.targetCompanyId)
+      : sourceCompanyId;
+
+    if (
+      !Number.isInteger(parsedTargetCompanyId) ||
+      parsedTargetCompanyId <= 0
+    ) {
+      throw new AppError("ERR_COMPANY_NOT_FOUND", 404);
+    }
+
     const userRatingSetting = await GetCompanySetting(
-      companyId,
+      sourceCompanyId,
       "userRating",
       "disabled"
     );
-
-    const ticket = await ShowTicketService(ticketId, companyId);
     const isGroup = ticket.contact?.isGroup || ticket.isGroup;
     const sourceWhatsappId = ticket.whatsappId;
     const sourceQueueId = ticket.queueId;
-    let targetCompanyId = companyId;
+    let targetCompanyId = sourceCompanyId;
     let targetContactId = ticket.contactId;
     let targetWhatsappId = ticket.whatsappId;
     const requestedCompanyId = parsedTargetCompanyId;
-    const changingCompany = requestedCompanyId !== companyId;
+    const changingCompany = requestedCompanyId !== sourceCompanyId;
+    if (changingCompany && !isSuper) {
+      throw new AppError("ERR_FORBIDDEN", 403);
+    }
     const changingWhatsapp =
       whatsappId !== undefined &&
       whatsappId !== null &&

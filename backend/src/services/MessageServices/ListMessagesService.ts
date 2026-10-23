@@ -12,6 +12,7 @@ interface Request {
   nextId?: string;
   queues?: number[];
   minUpdatedAt?: string;
+  isSuper?: boolean;
 }
 
 interface Response {
@@ -27,9 +28,14 @@ const ListMessagesService = async ({
   ticketId,
   companyId,
   queues = [],
-  minUpdatedAt
+  minUpdatedAt,
+  isSuper = false
 }: Request): Promise<Response> => {
-  const ticket = await ShowTicketService(ticketId, companyId);
+  const ticket = await ShowTicketService(
+    ticketId,
+    isSuper ? undefined : companyId
+  );
+  const ticketCompanyId = ticket.companyId;
 
   if (!ticket) {
     throw new AppError("ERR_NO_TICKET_FOUND", 404);
@@ -40,7 +46,7 @@ const ListMessagesService = async ({
   const options: FindOptions = {
     where: {
       ticketId,
-      companyId,
+      companyId: ticketCompanyId,
       mediaType: {
         [Op.or]: {
           [Op.ne]: "reactionMessage",
@@ -51,9 +57,13 @@ const ListMessagesService = async ({
   };
 
   if (
+    !isSuper &&
     queues.length > 0 &&
-    (await GetCompanySetting(companyId, "messageVisibility", "message")) ===
+    (await GetCompanySetting(
+      ticketCompanyId,
+      "messageVisibility",
       "message"
+    )) === "message"
   ) {
     options.where["queueId"] = {
       [Op.or]: {
@@ -78,7 +88,7 @@ const ListMessagesService = async ({
       where: {
         id: nextId,
         ticketId,
-        companyId
+        companyId: ticketCompanyId
       },
       attributes: ["id", "createdAt"]
     });

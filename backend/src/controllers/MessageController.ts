@@ -70,7 +70,8 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     ticketId,
     companyId,
     queues,
-    minUpdatedAt
+    minUpdatedAt,
+    isSuper: !!req.user.isSuper
   });
 
   if (ticket.channel === "whatsapp" && markAsRead === "true") {
@@ -136,7 +137,11 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const { companyId } = req.user;
   const userId = Number(req.user.id) || null;
 
-  const ticket = await ShowTicketService(ticketId, companyId);
+  const ticket = await ShowTicketService(
+    ticketId,
+    req.user.isSuper ? undefined : companyId
+  );
+  const ticketCompanyId = ticket.companyId;
   const { channel } = ticket;
   if (channel === "webchat") {
     if (!body?.trim()) {
@@ -147,7 +152,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       id: uuidv4(),
       ticketId: ticket.id,
       contactId: ticket.contactId,
-      companyId,
+      companyId: ticketCompanyId,
       queueId: ticket.queueId,
       body: body.trim(),
       fromMe: true,
@@ -158,13 +163,15 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
 
     await Ticket.update(
       { lastMessage: body.trim() },
-      { where: { id: ticket.id, companyId } }
+      { where: { id: ticket.id, companyId: ticketCompanyId } }
     );
 
-    getIO().to(ticket.id.toString()).emit(`company-${companyId}-appMessage`, {
-      action: "create",
-      message
-    });
+    getIO()
+      .to(ticket.id.toString())
+      .emit(`company-${ticketCompanyId}-appMessage`, {
+        action: "create",
+        message
+      });
 
     return res.status(201).json(message);
   }

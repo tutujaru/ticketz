@@ -140,10 +140,31 @@ const requestApi = async (apiId: string, token: string, params = {}) => {
 };
 
 const asList = (payload: any): TributaryRecord[] => {
-  if (Array.isArray(payload))
+  if (Array.isArray(payload)) {
     return payload.filter(item => item && typeof item === "object");
-  if (Array.isArray(payload?.dados)) return payload.dados;
-  if (Array.isArray(payload?.data)) return payload.data;
+  }
+
+  if (payload && typeof payload === "object") {
+    for (const key of [
+      "dados",
+      "data",
+      "rows",
+      "results",
+      "registros",
+      "records",
+      "resultado",
+      "result",
+      "items"
+    ]) {
+      if (Array.isArray(payload[key])) return asList(payload[key]);
+    }
+
+    const nestedArray = Object.values(payload).find(value =>
+      Array.isArray(value)
+    );
+    if (Array.isArray(nestedArray)) return asList(nestedArray);
+  }
+
   return payload && typeof payload === "object" ? [payload] : [];
 };
 
@@ -151,6 +172,16 @@ const valueOf = (record: TributaryRecord, ...keys: string[]): string => {
   for (const key of keys) {
     if (record[key] !== undefined && record[key] !== null)
       return String(record[key]);
+  }
+
+  const entries = Object.entries(record || {});
+  for (const key of keys) {
+    const entry = entries.find(
+      ([recordKey]) => recordKey.toLowerCase() === key.toLowerCase()
+    );
+    if (entry && entry[1] !== undefined && entry[1] !== null) {
+      return String(entry[1]);
+    }
   }
   return "";
 };
@@ -181,10 +212,8 @@ const getCached = async (
   return data;
 };
 
-const lookupDividaAtiva = async (
-  document: string
-): Promise<TributaryRecord[]> => {
-  const records = await getCached("divida-ativa", async () =>
+const loadDividaAtivaRecords = async (): Promise<TributaryRecord[]> =>
+  getCached("divida-ativa", async () =>
     asList(
       await requestApi(
         env("TRIBUTARY_DIVIDA_API_ID"),
@@ -192,6 +221,11 @@ const lookupDividaAtiva = async (
       )
     )
   );
+
+const lookupDividaAtiva = async (
+  document: string
+): Promise<TributaryRecord[]> => {
+  const records = await loadDividaAtivaRecords();
   return filterByDocument(records, document);
 };
 
@@ -227,7 +261,7 @@ const lookupIptu = async (
 
   // A API de parcelas futuras não retorna vencidos. A API geral da
   // Dívida Ativa contém os IPTUs em aberto, inclusive os vencidos.
-  const activeDebtRecords = (await lookupDividaAtiva(document)).filter(item => {
+  const activeDebtRecords = (await loadDividaAtivaRecords()).filter(item => {
     const sameContributor =
       normalizeDocumentForComparison(valueOf(item, "INSMF_CONTRIBUINTE")) ===
         document ||
