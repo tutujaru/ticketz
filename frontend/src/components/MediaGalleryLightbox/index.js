@@ -63,24 +63,6 @@ const buildCacheBustedUrl = (url, seed) => {
   }
 };
 
-export const buildInlineMediaUrl = url => {
-  if (!url) {
-    return url;
-  }
-
-  try {
-    const parsedUrl = new URL(url, window.location.origin);
-    if (!parsedUrl.pathname.includes("/public/")) {
-      return url;
-    }
-    parsedUrl.searchParams.set("inline", "1");
-    return parsedUrl.toString();
-  } catch (error) {
-    const separator = url.includes("?") ? "&" : "?";
-    return `${url}${separator}inline=1`;
-  }
-};
-
 const extractFileName = (url, fallback) => {
   if (!url) {
     return fallback;
@@ -140,8 +122,6 @@ export const buildMediaGalleryData = (
       const description = getDescription(message) || undefined;
       const cacheSeed =
         getUpdatedAt(message) || getCreatedAt(message) || messageId;
-      const inlineMediaUrl = buildInlineMediaUrl(mediaUrl);
-      const inlineThumbnailUrl = buildInlineMediaUrl(thumbnailUrl);
       const downloadUrl = buildCacheBustedUrl(mediaUrl, cacheSeed);
 
       acc.byMessageId[messageId] = acc.slides.length;
@@ -155,19 +135,19 @@ export const buildMediaGalleryData = (
           autoPlay: true,
           controls: true,
           description,
-          thumbnail: inlineThumbnailUrl || VIDEO_THUMBNAIL_FALLBACK,
-          poster: inlineThumbnailUrl || inlineMediaUrl,
+          thumbnail: thumbnailUrl || VIDEO_THUMBNAIL_FALLBACK,
+          poster: thumbnailUrl || mediaUrl,
           download: {
             url: downloadUrl,
             filename: extractFileName(mediaUrl, `video-${messageId}`)
           },
-          sources: [{ src: inlineMediaUrl }]
+          sources: [{ src: mediaUrl }]
         });
       } else {
         acc.slides.push({
           key: `${messageId}`,
-          src: inlineMediaUrl,
-          thumbnail: inlineThumbnailUrl || inlineMediaUrl,
+          src: mediaUrl,
+          thumbnail: thumbnailUrl || mediaUrl,
           description,
           download: {
             url: downloadUrl,
