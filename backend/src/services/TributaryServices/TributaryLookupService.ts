@@ -435,19 +435,19 @@ const formatDividaAtivaRecord = (item: TributaryRecord): string => {
   const cancellationDate = formatDateBR(valueOf(item, "DATA_CANCELAMENTO"));
 
   return [
-    `COD_DIVIDA: ${value("COD_DIVIDA")}`,
-    `COD_CADASTRO: ${value("COD_CADASTRO")}`,
-    `MATRICULA_CADASTRO: ${value("MATRICULA_CADASTRO")}`,
-    `COD_CONTRIBUINTE: ${value("COD_CONTRIBUINTE")}`,
-    `ANO_DIVIDA: ${value("ANO_DIVIDA")}`,
-    `DESC_SITUACAO: ${value("DESC_SITUACAO")}`,
-    `DATA_CANCELAMENTO: ${cancellationDate || "-"}`,
-    `NRO_PARCELA: ${value("NRO_PARCELA")}`,
-    `VLPRINCIPAL: ${money("VLPRINCIPAL")}`,
-    `VLCORRECAO: ${money("VLCORRECAO")}`,
-    `VLMULTA: ${money("VLMULTA")}`,
-    `VLJUROS: ${money("VLJUROS")}`,
-    `VLTOTAL: ${money("VLTOTAL")}`
+    `Cod. Dívida: ${value("COD_DIVIDA")}`,
+    `Cod. Cadastro: ${value("COD_CADASTRO")}`,
+    `Mat. Cadastro: ${value("MATRICULA_CADASTRO")}`,
+    `Cod. Cont.: ${value("COD_CONTRIBUINTE")}`,
+    `Ano Dívida: ${value("ANO_DIVIDA")}`,
+    `Situação: ${value("DESC_SITUACAO")}`,
+    `Data. Cancelamento: ${cancellationDate || "-"}`,
+    `N° Parc.: ${value("NRO_PARCELA")}`,
+    `Valor: ${money("VLPRINCIPAL")}`,
+    `Valor Correção: ${money("VLCORRECAO")}`,
+    `Valor Multa: ${money("VLMULTA")}`,
+    `Valor Juros: ${money("VLJUROS")}`,
+    `TOTAL: ${money("VLTOTAL")}`
   ].join("\n");
 };
 
