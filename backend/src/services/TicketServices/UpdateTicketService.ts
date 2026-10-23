@@ -302,7 +302,9 @@ const UpdateTicketService = async ({
 
     if (userId) {
       const targetUser = await User.findOne({
-        where: { id: Number(userId), companyId: targetCompanyId }
+        where: isSuper
+          ? { id: Number(userId) }
+          : { id: Number(userId), companyId: targetCompanyId }
       });
       if (!targetUser) {
         throw new AppError("ERR_USER_NOT_FOUND", 404);
