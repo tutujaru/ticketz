@@ -309,7 +309,7 @@ const UpdateTicketService = async ({
       }
     }
 
-    if (user && ticket.status !== "pending") {
+    if (user && !isSuper && ticket.status !== "pending") {
       if (user.profile !== "admin" && ticket.userId !== user.id) {
         throw new AppError("ERR_FORBIDDEN", 403);
       }
