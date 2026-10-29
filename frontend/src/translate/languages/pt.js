@@ -24,7 +24,7 @@ const messages = {
         email: "Email",
         phone: "Telefone",
         language: "Idioma",
-        company: "Empresa",
+        company: "Secretaria",
         user: "Usuário",
         users: "Usuários",
         connection: "Conexão",
@@ -89,13 +89,13 @@ const messages = {
         }
       },
       companies: {
-        title: "Cadastrar Empresa",
+        title: "Cadastrar Secretaria",
         form: {
-          name: "Nome da Empresa",
+          name: "Nome da Secretaria",
           plan: "Plano",
           token: "Token",
           submit: "Cadastrar",
-          success: "Empresa criada com sucesso!"
+          success: "Secretaria criada com sucesso!"
         }
       },
       companiesManager: {
@@ -123,13 +123,13 @@ const messages = {
           operationSuccess: "Operação realizada com sucesso",
           operationError: "Não foi possível realizar a operação",
           operationErrorDuplicate:
-            "Não foi possível realizar a operação. Verifique se já existe uma empresa com o mesmo nome ou se os campos foram preenchidos corretamente"
+            "Não foi possível realizar a operação. Verifique se já existe uma Secretaria com o mesmo nome ou se os campos foram preenchidos corretamente"
         },
         confirmationModal: {
           deleteTitle: "Exclusão de Registro",
           deleteMessage: "Deseja realmente excluir esse registro?",
           impersonateTitle: "Acessar como",
-          impersonateMessage: "Deseja acessar o sistema como esta empresa?"
+          impersonateMessage: "Deseja acessar o sistema como esta Secretaria?"
         }
       },
       auth: {
@@ -633,7 +633,7 @@ const messages = {
         },
         dialog: {
           name: "Nome",
-          company: "Empresa",
+          company: "Secretaria",
           okEdit: "Editar",
           okAdd: "Adicionar",
           add: "Adicionar",
@@ -982,7 +982,7 @@ const messages = {
           options: {
             disabled: "Desabilitado",
             ManagementByDepartment: "Gerenciamento Por Fila",
-            ManagementByCompany: "Gerenciamento Por Empresa"
+            ManagementByCompany: "Gerenciamento Por Secretaria"
           }
         },
         outOfHoursAction: {
@@ -1037,7 +1037,7 @@ const messages = {
         QuickMessages: {
           title: "Mensagens Rápidas",
           options: {
-            enabled: "Por empresa",
+            enabled: "Por Secretaria",
             disabled: "Por Usuário"
           }
         },
@@ -1098,7 +1098,7 @@ const messages = {
           title: "Opções"
         },
         Companies: {
-          title: "Empresas"
+          title: "Secretaria"
         },
         schedules: {
           title: "Horários",
