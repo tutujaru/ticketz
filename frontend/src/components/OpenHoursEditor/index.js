@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   makeStyles,
   Paper,
@@ -22,8 +22,7 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Event as EventIcon,
-  Schedule as ScheduleIcon,
-  Public as PublicIcon
+  Schedule as ScheduleIcon
 } from "@material-ui/icons";
 import { format, startOfWeek, addDays } from "date-fns";
 import { enUS, es, id, pt } from "date-fns/locale";
@@ -112,6 +111,8 @@ const getDayNames = () => {
 
 const OpenHoursEditor = ({ value = {}, onChange }) => {
   const classes = useStyles();
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const [activeTab, setActiveTab] = useState(0);
 
   const [weeklyRules, setWeeklyRules] = useState(
@@ -132,8 +133,8 @@ const OpenHoursEditor = ({ value = {}, onChange }) => {
   const DAYS_MAP = useMemo(() => getDayNames(), []);
 
   useEffect(() => {
-    if (onChange) {
-      onChange({
+    if (onChangeRef.current) {
+      onChangeRef.current({
         weeklyRules,
         overrides,
         timezone

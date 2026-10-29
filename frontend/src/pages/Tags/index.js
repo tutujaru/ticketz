@@ -13,8 +13,6 @@ import Button from "@material-ui/core/Button";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
-import FlagIcon from "@material-ui/icons/Flag";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import IconButton from "@material-ui/core/IconButton";
@@ -97,7 +95,6 @@ const Tags = () => {
   const classes = useStyles();
 
   const { user } = useContext(AuthContext);
-  const { id, profile, name } = user;
 
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -143,7 +140,7 @@ const Tags = () => {
     if (needMore && hasMore && !loading) {
       setPageNumber(prevPage => prevPage + 1);
     }
-  }, [needMore]);
+  }, [needMore, hasMore, loading]);
 
   useEffect(() => {
     const socket = socketManager.GetSocket(user.companyId);
@@ -167,7 +164,7 @@ const Tags = () => {
     return () => {
       socket.disconnect();
     };
-  }, [user, socketManager]);
+  }, [searchParam, socketManager, user.companyId]);
 
   const handleOpenTagModal = () => {
     setSelectedTag(null);

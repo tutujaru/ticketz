@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -8,6 +8,10 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Skeleton from "@material-ui/lab/Skeleton";
+import Typography from "@material-ui/core/Typography";
+import Box from "@material-ui/core/Box";
+import Chip from "@material-ui/core/Chip";
+import EmojiEventsIcon from "@material-ui/icons/EmojiEvents";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
 
 import { makeStyles } from "@material-ui/core/styles";
@@ -18,7 +22,6 @@ import ErrorIcon from "@material-ui/icons/Error";
 
 import Rating from "@material-ui/lab/Rating";
 import { i18n } from "../../translate/i18n";
-import { formatTimeInterval } from "../../helpers/formatTimeInterval.js";
 
 const useStyles = makeStyles(theme => ({
   on: {
@@ -29,22 +32,62 @@ const useStyles = makeStyles(theme => ({
     color: red[600],
     fontSize: "20px"
   },
-  pointer: {
-    cursor: "pointer"
+  rankingWrapper: {
+    padding: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    border: "1px solid #e2e8f0",
+    borderRadius: theme.spacing(1),
+    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)"
+  },
+  companyTitle: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+    fontWeight: 700,
+    color: "#1e293b"
+  },
+  podium: {
+    fontWeight: 700,
+    color: "#b45309"
+  },
+  empty: {
+    padding: theme.spacing(2),
+    color: theme.palette.text.secondary,
+    textAlign: "center"
   }
 }));
 
 export function RatingBox({ rating }) {
-  const ratingTrunc = rating === null ? 0 : Math.trunc(rating);
+  const numericRating = Number(rating);
+  const hasRating = Number.isFinite(numericRating) && numericRating > 0;
+  const displayRating = hasRating ? numericRating : 0;
+
   return (
-    <div style={{ width: "max-content" }}>
-      <Rating defaultValue={ratingTrunc} max={5} readOnly />
-      <span style={{ verticalAlign: "super" }}>
-        &nbsp;({ratingTrunc?.toFixed(1)})
-      </span>
-    </div>
+    <Box display="flex" alignItems="center" justifyContent="center">
+      <Rating value={displayRating} precision={0.1} max={5} readOnly />
+      <Typography variant="body2" component="span">
+        {hasRating ? ` ${numericRating.toFixed(1)}` : " Sem avaliação"}
+      </Typography>
+    </Box>
   );
 }
+
+const compareAttendants = (a, b) => {
+  const ratingA = Number(a.averageRating) || 0;
+  const ratingB = Number(b.averageRating) || 0;
+  const ticketsA = Number(a.totalTickets) || 0;
+  const ticketsB = Number(b.totalTickets) || 0;
+  const closedA = Number(a.closedTickets) || 0;
+  const closedB = Number(b.closedTickets) || 0;
+
+  return (
+    ratingB - ratingA ||
+    ticketsB - ticketsA ||
+    closedB - closedA ||
+    String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
+  );
+};
 
 export default function TableAttendantsStatus(props) {
   const { loading, attendants: loadedAttendants } = props;
@@ -69,7 +112,6 @@ export default function TableAttendantsStatus(props) {
 
   useEffect(() => {
     const socket = socketManager.GetSocket();
-
     socket.on("userOnlineChange", updateStatus);
 
     return () => {
@@ -77,64 +119,115 @@ export default function TableAttendantsStatus(props) {
     };
   }, [socketManager]);
 
-  function renderList() {
-    return attendants.map(a => (
-      <TableRow key={a.id}>
-        <TableCell>{a.name}</TableCell>
-        <TableCell align="center" className={classes.pointer}>
-          <RatingBox rating={a.averageRating} />
-        </TableCell>
-        <TableCell align="center">{a.totalTickets}</TableCell>
-        <TableCell align="center">{a.openTickets}</TableCell>
-        <TableCell align="center">{a.closedTickets}</TableCell>
-        <TableCell align="center">
-          {formatTimeInterval(a.avgWaitTime, 2)}
-        </TableCell>
-        <TableCell align="center">
-          {formatTimeInterval(a.avgServiceTime, 2)}
-        </TableCell>
-        <TableCell align="center">
-          {a.online ? (
-            <CheckCircleIcon className={classes.on} />
-          ) : (
-            <ErrorIcon className={classes.off} />
-          )}
-        </TableCell>
-      </TableRow>
-    ));
+  const rankings = useMemo(() => {
+    const grouped = new Map();
+
+    attendants.forEach(attendant => {
+      const companyId = attendant.companyId || "unknown";
+      const companyName = attendant.companyName || "Empresa não identificada";
+      const group = grouped.get(companyId) || {
+        companyId,
+        companyName,
+        users: []
+      };
+      group.users.push(attendant);
+      grouped.set(companyId, group);
+    });
+
+    return Array.from(grouped.values())
+      .map(group => ({
+        ...group,
+        users: [...group.users].sort(compareAttendants).slice(0, 5)
+      }))
+      .sort((a, b) => a.companyName.localeCompare(b.companyName, "pt-BR"));
+  }, [attendants]);
+
+  if (loading) {
+    return <Skeleton variant="rect" height={220} />;
   }
 
-  return !loading ? (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>{i18n.t("common.user")}</TableCell>
-            <TableCell align="center">{i18n.t("common.rating")}</TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.totalTickets")}
-            </TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.ticketsOpen")}
-            </TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.ticketsDone")}
-            </TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.avgWaitTime")}
-            </TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.avgServiceTime")}
-            </TableCell>
-            <TableCell align="center">
-              {i18n.t("dashboard.userCurrentStatus")}
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>{renderList()}</TableBody>
-      </Table>
-    </TableContainer>
-  ) : (
-    <Skeleton variant="rect" height={150} />
+  if (!rankings.length) {
+    return (
+      <Typography className={classes.empty}>
+        Nenhum atendimento encontrado no período selecionado.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box p={2}>
+      <Typography variant="h6" gutterBottom>
+        Ranking de atendentes por empresa
+      </Typography>
+      <Typography variant="body2" color="textSecondary" gutterBottom>
+        Ordenado por avaliação média e, em caso de empate, pelo total de
+        atendimentos.
+      </Typography>
+
+      {rankings.map(group => (
+        <Paper
+          key={group.companyId}
+          className={classes.rankingWrapper}
+          elevation={0}
+        >
+          <Typography className={classes.companyTitle} variant="subtitle1">
+            <EmojiEventsIcon color="primary" />
+            {group.companyName}
+            <Chip size="small" label={`Top ${group.users.length}`} />
+          </Typography>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">#</TableCell>
+                  <TableCell>{i18n.t("common.user")}</TableCell>
+                  <TableCell align="center">
+                    {i18n.t("common.rating")}
+                  </TableCell>
+                  <TableCell align="center">
+                    {i18n.t("dashboard.totalTickets")}
+                  </TableCell>
+                  <TableCell align="center">
+                    {i18n.t("dashboard.ticketsDone")}
+                  </TableCell>
+                  <TableCell align="center">
+                    {i18n.t("dashboard.userCurrentStatus")}
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {group.users.map((attendant, index) => (
+                  <TableRow key={attendant.id}>
+                    <TableCell
+                      align="center"
+                      className={index < 3 ? classes.podium : undefined}
+                    >
+                      {index + 1}º
+                    </TableCell>
+                    <TableCell>{attendant.name}</TableCell>
+                    <TableCell align="center">
+                      <RatingBox rating={attendant.averageRating} />
+                    </TableCell>
+                    <TableCell align="center">
+                      {Number(attendant.totalTickets) || 0}
+                    </TableCell>
+                    <TableCell align="center">
+                      {Number(attendant.closedTickets) || 0}
+                    </TableCell>
+                    <TableCell align="center">
+                      {attendant.online ? (
+                        <CheckCircleIcon className={classes.on} />
+                      ) : (
+                        <ErrorIcon className={classes.off} />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      ))}
+    </Box>
   );
 }

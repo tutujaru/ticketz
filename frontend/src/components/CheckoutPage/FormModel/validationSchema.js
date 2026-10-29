@@ -4,7 +4,7 @@ const {
   formField: { firstName, address1, city, zipcode, country }
 } = checkoutFormModel;
 
-export default [
+const validationSchema = [
   Yup.object().shape({
     [firstName.name]: Yup.string().required(`${firstName.requiredErrorMsg}`),
     [address1.name]: Yup.string().required(`${address1.requiredErrorMsg}`),
@@ -16,3 +16,5 @@ export default [
       .required(`${country.requiredErrorMsg}`)
   })
 ];
+
+export default validationSchema;

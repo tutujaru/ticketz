@@ -254,10 +254,7 @@ export function ChatModal({
         </Grid>
       </DialogContent>
       <DialogActions style={{ padding: 16 }}>
-        <Button
-          onClick={handleClose}
-          className={classes.cancelButton}
-        >
+        <Button onClick={handleClose} className={classes.cancelButton}>
           Cancelar
         </Button>
         <Button
@@ -467,10 +464,7 @@ function Chat(props) {
       <Typography variant="h6" className={classes.emptyChatText}>
         Selecione uma conversa
       </Typography>
-      <Typography
-        variant="body2"
-        style={{ color: "#94a3b8", marginTop: 8 }}
-      >
+      <Typography variant="body2" style={{ color: "#94a3b8", marginTop: 8 }}>
         Escolha uma conversa na lista à esquerda para começar.
       </Typography>
     </div>
@@ -481,7 +475,11 @@ function Chat(props) {
       <>
         <Grid className={classes.gridContainer} container>
           {/* Coluna Esquerda - Lista de Chats */}
-          <Grid className={`${classes.gridItem} ${classes.sideWrapper}`} md={3} item>
+          <Grid
+            className={`${classes.gridItem} ${classes.sideWrapper}`}
+            md={3}
+            item
+          >
             <div className={classes.btnContainer}>
               <Button
                 onClick={() => {
@@ -511,7 +509,11 @@ function Chat(props) {
           </Grid>
 
           {/* Coluna Direita - Mensagens */}
-          <Grid className={`${classes.gridItem} ${classes.messagesWrapper}`} md={9} item>
+          <Grid
+            className={`${classes.gridItem} ${classes.messagesWrapper}`}
+            md={9}
+            item
+          >
             {isObject(currentChat) && has(currentChat, "id") ? (
               <ChatMessages
                 chat={currentChat}

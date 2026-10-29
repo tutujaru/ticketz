@@ -15,8 +15,7 @@ import {
   Paper,
   Tooltip,
   Typography,
-  CircularProgress,
-  Checkbox
+  CircularProgress
 } from "@material-ui/core";
 import {
   Edit,
@@ -188,15 +187,6 @@ const Connections = () => {
     setPasskeyInitialToken("");
     setPasskeyModalOpen(false);
   }, [setPasskeyModalOpen, setSelectedWhatsApp, setPasskeyInitialToken]);
-
-  const handleTriggerCaptureFromQr = useCallback(
-    token => {
-      setQrModalOpen(false);
-      setPasskeyInitialToken(token);
-      setPasskeyModalOpen(true);
-    },
-    [setQrModalOpen, setPasskeyInitialToken, setPasskeyModalOpen]
-  );
 
   const handleOpenInstallInstructionsFromQr = useCallback(() => {
     setQrModalOpen(false);

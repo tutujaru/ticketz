@@ -10,8 +10,6 @@ import {
   TableCell,
   TableRow,
   IconButton,
-  FormControlLabel,
-  Checkbox,
   FormControl,
   InputLabel,
   Select,
@@ -20,11 +18,7 @@ import {
 import { Formik, Form, Field } from "formik";
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import ConfirmationModal from "../ConfirmationModal";
-import CurrencyInput from "../CurrencyInput";
-import InputMask from "react-input-mask";
-import { CheckBox, Edit as EditIcon } from "@material-ui/icons";
-import CurrencyFormat from "react-currency-format";
-import MaskedInput from "react-text-mask";
+import { Edit as EditIcon } from "@material-ui/icons";
 
 import { toast } from "react-toastify";
 import usePlans from "../../hooks/usePlans";

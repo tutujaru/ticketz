@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
@@ -27,7 +27,6 @@ import moment from "moment";
 import { i18n } from "../../translate/i18n";
 import OnlyForSuperUser from "../../components/OnlyForSuperUser";
 import useAuth from "../../hooks/useAuth.js";
-import { loadJSON } from "../../helpers/loadJSON";
 
 import { SmallPie } from "./SmallPie";
 import { TicketCountersChart } from "./TicketCountersChart";
@@ -40,8 +39,6 @@ import api from "../../services/api.js";
 import config from "../../services/config.js";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
 import { formatTimeInterval } from "../../helpers/formatTimeInterval.js";
-
-const gitinfo = loadJSON("/gitinfo.json");
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -249,10 +246,6 @@ const Dashboard = () => {
     });
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [period]);
-
   async function handleChangePeriod(value) {
     setPeriod(value);
   }
@@ -322,7 +315,7 @@ const Dashboard = () => {
       .catch(() => {});
   }
 
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     let params = { tz: getTimezoneOffset() };
 
     const days = Number(period);
@@ -374,8 +367,11 @@ const Dashboard = () => {
         }
       })
       .catch(() => {});
-  }
+  }, [period, dateFrom, dateTo]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   useEffect(() => {
     updateStatus();
   }, []);

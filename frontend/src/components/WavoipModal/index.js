@@ -125,6 +125,7 @@ const WavoipModal = ({ open, onClose, whatsappId }) => {
                 className={classes.wavoipLink}
                 href="https://wavoip.com"
                 target="_blank"
+                rel="noreferrer"
               >
                 wavoip.com.br
               </a>

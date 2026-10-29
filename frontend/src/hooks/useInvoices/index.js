@@ -28,15 +28,6 @@ const useInvoices = () => {
     return responseData;
   };
 
-  const show = async data => {
-    const { data: responseData } = await api.request({
-      url: "/invoices/${id}",
-      method: "GET",
-      data
-    });
-    return responseData;
-  };
-
   const update = async data => {
     const { data: responseData } = await api.request({
       url: `/invoices/${data.id}`,

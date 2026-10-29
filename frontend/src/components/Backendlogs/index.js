@@ -19,7 +19,6 @@ import ReactJsonView from "@microlink/react-json-view";
 import {
   FormControl,
   Grid,
-  InputBase,
   InputLabel,
   MenuItem,
   Select,

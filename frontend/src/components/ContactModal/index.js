@@ -71,6 +71,8 @@ const ContactSchema = Yup.object().shape({
 const ContactModal = ({ open, onClose, contactId, initialValues, onSave }) => {
   const classes = useStyles();
   const { getSetting } = useSettings();
+  const getSettingRef = useRef(getSetting);
+  getSettingRef.current = getSetting;
 
   const initialState = {
     name: "",
@@ -84,7 +86,7 @@ const ContactModal = ({ open, onClose, contactId, initialValues, onSave }) => {
   const [showTags, setShowTags] = useState(false);
 
   useEffect(() => {
-    getSetting("tagsMode").then(res => {
+    getSettingRef.current("tagsMode").then(res => {
       setShowTags(["contact", "both"].includes(res));
     });
 

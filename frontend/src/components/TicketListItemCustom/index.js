@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 
 import { useHistory, useParams } from "react-router-dom";
-import { parseISO, format, isSameDay } from "date-fns";
+import { parseISO } from "date-fns";
 import clsx from "clsx";
 
 import { makeStyles } from "@material-ui/core/styles";
@@ -20,7 +20,6 @@ import { i18n } from "../../translate/i18n";
 import { formatWhatsappContactName } from "../../helpers/formatWhatsappDisplay";
 
 import api from "../../services/api";
-import ButtonWithSpinner from "../ButtonWithSpinner";
 import WhatsMarked from "react-whatsmarked";
 import { Tooltip } from "@material-ui/core";
 import { AuthContext } from "../../context/Auth/AuthContext";
@@ -28,7 +27,6 @@ import { TicketsContext } from "../../context/Tickets/TicketsContext";
 import toastError from "../../errors/toastError";
 import { v4 as uuidv4 } from "uuid";
 
-import RoomIcon from "@material-ui/icons/Room";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import AndroidIcon from "@material-ui/icons/Android";
 import VisibilityIcon from "@material-ui/icons/Visibility";

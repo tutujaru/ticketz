@@ -272,9 +272,7 @@ const getInitials = name => {
   if (parts.length === 1) {
     return parts[0].charAt(0).toUpperCase();
   }
-  return (
-    parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
-  ).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
 // Cores de avatar baseadas no id do usuário
@@ -402,9 +400,7 @@ const Users = () => {
     return (
       <Chip
         label={profile}
-        className={
-          isAdmin ? classes.profileChipAdmin : classes.profileChipUser
-        }
+        className={isAdmin ? classes.profileChipAdmin : classes.profileChipUser}
         size="small"
       />
     );
@@ -416,10 +412,7 @@ const Users = () => {
       <Typography variant="h6" className={classes.emptyStateText}>
         Nenhum usuário encontrado
       </Typography>
-      <Typography
-        variant="body2"
-        style={{ color: "#94a3b8", marginTop: 8 }}
-      >
+      <Typography variant="body2" style={{ color: "#94a3b8", marginTop: 8 }}>
         {searchParam
           ? "Tente ajustar sua busca ou limpar o filtro."
           : 'Clique em "Adicionar" para criar seu primeiro usuário.'}
@@ -490,9 +483,7 @@ const Users = () => {
             <TableHead className={classes.tableHead}>
               <TableRow>
                 <TableCell align="center">ID</TableCell>
-                <TableCell align="left">
-                  {i18n.t("users.table.name")}
-                </TableCell>
+                <TableCell align="left">{i18n.t("users.table.name")}</TableCell>
                 <TableCell align="left">
                   {i18n.t("users.table.email")}
                 </TableCell>
@@ -519,9 +510,7 @@ const Users = () => {
                         >
                           {getInitials(user.name)}
                         </div>
-                        <span className={classes.userName}>
-                          {user.name}
-                        </span>
+                        <span className={classes.userName}>{user.name}</span>
                       </div>
                     </TableCell>
                     <TableCell align="left">

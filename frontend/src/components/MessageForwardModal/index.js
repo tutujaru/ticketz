@@ -11,7 +11,6 @@ import Autocomplete, {
 } from "@material-ui/lab/Autocomplete";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { Grid } from "@material-ui/core";
-import { toast } from "react-toastify";
 
 import api from "../../services/api";
 import { AuthContext } from "../../context/Auth/AuthContext";

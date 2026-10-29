@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { makeStyles, Paper, Box, Typography, Chip } from "@material-ui/core";
+import { makeStyles, Paper, Typography } from "@material-ui/core";
 
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
@@ -208,10 +208,7 @@ const Helps = () => {
       <Typography variant="h6" className={classes.emptyStateText}>
         Nenhum tutorial disponível ainda
       </Typography>
-      <Typography
-        variant="body2"
-        style={{ color: "#94a3b8", marginTop: 8 }}
-      >
+      <Typography variant="body2" style={{ color: "#94a3b8", marginTop: 8 }}>
         Novos vídeos e tutoriais aparecerão aqui quando forem adicionados.
       </Typography>
     </div>
@@ -228,9 +225,7 @@ const Helps = () => {
           <Accordion key={key} className={classes.accordion} elevation={0}>
             <AccordionSummary
               className={classes.accordionSummary}
-              expandIcon={
-                <ExpandMoreIcon className={classes.expandIcon} />
-              }
+              expandIcon={<ExpandMoreIcon className={classes.expandIcon} />}
               aria-controls={`panel-${key}-content`}
               id={`panel-${key}-header`}
             >

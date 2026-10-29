@@ -8,7 +8,6 @@ import {
   Tabs,
   Tab,
   Button,
-  Grid,
   Box,
   Typography
 } from "@material-ui/core";

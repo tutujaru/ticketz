@@ -16,10 +16,19 @@ export function UsersFilter({
 
   useEffect(() => {
     async function fetchData() {
-      await loadUsers();
+      try {
+        const { data } = await api.get(`/users/list`);
+        let userList = data.map(u => ({ id: u.id, name: u.name }));
+        if (excludeId) {
+          userList = userList.filter(user => user.id !== excludeId);
+        }
+        setUsers(userList);
+      } catch (err) {
+        toastError(err);
+      }
     }
     fetchData();
-  }, []);
+  }, [excludeId]);
 
   useEffect(() => {
     if (multiple) {
@@ -45,19 +54,6 @@ export function UsersFilter({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUsers, users, multiple]);
-
-  const loadUsers = async () => {
-    try {
-      const { data } = await api.get(`/users/list`);
-      let userList = data.map(u => ({ id: u.id, name: u.name }));
-      if (excludeId) {
-        userList = userList.filter(user => user.id !== excludeId);
-      }
-      setUsers(userList);
-    } catch (err) {
-      toastError(err);
-    }
-  };
 
   const onChange = async value => {
     setSelected(value);

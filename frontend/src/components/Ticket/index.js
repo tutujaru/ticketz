@@ -21,8 +21,6 @@ import { TagsContainer } from "../TagsContainer";
 import { SocketContext } from "../../context/Socket/SocketContext";
 import useSettings from "../../hooks/useSettings";
 
-const drawerWidth = 320;
-
 const useStyles = makeStyles(theme => ({
   root: {
     display: "flex",
@@ -99,7 +97,7 @@ const Ticket = () => {
     getSetting("tagsMode", "ticket").then(tagsMode => {
       setTagsMode(tagsMode);
     });
-  }, []);
+  }, [getSetting]);
 
   useEffect(() => {
     setLoading(true);

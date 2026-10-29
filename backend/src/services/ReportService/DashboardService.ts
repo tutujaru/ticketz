@@ -42,6 +42,8 @@ type TicketsStatisticsData = {
 type UserStatistics = {
   id: number;
   name: string;
+  companyId: number;
+  companyName: string;
   avgWaitTime: number;
   avgServiceTime: number;
   totalTickets: number;
@@ -135,7 +137,8 @@ export async function ticketsStatusSummary(companyId: CompanyScope) {
 
   const groupsEnabled = Array.isArray(companyId)
     ? false
-    : (await GetCompanySetting(companyId, "groupsTab", "disabled")) === "enabled";
+    : (await GetCompanySetting(companyId, "groupsTab", "disabled")) ===
+      "enabled";
 
   if (groupsEnabled) {
     where.isGroup = false;
@@ -193,11 +196,25 @@ export async function usersStatusSummary(companyId: CompanyScope) {
   return usersSummary;
 }
 
-export async function userReport(companyId: CompanyScope, start: Date, end: Date) {
+export async function userReport(
+  companyId: CompanyScope,
+  start: Date,
+  end: Date
+) {
   const result = await User.findAll({
     attributes: [
       "id",
       "name",
+      "companyId",
+      [
+        literal(`(
+          SELECT c."name"
+          FROM "Companies" AS c
+          WHERE c."id" = "User"."companyId"
+          LIMIT 1
+        )`),
+        "companyName"
+      ],
       [fn("AVG", col("tickets.ticketTrakings.waitTime")), "avgWaitTime"],
       [fn("AVG", col("tickets.ticketTrakings.serviceTime")), "avgServiceTime"],
       [fn("COUNT", col("tickets.id")), "totalTickets"],

@@ -147,7 +147,7 @@ const TicketsManagerTabs = () => {
         );
       }
     );
-  }, []);
+  }, [getSetting]);
 
   useEffect(() => {
     if (user.profile.toUpperCase() === "ADMIN") {

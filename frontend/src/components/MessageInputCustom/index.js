@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import withWidth, { isWidthUp } from "@material-ui/core/withWidth";
+import withWidth from "@material-ui/core/withWidth";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 import MicRecorder from "mic-recorder-to-mp3";
@@ -27,14 +27,7 @@ import MicIcon from "@material-ui/icons/Mic";
 import CheckCircleOutlineIcon from "@material-ui/icons/CheckCircleOutline";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
 import CameraAltIcon from "@material-ui/icons/CameraAlt";
-import {
-  FormControlLabel,
-  Switch,
-  Tooltip,
-  InputAdornment,
-  Typography,
-  Popper
-} from "@material-ui/core";
+import { Tooltip, InputAdornment, Typography, Popper } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { isString, isEmpty, isObject, has } from "lodash";
 
@@ -237,20 +230,6 @@ const EmojiOptions = props => {
   );
 };
 
-const SignSwitch = props => {
-  const { setSignMessage, signMessage } = props;
-  const classes = useStyles({ signMessage });
-
-  return (
-    <IconButton
-      onClick={() => setSignMessage(!signMessage)}
-      className={classes.signatureIcon}
-    >
-      <FontAwesomeIcon icon={faSignature} />
-    </IconButton>
-  );
-};
-
 const IconSwitch = props => {
   const { setter, value, icon, tooltip } = props;
   const classes = useStyles({ value });
@@ -295,7 +274,6 @@ const ActionButtons = props => {
     inputMessage,
     loading,
     recording,
-    ticketStatus,
     handleSendMessage,
     handleCancelAudio,
     handleUploadAudio,
@@ -388,8 +366,6 @@ const CustomInput = props => {
   const [quickMessages, setQuickMessages] = useState([]);
   const [options, setOptions] = useState([]);
   const [popupOpen, setPopupOpen] = useState(false);
-
-  const { user } = useContext(AuthContext);
 
   const { list: listQuickMessages } = useQuickMessages();
 
@@ -829,7 +805,7 @@ const MessageInputCustom = props => {
       return;
     }
     sessionStorage.setItem("messageDraft-" + ticketId, inputMessage);
-  }, [inputMessage]);
+  }, [inputMessage, ticketId]);
 
   useEffect(() => {
     const draftMessage = sessionStorage.getItem("messageDraft-" + ticketId);
@@ -873,7 +849,7 @@ const MessageInputCustom = props => {
       setEditingMessage(null);
       setInputMessage("");
     };
-  }, [ticketId]);
+  }, [ticketId, setEditingMessage, setReplyingMessage]);
 
   // const handleChangeInput = e => {
   // 	if (isObject(e) && has(e, 'value')) {
@@ -917,7 +893,7 @@ const MessageInputCustom = props => {
         return;
       }
 
-      if (media?.type.split("/")[0] == "image") {
+      if (media?.type.split("/")[0] === "image") {
         new Compressor(file, {
           quality: 0.7,
 

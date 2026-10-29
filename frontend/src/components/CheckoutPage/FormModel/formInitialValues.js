@@ -16,7 +16,7 @@ const {
   }
 } = checkoutFormModel;
 
-export default {
+const formInitialValues = {
   [firstName.name]: "",
   [lastName.name]: "",
   [address1.name]: "",
@@ -30,3 +30,5 @@ export default {
   [invoiceId.name]: "",
   [cvv.name]: ""
 };
+
+export default formInitialValues;

@@ -43,7 +43,7 @@ export function PhoneNumberInput(props) {
         setCountryCode(defaultCountry.phonecode);
       }
     }
-  }, [countries, value]);
+  }, [countries, value, countryCode]);
 
   useEffect(() => {
     if (value && !isNumeric(value)) {

@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Grid,
   TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Table,
   TableBody,
   TableCell,
@@ -20,34 +15,13 @@ import api from "../../services/api";
 import { SelectLanguage } from "../SelectLanguage";
 
 const I18nSettings = () => {
-  const [languages, setLanguages] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("");
-  const [newLanguage, setNewLanguage] = useState("");
   const [translations, setTranslations] = useState([]);
   const [editingKey, setEditingKey] = useState(null);
   const [editingValue, setEditingValue] = useState("");
   const [newRow, setNewRow] = useState(null);
 
-  useEffect(() => {
-    fetchLanguages();
-  }, []);
-
-  useEffect(() => {
-    if (selectedLanguage) {
-      fetchTranslations();
-    }
-  }, [selectedLanguage]);
-
-  const fetchLanguages = async () => {
-    try {
-      const { data } = await api.get("/translations/languages");
-      setLanguages(data.languages);
-    } catch (error) {
-      toast.error("Error fetching languages");
-    }
-  };
-
-  const fetchTranslations = async () => {
+  const fetchTranslations = useCallback(async () => {
     try {
       const { data } = await api.get("/translations", {
         params: { namespace: "backend", language: selectedLanguage }
@@ -56,7 +30,13 @@ const I18nSettings = () => {
     } catch (error) {
       toast.error("Error fetching translations");
     }
-  };
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    if (selectedLanguage) {
+      fetchTranslations();
+    }
+  }, [selectedLanguage, fetchTranslations]);
 
   const handleSaveTranslation = async (key, value) => {
     if (!key) return;
@@ -82,10 +62,6 @@ const I18nSettings = () => {
     await handleSaveTranslation(key, "");
   };
 
-  const handleAddNewRow = () => {
-    setNewRow({ key: "", value: "" });
-  };
-
   return (
     <div>
       <Grid container spacing={3}>
@@ -97,42 +73,7 @@ const I18nSettings = () => {
             variant="outlined"
           />
         </Grid>
-        {/* * /}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Add New Language"
-            value={newLanguage}
-            onChange={(e) => setNewLanguage(e.target.value)}
-            fullWidth
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              if (newLanguage) {
-                setLanguages((prev) => [...prev, newLanguage]);
-                setNewLanguage("");
-                toast.success("Language added successfully");
-              }
-            }}
-            style={{ marginTop: "8px" }}
-          >
-            Add Language
-          </Button>
-        </Grid>
-        {/* */}
       </Grid>
-
-      {/* * /}
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={handleAddNewRow}
-        style={{ marginBottom: "16px" }}
-      >
-        Add New Translation
-      </Button>
-      {/* */}
 
       <Table>
         <TableHead>

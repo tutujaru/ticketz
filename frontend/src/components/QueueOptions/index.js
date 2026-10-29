@@ -63,10 +63,8 @@ export function QueueOptionStepper({ queueId, options, updateOptions }) {
   const [attachment, setAttachment] = useState(null);
   const attachmentFile = useRef(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [forwardQueue, setForwardQueue] = useState(null);
-  const [exitChatbot, setExitChatbot] = useState(false);
-  const [allQueues, setAllQueues] = useState([]);
   const [queues, setQueues] = useState([]);
+  const [, setAllQueues] = useState([]);
   const { findAll: findAllQueues } = useQueues();
   const isMounted = useRef(true);
 

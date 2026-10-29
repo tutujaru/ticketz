@@ -66,10 +66,10 @@ export function TicketNotes({ ticket }) {
   useEffect(() => {
     async function openAndFetchData() {
       setLoading(false);
-      await loadNotes();
+      await listNotes({ ticketId, contactId }).then(setNotes);
     }
     openAndFetchData();
-  }, []);
+  }, [ticketId, contactId, listNotes]);
 
   const handleSave = async (note, resetForm) => {
     setLoading(true);

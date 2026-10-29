@@ -21,7 +21,7 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
-import { IconButton, InputAdornment, FormControl } from "@material-ui/core";
+import { IconButton, InputAdornment } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -54,11 +54,6 @@ const useStyles = makeStyles(theme => ({
   colorAdorment: {
     width: 20,
     height: 20
-  },
-  multFieldLine: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center"
   }
 }));
 

@@ -15,7 +15,6 @@ import {
   Avatar,
   Button,
   CircularProgress,
-  Divider,
   IconButton,
   makeStyles,
   Tooltip,
@@ -791,15 +790,20 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     loadData();
   }
 
-  useEffect(async () => {
-    dispatch({ type: "RESET" });
-    setContactPresence("available");
+  useEffect(() => {
+    const fetchData = async () => {
+      dispatch({ type: "RESET" });
+      setContactPresence("available");
 
-    currentTicketId.current = ticketId;
+      currentTicketId.current = ticketId;
 
-    await loadPageMutex.runExclusive(async () => {
-      loadData();
-    });
+      await loadPageMutex.runExclusive(async () => {
+        loadData();
+      });
+    };
+    fetchData();
+    // loadData is intentionally defined with the component state it reads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);
 
   useEffect(() => {
@@ -931,6 +935,8 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     return () => {
       socket.disconnect();
     };
+    // refreshMessagesList is an event helper and must not recreate the socket subscription.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId, ticket, socketManager]);
 
   const loadMore = async () => {
@@ -1348,7 +1354,9 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
           )}
           <WhatsMarked>{getQuotedMessageText(message.quotedMsg)}</WhatsMarked>
         </div>
-        {imageUrl && <img className={classes.quotedThumbnail} src={imageUrl} />}
+        {imageUrl && (
+          <img className={classes.quotedThumbnail} src={imageUrl} alt="" />
+        )}
       </div>
     );
   };
@@ -1448,7 +1456,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
             )}
           </div>
           {!message.thumbnailUrl && imageUrl && (
-            <img className={classes.quotedThumbnail} src={imageUrl} />
+            <img className={classes.quotedThumbnail} src={imageUrl} alt="" />
           )}
         </div>
       </a>
@@ -1731,6 +1739,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
             <img
               src={`data:image/png;base64, ${location.jpegThumbnail}`}
               className={classes.imageLocation}
+              alt=""
             />
           ) : (
             <LocationOn
@@ -1811,7 +1820,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
     const stickedMessages = [];
     const viewMessagesList = messagesList.map((message, index) => {
       if (message.mediaType === "reactionMessage") {
-        return;
+        return null;
       }
 
       const data = JSON.parse(message.dataJson);
@@ -1869,6 +1878,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                 <img
                   className={classes.previewThumbnail}
                   src={buildInlineMediaUrl(message.thumbnailUrl)}
+                  alt=""
                 />
               )}
 
@@ -1975,6 +1985,7 @@ const MessagesList = ({ ticket, ticketId, isGroup, markAsRead, readOnly }) => {
                 <img
                   className={classes.previewThumbnail}
                   src={buildInlineMediaUrl(message.thumbnailUrl)}
+                  alt=""
                 />
               )}
 

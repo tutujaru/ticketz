@@ -363,7 +363,7 @@ export default function Options(props) {
       };
       loadQueues();
     }
-  }, []);
+  }, [findAllQueues]);
 
   async function handleChangeUserRating(value) {
     setUserRating(value);

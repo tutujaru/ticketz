@@ -196,13 +196,11 @@ const TicketsListCustom = props => {
     nextUpdatedAt: null,
     nextTicketId: null
   });
-  const [update, setUpdate] = useState(0);
   const [ticketsList, dispatch] = useReducer(reducer, []);
   const ticketsListRef = useRef(ticketsList);
   useEffect(() => {
     ticketsListRef.current = ticketsList;
   }, [ticketsList]);
-  const [ticketsListUpdated, setTicketsListUpdated] = useState([]);
   const { user } = useContext(AuthContext);
   const { profile, queues } = user;
 
@@ -224,10 +222,7 @@ const TicketsListCustom = props => {
 
   const {
     tickets,
-    hasMore,
     loading,
-    nextUpdatedAt,
-    nextTicketId,
     refetch: refetchTickets,
     fetchSince
   } = useTickets({
@@ -419,6 +414,8 @@ const TicketsListCustom = props => {
       }
       socket.disconnect();
     };
+    // fetchSince is supplied by the data hook and intentionally omitted to avoid resubscribing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     status,
     isSearch,

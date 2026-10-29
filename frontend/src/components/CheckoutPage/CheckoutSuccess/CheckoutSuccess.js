@@ -44,7 +44,7 @@ function CheckoutSuccess(props) {
     return () => {
       socket.disconnect();
     };
-  }, [history, dateToClient, socketManager]);
+  }, [history, dateToClient, socketManager, onClose]);
 
   const handleCopyQR = () => {
     setTimeout(() => {

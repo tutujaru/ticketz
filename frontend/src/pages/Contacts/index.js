@@ -148,7 +148,7 @@ const Contacts = () => {
   useEffect(() => {
     api.get("/whatsapp").then(({ data }) => {
       setConnections(data);
-      data.map(connection => {
+      data.forEach(connection => {
         if (connection.channel === "whatsapp" && connection.isDefault) {
           setImportConnectionId(connection.id);
         }

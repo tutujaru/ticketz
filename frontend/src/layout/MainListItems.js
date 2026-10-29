@@ -15,12 +15,9 @@ import PeopleAltOutlinedIcon from "@material-ui/icons/PeopleAltOutlined";
 import ContactPhoneOutlinedIcon from "@material-ui/icons/ContactPhoneOutlined";
 import AccountTreeOutlinedIcon from "@material-ui/icons/AccountTreeOutlined";
 import FlashOnIcon from "@material-ui/icons/FlashOn";
-import CalendarToday from "@material-ui/icons/CalendarToday";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CodeRoundedIcon from "@material-ui/icons/CodeRounded";
 import EventIcon from "@material-ui/icons/Event";
-import InfoIcon from "@material-ui/icons/Info";
-import DarkMode from "../components/DarkMode";
 
 import LocalOfferIcon from "@material-ui/icons/LocalOffer";
 import EventAvailableIcon from "@material-ui/icons/EventAvailable";
@@ -28,11 +25,9 @@ import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import PeopleIcon from "@material-ui/icons/People";
 import ListIcon from "@material-ui/icons/ListAlt";
-import LoyaltyRoundedIcon from "@material-ui/icons/LoyaltyRounded";
 import AnnouncementIcon from "@material-ui/icons/Announcement";
 import ForumIcon from "@material-ui/icons/Forum";
 import LocalAtmIcon from "@material-ui/icons/LocalAtm";
-import RotateRight from "@material-ui/icons/RotateRight";
 import { i18n } from "../translate/i18n";
 import BorderColorIcon from "@material-ui/icons/BorderColor";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
@@ -261,10 +256,9 @@ const MainListItems = props => {
   const classes = useStyles();
   const { drawerClose, drawerOpen } = props;
   const { whatsApps } = useContext(WhatsAppsContext);
-  const { user, handleLogout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [connectionWarning, setConnectionWarning] = useState(false);
   const [openCampaignSubmenu, setOpenCampaignSubmenu] = useState(false);
-  const [openKanbanSubmenu, setOpenKanbanSubmenu] = useState(false);
 
   const [showCampaigns, setShowCampaigns] = useState(false);
   const history = useHistory();
@@ -272,7 +266,6 @@ const MainListItems = props => {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchParam] = useState("");
   const [chats, dispatch] = useReducer(reducer, []);
-  const [version, setVersion] = useState("v N/A");
 
   const socketManager = useContext(SocketContext);
 
@@ -363,10 +356,6 @@ const MainListItems = props => {
     } catch (err) {
       toastError(err);
     }
-  };
-
-  const handleClickLogout = () => {
-    handleLogout();
   };
 
   return (
@@ -496,9 +485,13 @@ const MainListItems = props => {
                     primary={i18n.t("mainDrawer.listItems.campaigns")}
                   />
                   {openCampaignSubmenu ? (
-                    <ExpandLessIcon style={{ color: "#64748b", fontSize: 20 }} />
+                    <ExpandLessIcon
+                      style={{ color: "#64748b", fontSize: 20 }}
+                    />
                   ) : (
-                    <ExpandMoreIcon style={{ color: "#64748b", fontSize: 20 }} />
+                    <ExpandMoreIcon
+                      style={{ color: "#64748b", fontSize: 20 }}
+                    />
                   )}
                 </ListItem>
                 <Collapse

@@ -88,7 +88,7 @@ const useAuth = () => {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [socketManager]);
 
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
@@ -109,7 +109,7 @@ const useAuth = () => {
       socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [socketManager, user]);
 
   const posLogin = (data, impersonated = false) => {
     const {
@@ -117,7 +117,7 @@ const useAuth = () => {
       token
     } = data;
 
-    const { companyId, userId } = decodeToken(token);
+    const { companyId } = decodeToken(token);
 
     if (has(company, "settings") && isArray(company.settings)) {
       const setting = company.settings.find(s => s.key === "campaignsEnabled");
@@ -128,7 +128,6 @@ const useAuth = () => {
 
     moment.locale("pt-br");
     const dueDate = data.user.company.dueDate;
-    const hoje = moment(moment()).format("DD/MM/yyyy");
     const vencimento = moment(dueDate).format("DD/MM/yyyy");
 
     var diff = moment(dueDate).diff(moment(moment()).format());

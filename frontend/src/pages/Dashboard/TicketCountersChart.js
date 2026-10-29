@@ -1,5 +1,5 @@
 import { useTheme } from "@material-ui/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { i18n } from "../../translate/i18n";
 import {
   Area,
@@ -14,7 +14,6 @@ import CustomTooltip from "./CustomTooltip";
 import Title from "./Title";
 import { getTimezoneOffset } from "../../helpers/getTimezoneOffset";
 import { getISOStringWithTimezone } from "../../helpers/getISOStringWithTimezone";
-import { numPad } from "../../helpers/numPad";
 
 function prepareChartData(emptyData, serie) {
   const ticketCreateData = JSON.parse(JSON.stringify(emptyData));
@@ -30,7 +29,7 @@ function prepareChartData(emptyData, serie) {
 }
 
 export function TicketCountersChart({ ticketCounters }) {
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const tz = getTimezoneOffset();
   const theme = useTheme();
   const t = (...params) => i18n.t(...params);
@@ -48,10 +47,6 @@ export function TicketCountersChart({ ticketCounters }) {
       hour: 60,
       timestamp: 30
     };
-
-    const offset = new Date().getTimezoneOffset();
-    const interval = step[field];
-    const firstMinutes = (offset + interval) % interval;
 
     const startDate = new Date(ticketCounters.create.start);
     const endDate = new Date(ticketCounters.create.end);
@@ -85,7 +80,7 @@ export function TicketCountersChart({ ticketCounters }) {
     }));
 
     setChartData(chartData);
-  }, [ticketCounters]);
+  }, [ticketCounters, now]);
 
   return (
     <React.Fragment>

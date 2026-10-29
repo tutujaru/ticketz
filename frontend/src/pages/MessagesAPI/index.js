@@ -471,10 +471,7 @@ const MessagesAPI = () => {
         </Typography>
 
         {/* Métodos de Envio */}
-        <Typography
-          className={classes.sectionTitle}
-          style={{ marginTop: 0 }}
-        >
+        <Typography className={classes.sectionTitle} style={{ marginTop: 0 }}>
           Métodos de Envio
         </Typography>
         <Box display="flex" gap={1} flexWrap="wrap" marginBottom={3}>
@@ -539,8 +536,7 @@ const MessagesAPI = () => {
                 <b>Endpoint:</b> {getEndpoint()}
               </div>
               <div>
-                <b>Método:</b>{" "}
-                <span className={classes.methodChip}>POST</span>
+                <b>Método:</b> <span className={classes.methodChip}>POST</span>
               </div>
               <div>
                 <b>Headers:</b> Authorization ("Bearer " + token cadastrado) e
@@ -550,7 +546,7 @@ const MessagesAPI = () => {
                 <b>Body:</b>
               </div>
               <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-{`{
+                {`{
   "number": "558599999999",
   "body": "Sua mensagem",
   "saveOnTicket": true,
@@ -591,8 +587,7 @@ const MessagesAPI = () => {
                 <b>Endpoint:</b> {getEndpoint()}
               </div>
               <div>
-                <b>Método:</b>{" "}
-                <span className={classes.methodChip}>POST</span>
+                <b>Método:</b> <span className={classes.methodChip}>POST</span>
               </div>
               <div>
                 <b>Headers:</b> Authorization ("Bearer " + token cadastrado) e
@@ -602,7 +597,7 @@ const MessagesAPI = () => {
                 <b>FormData:</b>
               </div>
               <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-{`number: 558599999999
+                {`number: 558599999999
 medias: <arquivo>
 saveOnTicket: true`}
               </pre>

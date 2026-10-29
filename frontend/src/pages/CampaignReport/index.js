@@ -10,7 +10,6 @@ import Title from "../../components/Title";
 
 import { Grid, LinearProgress, Typography } from "@material-ui/core";
 import api from "../../services/api";
-import { has, get, isNull } from "lodash";
 import CardCounter from "../../components/Dashboard/CardCounter";
 import GroupIcon from "@material-ui/icons/Group";
 import ScheduleIcon from "@material-ui/icons/Schedule";
