@@ -137,7 +137,7 @@ export default function TableAttendantsStatus(props) {
     return Array.from(grouped.values())
       .map(group => ({
         ...group,
-        users: [...group.users].sort(compareAttendants).slice(0, 5)
+        users: [...group.users].sort(compareAttendants).slice(0, 15)
       }))
       .sort((a, b) => a.companyName.localeCompare(b.companyName, "pt-BR"));
   }, [attendants]);
@@ -157,7 +157,7 @@ export default function TableAttendantsStatus(props) {
   return (
     <Box p={2}>
       <Typography variant="h6" gutterBottom>
-        Ranking de atendentes por empresa
+        Ranking de atendentes por Secretaria — Top 15
       </Typography>
       <Typography variant="body2" color="textSecondary" gutterBottom>
         Ordenado por avaliação média e, em caso de empate, pelo total de
