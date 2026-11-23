@@ -35,6 +35,7 @@ import { getTimezoneOffset } from "../../helpers/getTimezoneOffset.js";
 import TicketzRegistry from "../../components/TicketzRegistry";
 import ContainerUpdatesBanner from "../../components/Dashboard/ContainerUpdatesBanner";
 import ActiveTicketsPanel from "../../components/Dashboard/ActiveTicketsPanel";
+import WhatsAppConnectionsMonitor from "../../components/Dashboard/WhatsAppConnectionsMonitor";
 import api from "../../services/api.js";
 import config from "../../services/config.js";
 import { SocketContext } from "../../context/Socket/SocketContext.js";
@@ -495,6 +496,7 @@ const Dashboard = () => {
         <Grid container spacing={3} justifyContent="flex-start">
           <Grid item xs={12}>
             <ActiveTicketsPanel currentUser={currentUser} />
+            <WhatsAppConnectionsMonitor currentUser={currentUser} />
           </Grid>
 
           {/* USUARIOS ONLINE */}

@@ -13,7 +13,10 @@ import ShowWhatsAppService from "../services/WhatsappService/ShowWhatsAppService
 import UpdateWhatsAppService from "../services/WhatsappService/UpdateWhatsAppService";
 import AppError from "../errors/AppError";
 import Ticket from "../models/Ticket";
-import { sendWhatsappUpdate } from "../services/WhatsappService/SocketSendWhatsappUpdate";
+import {
+  sendWhatsappDeleteUpdate,
+  sendWhatsappUpdate
+} from "../services/WhatsappService/SocketSendWhatsappUpdate";
 
 interface WhatsappData {
   name: string;
@@ -210,6 +213,7 @@ export const remove = async (
     action: "delete",
     whatsappId: +whatsappId
   });
+  sendWhatsappDeleteUpdate(companyId, +whatsappId);
 
   return res.status(200).json({ message: "Session disconnected." });
 };

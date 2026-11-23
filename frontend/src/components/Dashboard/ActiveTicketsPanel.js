@@ -177,13 +177,18 @@ export default function ActiveTicketsPanel({ currentUser }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [socketIssue, setSocketIssue] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const loadTickets = useCallback(async () => {
     try {
       const { data } = await api.get("/dashboard/active-tickets");
       setTickets(Array.isArray(data) ? data : []);
+      setLastUpdated(new Date());
+      setLoadError(false);
     } catch (error) {
-      setTickets([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -193,12 +198,18 @@ export default function ActiveTicketsPanel({ currentUser }) {
     if (!currentUser?.super) return undefined;
 
     loadTickets();
+    const fallbackTimer = setInterval(loadTickets, 30000);
     const socket = socketManager.GetSocket();
     const refresh = () => loadTickets();
     socket.on("superadmin-active-ticket", refresh);
+    const unsubscribeIssue = socketManager.subscribeWsConnectionIssue?.(setSocketIssue);
+    const unsubscribeRefresh = socketManager.subscribeWsRefreshRequired?.(() => loadTickets());
 
     return () => {
+      clearInterval(fallbackTimer);
       socket.off("superadmin-active-ticket", refresh);
+      if (typeof unsubscribeIssue === "function") unsubscribeIssue();
+      if (typeof unsubscribeRefresh === "function") unsubscribeRefresh();
     };
   }, [currentUser, loadTickets, socketManager]);
 
@@ -233,17 +244,20 @@ export default function ActiveTicketsPanel({ currentUser }) {
           </Typography>
           <Typography className={classes.subtitle}>
             Acompanhamento dos atendimentos ativos de todas as Secretarias
+            {lastUpdated ? ` · última leitura ${lastUpdated.toLocaleTimeString("pt-BR")}` : ""}
           </Typography>
         </div>
-        {loading ? (
-          <CircularProgress size={22} />
-        ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {socketIssue && <Chip size="small" label="Socket reconectando" color="secondary" />}
+          {loadError && <Chip size="small" label="Atualização pendente" color="secondary" />}
+          {loading ? <CircularProgress size={22} /> : (
           <Chip
             className={classes.activeChip}
             size="small"
             label={`${tickets.length} ativo${tickets.length === 1 ? "" : "s"}`}
           />
-        )}
+          )}
+        </div>
       </div>
 
       {!loading && tickets.length === 0 ? (

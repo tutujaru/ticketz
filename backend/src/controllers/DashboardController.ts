@@ -15,6 +15,9 @@ import Whatsapp from "../models/Whatsapp";
 import TicketTraking from "../models/TicketTraking";
 import AppError from "../errors/AppError";
 import { Op } from "sequelize";
+import { removeWbot } from "../libs/wbot";
+import { StartWhatsAppSession } from "../services/WbotServices/StartWhatsAppSession";
+import { sendWhatsappUpdate } from "../services/WhatsappService/SocketSendWhatsappUpdate";
 
 const getDashboardCompanyScope = async (
   req: Request
@@ -104,4 +107,56 @@ export const activeTickets = async (
   });
 
   return res.status(200).json(tickets);
+};
+
+const assertSuperadmin = async (req: Request) => {
+  const user = await User.findByPk(req.user.id, { attributes: ["super"] });
+  if (!user?.super) throw new AppError("Acesso não permitido", 403);
+};
+
+export const activeWhatsapps = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  await assertSuperadmin(req);
+
+  const whatsapps = await Whatsapp.findAll({
+    attributes: [
+      "id",
+      "name",
+      "channel",
+      "provider",
+      "status",
+      "isDefault",
+      "updatedAt",
+      "companyId"
+    ],
+    include: [{ model: Company, as: "company", attributes: ["id", "name"] }],
+    order: [["name", "ASC"]]
+  });
+
+  return res.status(200).json(whatsapps);
+};
+
+export const manageWhatsapp = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  await assertSuperadmin(req);
+  const whatsapp = await Whatsapp.findByPk(req.params.whatsappId);
+  if (!whatsapp) throw new AppError("ERR_NO_WAPP_FOUND", 404);
+
+  const { action } = req.body;
+  if (action === "restart") {
+    await removeWbot(whatsapp.id, false);
+    await StartWhatsAppSession(whatsapp, whatsapp.companyId);
+  } else if (action === "disconnect") {
+    await removeWbot(whatsapp.id, false);
+    await whatsapp.update({ status: "DISCONNECTED", qrcode: "", retries: 0 });
+    sendWhatsappUpdate(whatsapp);
+  } else {
+    throw new AppError("Ação de conexão inválida", 400);
+  }
+
+  return res.status(200).json({ message: "Ação executada com sucesso." });
 };

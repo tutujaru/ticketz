@@ -39,4 +39,20 @@ routes.get(
   DashboardController.activeTickets
 );
 
+routes.get(
+  "/dashboard/active-whatsapps",
+  isAuth,
+  isAdmin,
+  isCompliant,
+  DashboardController.activeWhatsapps
+);
+
+routes.post(
+  "/dashboard/whatsapp/:whatsappId/action",
+  isAuth,
+  isAdmin,
+  isCompliant,
+  DashboardController.manageWhatsapp
+);
+
 export default routes;
