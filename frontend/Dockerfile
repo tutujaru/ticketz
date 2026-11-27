@@ -1,4 +1,4 @@
-FROM ghcr.io/ticketz-oss/ticketz-node-24:latest as build-deps
+FROM ghcr.io/ticketz-oss/ticketz-node-26:latest as build-deps
 
 WORKDIR /usr/src/app
 COPY . .
